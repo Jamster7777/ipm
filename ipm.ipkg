@@ -1,0 +1,10 @@
+package ipm
+
+sourcedir = src
+modules = ParseManifest
+main = ParseManifest
+opts = "-p contrib"
+
+-- idris --libd
+-- symbolic links
+-- don't need to cooperate with compiler
