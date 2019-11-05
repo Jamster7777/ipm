@@ -2,37 +2,6 @@ module ParseManifest
 import Locktypes
 import Language.JSON
 
-
-
--- checkVersion : (xs : List (String, JSON)) -> (name : String) -> Either LockError Lockfile
--- checkVersion [] name        = ?checkVersion_rhs_1
--- checkVersion (x :: xs) name = case x of
---                                     ("name", b) => ?checkVersion_rhs_4
---
---
--- checkInt : List Char -> (soFar : String) -> Either LockError (Int, List Char)
--- checkInt [] soFar = ?checkInt_rhs_1
--- checkInt (x :: xs) soFar = case isDigit x of
---                                 False => (case x == '.' of
---                                                False => Left FormatError
---                                                True => Right (soFar, x :: xs))
---                                 True => ?checkInt_rhs_4
---
-
--- checkInt : List Char -> Maybe Int
--- checkInt [] = ?checkInt_rhs_1
--- checkInt (x :: xs) = ?checkInt_rhs_2
--- checkInt (x :: xs) = case checkInt xs of
---                           case_val => ?checkInt_rhs_2
-
--- checkVersionHelper : List Char -> Maybe Int -> Maybe Int -> Maybe Int -> Either LockError Version
--- checkVersionHelper (x :: xs) Nothing minor patch = case (isDigit x) of
--- checkVersionHelper (x :: xs) (Just y) Nothing patch = ?help_7
--- checkVersionHelper (x :: xs) (Just y) (Just z) Nothing = ?help_6
--- checkVersionHelper (x :: xs) (Just y) (Just z) (Just w) = ?help_4
--- checkVersionHelper [] (Just y) (Just z) (Just w) = ?help_2
-
-
 checkVersion : String -> Either LockError Version
 checkVersion str =  checkVersionHelper [] (split (== '.') str)
 where
