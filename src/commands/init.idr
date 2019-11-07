@@ -1,18 +1,20 @@
 import System
 
--- TODO properly
 evalYesNo : String -> Bool
-evalYesNo "Y" = True
-evalYesNo "y" = True
-evalYesNo "N" = False
-evalYesNo "n" = False
-evalYesNo _   = True
+evalYesNo x = evalYesNoHelper (toLower x)
+where
+  evalYesNoHelper : String -> Bool
+  evalYesNoHelper "y" = True
+  evalYesNoHelper "n" = False
+  evalYesNoHelper "yes" = False
+  evalYesNoHelper "no" = False
+  evalYesNoHelper _   = True
 
 initGit : IO ()
 initGit =
   do  putStrLn "No git repository found. Initialise a new one? [Y/N]"
-      asdf <- getLine
-      if (evalYesNo asdf)
+      res <- getLine
+      if (evalYesNo res)
       then do exitCode <- system "git init"
               putStrLn "yay"
       else exit 0
