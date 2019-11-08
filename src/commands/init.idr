@@ -1,17 +1,5 @@
 import System
 
-evalYesNo : String -> Bool
-evalYesNo x = evalYesNoHelper (toLower x)
-where
-  evalYesNoHelper : String -> Bool
-  evalYesNoHelper "y" = True
-  evalYesNoHelper "n" = False
-  evalYesNoHelper "yes" = False
-  evalYesNoHelper "no" = False
-  evalYesNoHelper _   = True
-
-
-
 bashCommand : (command : String) -> (failMessage : String) -> IO ()
 bashCommand command failMessage =
   do  exitCode <- system command
@@ -20,16 +8,28 @@ bashCommand command failMessage =
               exit 1
       else putStr ""  --TODO tidy
 
+promptYesNo : (prompt : String) -> (action : IO ()) -> IO ()
+promptYesNo prompt action =
+  do  putStrLn (prompt ++ " [Y/N]")
+      res <- getLine
+      if (evalYesNo (toLower res))
+      then action
+      else putStr ""  -- TODO tidy
+  where
+    evalYesNo : String -> Bool
+    evalYesNo "y"   = True
+    evalYesNo "n"   = False
+    evalYesNo "yes" = False
+    evalYesNo "no"  = False
+    evalYesNo _     = True
 
--- initGit : IO ()
--- initGit =
---   do  putStrLn "No git repository found. Initialise a new one? [Y/N]"
---       res <- getLine
---       if (evalYesNo res)
---       then do exitCode <- system "git init"
---               if (exitCode /= 0)
---               then exit 1
---       else exit 0
+
+
+
+initGit : IO ()
+initGit =
+  promptYesNo "No git repository found. Initialise a new one?" (bashCommand "git init" "Failed to initialise git repository, exiting.")
+
 --
 -- setupGitRepo : IO ()
 -- setupGitRepo =
@@ -41,4 +41,4 @@ bashCommand command failMessage =
 --
 -- -- TODO rename to init
 main : IO ()
-main = bashCommand "pwd" "failure"
+main = promptYesNo "Use pwd?" (bashCommand "pwd" "failed")
