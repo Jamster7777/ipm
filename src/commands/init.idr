@@ -10,23 +10,35 @@ where
   evalYesNoHelper "no" = False
   evalYesNoHelper _   = True
 
-initGit : IO ()
-initGit =
-  do  putStrLn "No git repository found. Initialise a new one? [Y/N]"
-      res <- getLine
-      if (evalYesNo res)
-      then do exitCode <- system "git init"
-              putStrLn "yay"
-      else exit 0
 
-setupGitRepo : IO ()
-setupGitRepo =
-  do  exitCode <- system "[ -d \".git/\" ]"
-      if (exitCode == 0)
-      then putStrLn $ "Git repository already exists"
-      else initGit
-      putStrLn "test2"
 
--- TODO rename to init
+bashCommand : (command : String) -> (failMessage : String) -> IO ()
+bashCommand command failMessage =
+  do  exitCode <- system command
+      if (exitCode /= 0)
+      then do putStrLn failMessage
+              exit 1
+      else putStr ""  --TODO tidy
+
+
+-- initGit : IO ()
+-- initGit =
+--   do  putStrLn "No git repository found. Initialise a new one? [Y/N]"
+--       res <- getLine
+--       if (evalYesNo res)
+--       then do exitCode <- system "git init"
+--               if (exitCode /= 0)
+--               then exit 1
+--       else exit 0
+--
+-- setupGitRepo : IO ()
+-- setupGitRepo =
+--   do  exitCode <- system "[ -d \".git/\" ]"
+--       if (exitCode == 0)
+--       then putStrLn $ "Git repository already exists"
+--       else initGit
+--       putStrLn "test2"
+--
+-- -- TODO rename to init
 main : IO ()
-main = setupGitRepo
+main = bashCommand "pwd" "failure"
