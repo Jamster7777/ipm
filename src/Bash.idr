@@ -4,6 +4,29 @@ import System
 -- TODO remove
 %access public export
 
+-- TODO taken from https://stackoverflow.com/questions/39812465/how-can-i-call-a-subprocess-in-idris
+-- need to refactor.
+
+-- read the contents of a file
+readFileH : (fileHandle : File) -> IO String
+readFileH h = loop ""
+  where
+    loop acc = do
+      if !(fEOF h) then pure acc
+      else do
+        Right l <- fGetLine h | Left err => pure acc
+        loop (acc ++ l)
+
+execAndReadOutput : (cmd : String) -> IO String
+execAndReadOutput cmd = do
+  Right fh <- popen cmd Read | Left err => pure ""
+  contents <- readFileH fh
+  pclose fh
+  pure contents
+
+
+-- end of reference
+
 -- TODO tidy
 doNothing : IO ()
 doNothing = putStr ""
