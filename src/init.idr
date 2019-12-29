@@ -1,4 +1,4 @@
-import src.Bash
+import Bash
 
 setupGitRepo : IO ()
 setupGitRepo = bashCommand "[ -d \".git/\" ]" (putStrLn "Git repository already exists") initGit

@@ -4,6 +4,27 @@ import System
 -- TODO remove
 %access public export
 
+
+-- TODO overriding popen implementation
+
+my_modStr : Mode -> String
+my_modStr Read              = "r"
+my_modStr WriteTruncate     = "w"
+my_modStr Append            = "a"
+my_modStr ReadWrite         = "r+"
+my_modStr ReadWriteTruncate = "w+"
+my_modStr ReadAppend        = "a+"
+
+my_do_popen : String -> String -> IO Ptr
+my_do_popen f m = foreign FFI_C "do_popen" (String -> String -> IO Ptr) f m
+
+my_popen : String -> Mode -> IO (Either FileError File)
+my_popen f m = do  ptr <- my_do_popen f (my_modStr m)
+                   if !(nullPtr ptr)
+                      then do err <- getFileError
+                              pure (Left err)
+                      else pure (Right (FHandle ptr))
+
 -- TODO taken from https://stackoverflow.com/questions/39812465/how-can-i-call-a-subprocess-in-idris
 -- need to refactor.
 
@@ -19,7 +40,7 @@ readFileH h = loop ""
 
 execAndReadOutput : (cmd : String) -> IO String
 execAndReadOutput cmd = do
-  Right fh <- popen cmd Read | Left err => pure ""
+  Right fh <- my_popen cmd Read | Left err => pure (show err)
   contents <- readFileH fh
   pclose fh
   pure contents
