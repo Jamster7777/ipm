@@ -1,9 +1,9 @@
 module Bash
 import System
+import IpmError
 
 -- TODO remove
 %access public export
-
 
 -- TODO overriding popen implementation
 
@@ -38,12 +38,12 @@ readFileH h = loop ""
         Right l <- fGetLine h | Left err => pure acc
         loop (acc ++ l)
 
-execAndReadOutput : (cmd : String) -> IO String
+execAndReadOutput : (cmd : String) -> IO (Either IpmError String)
 execAndReadOutput cmd = do
-  Right fh <- my_popen cmd Read | Left err => pure (show err)
+  Right fh <- my_popen cmd Read | Left err => pure (Left (BashError (show err)))
   contents <- readFileH fh
   pclose fh
-  pure contents
+  pure (Right contents)
 
 
 -- end of reference
@@ -57,8 +57,8 @@ errorAndExit failMessage =
   do  putStrLn failMessage
       exit 1
 
-bashCommand : (command : String) -> (onSuccess : IO ()) -> (onFail : IO ()) -> IO ()
-bashCommand command onSuccess onFail =
+bashCommand : (command : String) -> { default doNothing onSuccess : IO ()} -> { default doNothing onFail : IO ()} -> IO ()
+bashCommand command {onSuccess} {onFail} =
   do  exitCode <- system command
       if (exitCode == 0)
       then onSuccess
