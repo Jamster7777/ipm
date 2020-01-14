@@ -1,7 +1,10 @@
-module ParseManifest
+module src.ParseManifest
 import src.Locktypes
 import src.IpmError
 import Language.JSON
+
+-- TODO remove
+%access public export
 
 packageFilename : String
 packageFilename = "ipkg.json"
@@ -70,10 +73,4 @@ checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
 
 checkParentObject : (manifest: JSON) -> Either IpmError Lockfile
 checkParentObject (JObject keys)  = checkKeys keys
-checkParentObject _             = Left (ManifestFormatError "No parent JSON object")
-
-main : IO ()
-main = do Right str       <-  readFile packageFilename  | Left fileError => putStrLn ("Error: no " ++ packageFilename ++ " file found")
-          let Just json   =   parse str                 | Nothing        => putStrLn ("Error: Invalid JSON format in " ++ packageFilename)
-          let lockfile    =   checkParentObject json    | Left err       => putStrLn (show err)
-          putStrLn "temp"
+checkParentObject _               = Left (ManifestFormatError "No parent JSON object")
