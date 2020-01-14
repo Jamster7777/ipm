@@ -2,6 +2,7 @@ package ipm
 
 sourcedir = src
 modules = ParseManifest
+        , Locktypes
 main = ParseManifest
 opts = "-p contrib"
 
