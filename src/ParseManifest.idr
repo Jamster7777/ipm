@@ -18,7 +18,7 @@ resolveDependancies xs = ?resolveDependancies_rhs
 
 checkVersion : String -> Either IpmError Version
 checkVersion str =
-  do let (Right version) = checkVersionHelper [] (split (== '.') str) | Left err => Left (ManifestFormatError ("'" ++ "' is an invalid version number."))
+  do let (Right version) = checkVersionHelper [] (split (== '.') str) | Left err => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
      Right version
 where
   checkVersionHelper : (ints: List Integer) -> (splitString : List String) -> Either IpmError Version
