@@ -37,17 +37,37 @@ where
       then parseNumWithoutSign cs ((acc * 10) + (cast ((ord c) - (ord '0'))))
       else Nothing
 
-checkKeys : (keys : List (String, JSON)) -> Either LockError Lockfile
-checkKeys [] = Left FormatError
-checkKeys (key :: keys) = case key of
-                           ("name", (JString str))          => ?asdf
-                           ("version", (JString str))       => ?help --checkVersion str
-                           ("dependancies", (JObject keys)) => ?help2
-                           _                                => Left FormatError
+checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
+
+checkKeys : (keys : List (String, JSON)) -> Either IpmError Lockfile
+checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
+  where
+    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe String) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> Either IpmError Lockfile
+    checkKeysHelper [] Nothing _ _ = Left ManifestFormatError
+    checkKeysHelper [] _ Nothing _ = Left ManifestFormatError
+    checkKeysHelper [] _ _ Nothing = Left ManifestFormatError
+    checkKeysHelper [] name version dependancies = Right (MkLockfile name version dependancies)
+    checkKeysHelper (key :: keys) name version dependancies =
+      case key of
+        -- JSON parser should deal with duplicate keys
+        ("name", (JString str))          => checkKeysHelper keys (Just str) version dependancies
+        ("version", (JString str))       => do  let (Right parsedVersion)       = checkVersion str | (Left err) => Left err
+                                                checkKeysHelper keys name (Just parsedVersion) dependancies
+        ("dependancies", (JObject dKeys))=> do  let (Right parsedDependancies)  = checkDependancies dKeys | (Left err) => Left err
+                                                checkKeysHelper keys name version (Just parsedDependancies)
+        _                                => Left FormatError
+
+-- checkKeys [] = Left FormatError
+-- checkKeys (key :: keys) =
+--   case key of
+--      ("name", (JString str))          => ?asdf
+--      ("version", (JString str))       => checkVersion str
+--      ("dependancies", (JObject keys)) => ?help2
+--      _                                => Left FormatError
 
 checkParentObject : (manifest: JSON) -> Either LockError Lockfile
 checkParentObject (JObject keys)  = checkKeys keys
-checkParentObject _             = Left FormatError
+checkParentObject _             = Left ManifestFormatError
 
 main : IO ()
 main = do Right str       <-  readFile packageFilename  | Left fileError => putStrLn ("Error: no " ++ packageFilename ++ " file found")
