@@ -23,7 +23,7 @@ checkVersion str =
 where
   checkVersionHelper : (ints: List Integer) -> (splitString : List String) -> Either IpmError Version
   checkVersionHelper ints [] =
-    if ((length ints) == 3)
+    if ((length ints) /= 3)
     then Left VersionFormatError
     else do let (Just major) = index' 2 ints | Nothing => Left VersionFormatError
             let (Just minor) = index' 1 ints | Nothing => Left VersionFormatError
