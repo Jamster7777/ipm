@@ -38,6 +38,13 @@ where
       else Nothing
 
 checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
+checkDependancies keys = checkDependanciesHelper keys []
+  where
+    checkDependanciesHelper [] = []
+    checkDependanciesHelper (key :: keys) =
+      do  let (name, (JString version)) = key | _ => Left ManifestFormatError
+          let (Right parsedVersion) = checkVersion version | (Left err) => Left err
+          (MkDependancy name parsedVersion) :: (checkDependanciesHelper keys)
 
 checkKeys : (keys : List (String, JSON)) -> Either IpmError Lockfile
 checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
@@ -55,15 +62,8 @@ checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
                                                 checkKeysHelper keys name (Just parsedVersion) dependancies
         ("dependancies", (JObject dKeys))=> do  let (Right parsedDependancies)  = checkDependancies dKeys | (Left err) => Left err
                                                 checkKeysHelper keys name version (Just parsedDependancies)
-        _                                => Left FormatError
+        _                                => Left ManifestFormatError
 
--- checkKeys [] = Left FormatError
--- checkKeys (key :: keys) =
---   case key of
---      ("name", (JString str))          => ?asdf
---      ("version", (JString str))       => checkVersion str
---      ("dependancies", (JObject keys)) => ?help2
---      _                                => Left FormatError
 
 checkParentObject : (manifest: JSON) -> Either LockError Lockfile
 checkParentObject (JObject keys)  = checkKeys keys
