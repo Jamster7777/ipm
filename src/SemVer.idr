@@ -10,13 +10,17 @@ Eq Version where
   (/=) x y = not (x == y)
 
 Ord Version where
-  compare x y = ?Ord_rhs_1
-  (<) x y = ?Ord_rhs_2
-  (>) x y = ?Ord_rhs_3
-  (<=) x y = ?Ord_rhs_4
-  (>=) x y = ?Ord_rhs_5
-  max x y = ?Ord_rhs_6
-  min x y = ?Ord_rhs_7
+  compare (MkVersion mj1 mn1 p1) (MkVersion mj2 mn2 p2) =
+    case (compare mj1 mj2) of
+      LT => LT
+      GT => GT
+      EQ => case (compare mn1 mn2) of
+        LT => LT
+        GT => GT
+        EQ => case (compare p1 p2) of
+          LT => LT
+          GT => GT
+          EQ => EQ
 
 
 -- data VersionRange = EqV Version | GtV Version | LtV Version | GteV Version
