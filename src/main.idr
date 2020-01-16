@@ -1,9 +1,18 @@
 module Main
+
 import ParseManifest
 import Locktypes
 import IpmError
+import Install
+
 import Language.JSON
 
+outputUsageMessage : IO ()
+outputUsageMessage = putStrLn "TODO: temp usage message"
+
 main : IO ()
-main = do Right lockfile <- parseManifest "." | Left err       => putStrLn (show err)
-          putStrLn (show lockfile)
+main = do args <- getArgs
+          let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
+          case cmd of
+            "install" => install args
+            invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")

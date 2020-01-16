@@ -1,7 +1,20 @@
-module src.Install
+module Install
+import Paths
+
+--TODO remove
+%access public export
 
 defaultPath : String
 defaultPath = "~/ipm/packages/"
 
-install : IO String -> IO ()
-install path = ?install_rhs
+
+handleArgs : List String -> String
+handleArgs args =
+  case (index' 2 args) of
+        (Just fp) => fp
+        Nothing   => "."
+
+install : List String -> IO ()
+install args =
+  do  let fp = handleArgs args
+      putStrLn fp
