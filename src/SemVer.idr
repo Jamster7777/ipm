@@ -22,6 +22,14 @@ Ord Version where
           GT => GT
           EQ => EQ
 
+incrementMajor : Version -> Version
+incrementMajor (MkVersion mj mn p) = MkVersion (mj + 1) 0 0
+
+incrementMinor : Version -> Version
+incrementMinor (MkVersion mj mn p) = MkVersion mj (mn + 1) 0
+
+incrementPatch : Version -> Version
+incrementPatch (MkVersion mj mn p) = MkVersion mj mn (p + 1)
 
 -- data VersionRange = EqV Version | GtV Version | LtV Version | GteV Version
 -- findCompatabileVersionRange : VersionRange -> VersionRange ->  Either IpmError VersionRange
