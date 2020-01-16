@@ -1,5 +1,8 @@
 module Install
 import Paths
+import ParseManifest
+import IpmError
+import Locktypes
 
 --TODO remove
 %access public export
@@ -11,10 +14,11 @@ defaultPath = "~/ipm/packages/"
 handleArgs : List String -> String
 handleArgs args =
   case (index' 2 args) of
-        (Just fp) => fp
+        (Just dir) => dir
         Nothing   => "."
 
 install : List String -> IO ()
 install args =
-  do  let fp = handleArgs args
-      putStrLn fp
+  do  let dir = handleArgs args
+      Right lockfile <- parseManifest dir | Left err => putStrLn (show err)
+      putStrLn "success"
