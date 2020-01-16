@@ -1,4 +1,4 @@
-module Install
+module src.Install
 
 defaultPath : String
 defaultPath = "~/ipm/packages/"

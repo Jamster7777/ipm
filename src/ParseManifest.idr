@@ -1,16 +1,12 @@
-module src.ParseManifest
-import src.Locktypes
-import src.IpmError
+module ParseManifest
+import Locktypes
+import IpmError
+import Constants
+import Paths
 import Language.JSON
 
 -- TODO remove
 %access public export
-
-packageFilename : String
-packageFilename = "ipkg.json"
-
-packageDir : String
-packageDir = "~/ipkg/"
 
 resolveDependancies : List (Dependancy, Version) -> List (Dependancy, Version)
 resolveDependancies xs = ?resolveDependancies_rhs
@@ -74,3 +70,9 @@ checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
 checkParentObject : (manifest: JSON) -> Either IpmError Lockfile
 checkParentObject (JObject keys)  = checkKeys keys
 checkParentObject _               = Left (ManifestFormatError "No parent JSON object")
+
+parseManifest : String -> IO (Either IpmError Lockfile)
+parseManifest dir =
+  do  Right str     <- readFile ((cleanFilePath dir) ++ PACKAGE_FILE_NAME) | Left fileError => pure (Left (ManifestFormatError ("Error: no " ++ PACKAGE_FILE_NAME ++ " file found for the given path")))
+      let Just json =  parse str  | Nothing        => pure (Left (ManifestFormatError ("Error: Invalid JSON format in " ++ PACKAGE_FILE_NAME)))
+      pure (checkParentObject json)

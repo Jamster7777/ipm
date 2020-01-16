@@ -2,7 +2,10 @@ module src.IpmError
 
 %access public export
 
-data IpmError = BashError String | PublishError String | ManifestFormatError String | VersionFormatError
+data IpmError = BashError String
+              | PublishError String
+              | ManifestFormatError String
+              | VersionFormatError
 
 Show IpmError where
   show (BashError x)      = ?asdf_1
