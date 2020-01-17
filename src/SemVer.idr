@@ -31,5 +31,13 @@ incrementMinor (MkVersion mj mn p) = MkVersion mj (mn + 1) 0
 incrementPatch : Version -> Version
 incrementPatch (MkVersion mj mn p) = MkVersion mj mn (p + 1)
 
--- data VersionRange = EqV Version | GtV Version | LtV Version | GteV Version
+-- data Rule = 
+--
+-- data Range  = EQ_V Version
+--                   | GT_V Version
+--                   | GTE_V Version
+--                   | LT_V Version
+--                   | LTE_V Version
+--
+-- data Rule
 -- findCompatabileVersionRange : VersionRange -> VersionRange ->  Either IpmError VersionRange
