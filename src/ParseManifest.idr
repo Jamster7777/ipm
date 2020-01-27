@@ -59,7 +59,31 @@ checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Depend
 --       let (Right parsedVersion) = checkVersion version | (Left err) => Left err
 --       let (Right laterDependancies) = checkDependancies keys | (Left err) => Left err
 --       Right ((MkDependancy name parsedVersion) :: laterDependancies)
+checkDependancies [] = ?checkDependancies_rhs_1
+checkDependancies (key :: keys) =
+  case key of
+    -- JSON parser deals with duplicate keys
+    (id, (JObject fields)) => do  let (Right parsedName) = checkName id | Left err => Left err
+                                  let (Right dep) = checkDependancy parsedName fields Nothing Nothing | Left err => Left err
+                                  case (checkDependancies keys) of
+                                    (Left err)   => Left err
+                                    (Right deps) => Right (dep :: deps)
+    (id, _) => Left (ManifestFormatError ("The dependancy'" ++ id ++ "' is not defined correctly."))
+  where
+    checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeVersion : Maybe Version) -> (maybePath : Maybe String) -> Either IpmError Dependancy
+    checkDependancy name [] (Just version) (Just path) = Right (MkDependancy name (PkgLocal path) version)
+    checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a version."))
+    checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a local path."))
 
+    checkDependancy name (("version", (JString str)) :: fields) maybeVersion maybePath =
+      do  let (Right parsedVersion) = checkVersion str | Left err => Left err
+          checkDependancy name fields (Just parsedVersion) maybePath
+
+    checkDependancy name (("path", (JString str)) :: fields) maybeVersion maybePath =
+      checkDependancy name fields maybeVersion (Just (cleanFilePath str))
+
+    -- checkDependancy (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
+    checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependancy field."))
 
 checkKeys : (keys : List (String, JSON)) -> Either IpmError Lockfile
 checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
