@@ -21,4 +21,4 @@ install : List String -> IO ()
 install args =
   do  let dir = handleArgs args
       Right lockfile <- parseManifest dir | Left err => putStrLn (show err)
-      putStrLn "success"
+      putStrLn (show lockfile)

@@ -53,13 +53,7 @@ where
       else Nothing
 
 checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
--- checkDependancies [] = Right []
--- checkDependancies (key :: keys) =
---   do  let (name, (JString version)) = key | (name, _) => Left (ManifestFormatError ("'" ++ name ++ "' is an invalid dependancy."))
---       let (Right parsedVersion) = checkVersion version | (Left err) => Left err
---       let (Right laterDependancies) = checkDependancies keys | (Left err) => Left err
---       Right ((MkDependancy name parsedVersion) :: laterDependancies)
-checkDependancies [] = ?checkDependancies_rhs_1
+checkDependancies [] = Right []
 checkDependancies (key :: keys) =
   case key of
     -- JSON parser deals with duplicate keys
