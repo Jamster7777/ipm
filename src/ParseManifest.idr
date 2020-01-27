@@ -1,5 +1,5 @@
 module ParseManifest
-import Locktypes
+import ManifestTypes
 import IpmError
 import Constants
 import Paths
@@ -79,14 +79,14 @@ checkDependancies (key :: keys) =
     -- checkDependancy (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
     checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependancy field."))
 
-checkKeys : (keys : List (String, JSON)) -> Either IpmError Lockfile
+checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
 checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
   where
-    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> Either IpmError Lockfile
+    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> Either IpmError Manifest
     checkKeysHelper [] Nothing _ _ = Left (ManifestFormatError "No package name specified")
     checkKeysHelper [] _ Nothing _ = Left (ManifestFormatError "No version number specified")
     checkKeysHelper [] _ _ Nothing = Left (ManifestFormatError "No dependancies specified") -- TODO allow this
-    checkKeysHelper [] (Just name) (Just version) (Just dependancies) = Right (MkLockfile name version dependancies)
+    checkKeysHelper [] (Just name) (Just version) (Just dependancies) = Right (MkManifest name version dependancies)
     checkKeysHelper (key :: keys) maybeName maybeVersion maybeDependancies =
       case key of
         -- JSON parser should deal with duplicate keys
@@ -99,11 +99,11 @@ checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
         (invalidKey, _)                  => Left (ManifestFormatError ("Invalid key '" ++ invalidKey ++ "'"))
 
 
-checkParentObject : (manifest: JSON) -> Either IpmError Lockfile
+checkParentObject : (manifest: JSON) -> Either IpmError Manifest
 checkParentObject (JObject keys)  = checkKeys keys
 checkParentObject _               = Left (ManifestFormatError "No parent JSON object")
 
-parseManifest : String -> IO (Either IpmError Lockfile)
+parseManifest : String -> IO (Either IpmError Manifest)
 parseManifest dir =
   do  Right str     <- readFile ((cleanFilePath dir) ++ PACKAGE_FILE_NAME) | Left fileError => pure (Left (ManifestFormatError ("Error: no " ++ PACKAGE_FILE_NAME ++ " file found for the given path")))
       let Just json =  parse str  | Nothing        => pure (Left (ManifestFormatError ("Error: Invalid JSON format in " ++ PACKAGE_FILE_NAME)))

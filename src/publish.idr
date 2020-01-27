@@ -1,7 +1,7 @@
-module publish
+module Publish
 -- import src.Bash
 import Bash
-import Locktypes
+import ManifestTypes
 
 getMostRecentTag : IO (Either IpmError String)
 getMostRecentTag =

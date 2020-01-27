@@ -1,7 +1,7 @@
 module Main
 
 import ParseManifest
-import Locktypes
+import ManifestTypes
 import IpmError
 import Install
 

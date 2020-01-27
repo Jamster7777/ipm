@@ -2,7 +2,7 @@ module Install
 import Paths
 import ParseManifest
 import IpmError
-import Locktypes
+import ManifestTypes
 
 --TODO remove
 %access public export
@@ -20,5 +20,5 @@ handleArgs args =
 install : List String -> IO ()
 install args =
   do  let dir = handleArgs args
-      Right lockfile <- parseManifest dir | Left err => putStrLn (show err)
-      putStrLn (show lockfile)
+      Right manifest <- parseManifest dir | Left err => putStrLn (show err)
+      putStrLn (show manifest)
