@@ -4,6 +4,7 @@ import Core.IpmError
 import Util.Bash
 import Util.ParseManifest
 import Data.String
+import Data.Vect
 
 --TODO remove
 %access public export
@@ -22,9 +23,17 @@ getMostRecentTag =
 
 -- git push origin v1.5
 
--- TODO rename to publish
+modifyVersion : Version -> IO Version
+modifyVersion old =
+  do  i <- promptNumberedSelection "What type of release is this?" ("Major" :: "Minor" :: "Patch" :: [])
+      case i of
+        FZ            => pure (incrementMajor old)
+        (FS FZ)       => pure (incrementMinor old)
+        (FS (FS FZ))  => pure (incrementPatch old)
+
+-- TODO perhaps stash changes before publishing?
 publish : IO ()
-publish = do  bashCommand "git stash"
-              Right v <- getMostRecentTag | Left err => putStrLn (show err)
-              putStrLn ("Most recent version: " ++ (show v))
-              bashCommand "git stash pop"
+publish = do  Right old <- getMostRecentTag | Left err => putStrLn (show err)
+              putStrLn ("Most recent version: " ++ (show old))
+              new <- modifyVersion old
+              putStrLn ("new version: " ++ (show new))

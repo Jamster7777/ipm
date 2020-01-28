@@ -82,24 +82,24 @@ promptYesNo prompt action =
     evalYesNo "no"  = False
     evalYesNo _     = True
 
-promptNumberedSelection : (prompt : String) -> (options : Vect n String) -> (actions : Vect n (IO ())) -> IO ()
-promptNumberedSelection {n} prompt options actions =
+promptNumberedSelection : (prompt : String) -> (options : Vect n String) -> IO (Fin n)
+promptNumberedSelection {n} prompt options =
   do  putStrLn prompt
       printOptions 1 options
       res <- getLine
       case (parsePositive res) of
         Nothing       => reprompt
         (Just resInt) => case (integerToFin (resInt-1) n) of
-                            (Just i) => index i actions
+                            (Just i) => pure i
                             Nothing  => reprompt
   where
     printOptions : Integer -> (options : Vect m String) -> IO ()
     printOptions n [] = pure ()
     printOptions n (x :: xs) = do putStrLn ((show n) ++ ": " ++ x)
                                   printOptions (n+1) xs
-    reprompt : IO ()
+    reprompt : IO (Fin n)
     reprompt = do putStrLn "Not a valid option"
-                  promptNumberedSelection prompt options actions
+                  promptNumberedSelection prompt options
 
 
 -- TODO why doens't this work

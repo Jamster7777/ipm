@@ -26,3 +26,12 @@ Show Manifest where
 
 getDependancies : Manifest -> List Dependancy
 getDependancies (MkManifest x y xs z) = xs
+
+incrementMajor : Version -> Version
+incrementMajor (MkVersion mj mn p) = MkVersion (mj + 1) 0 0
+
+incrementMinor : Version -> Version
+incrementMinor (MkVersion mj mn p) = MkVersion mj (mn + 1) 0
+
+incrementPatch : Version -> Version
+incrementPatch (MkVersion mj mn p) = MkVersion mj mn (p + 1)
