@@ -79,7 +79,15 @@ checkDependancies (key :: keys) =
     -- checkDependancy (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
     checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependancy field."))
 
-checkModules : JSON -> List String
+
+jsonListToStringList : List JSON -> Maybe (List String)
+jsonListToStringList [] = Just []
+jsonListToStringList ((JString x) :: xs) =
+  case (jsonListToStringList xs) of
+    Nothing     => Nothing
+    (Just list) => Just (x :: list)
+jsonListToStringList _ = Nothing
+
 
 checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
 checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing (MkPkgModules "." [])
@@ -105,8 +113,11 @@ checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing (MkPkgModules "." 
     checkKeysHelper (("sourcedir", (JString str)) :: keys) maybeName maybeVersion maybeDependancies (MkPkgModules _ moduleList) =
       checkKeysHelper keys maybeName maybeVersion maybeDependancies (MkPkgModules str moduleList)
 
-    checkKeysHelper (("modules", (JString str)) :: keys) maybeName maybeVersion maybeDependancies (MkPkgModules _ moduleList) =
-      checkKeysHelper keys maybeName maybeVersion maybeDependancies (MkPkgModules str moduleList)
+    checkKeysHelper (("modules", (JArray list)) :: keys) maybeName maybeVersion maybeDependancies (MkPkgModules sourcedir _) =
+      do  let (Just strList) = jsonListToStringList list | Nothing => Left (ManifestFormatError ("Invalid module list"))
+          checkKeysHelper keys maybeName maybeVersion maybeDependancies (MkPkgModules sourcedir strList)
+
+    checkKeysHelper ((invalidKey, _) :: _) _ _ _ _ = Left (ManifestFormatError ("'" ++ invalidKey ++ "' is not a valid field."))
 
 checkParentObject : (manifest: JSON) -> Either IpmError Manifest
 checkParentObject (JObject keys)  = checkKeys keys

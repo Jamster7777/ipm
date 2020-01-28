@@ -18,5 +18,8 @@ Show Version where
 Show Dependancy where
   show (MkDependancy name source version) = (show name) ++ ": " ++ (show version)
 
+Show PkgModules where
+  show (MkPkgModules sourcedir modules) = sourcedir ++ "\n" ++ (show modules)
+
 Show Manifest where
-  show (MkManifest name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies)
+  show (MkManifest name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies) ++ "\n--- Modules ---\n" ++ (show modules)
