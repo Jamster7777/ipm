@@ -78,3 +78,7 @@ promptYesNo prompt action =
     evalYesNo "yes" = False
     evalYesNo "no"  = False
     evalYesNo _     = True
+
+-- TODO why doens't this work
+cd : (path : String) -> IO ()
+cd path = bashCommand ("ls " ++ path) {onSuccess=(putStrLn "success!")} {onFail=(putStrLn "faillll!")} --TODO remove

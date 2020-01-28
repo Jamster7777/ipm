@@ -23,3 +23,6 @@ Show PkgModules where
 
 Show Manifest where
   show (MkManifest name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies) ++ "\n--- Modules ---\n" ++ (show modules)
+
+getDependancies : Manifest -> List Dependancy
+getDependancies (MkManifest x y xs z) = xs
