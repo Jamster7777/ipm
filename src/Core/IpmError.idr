@@ -1,4 +1,4 @@
-module src.IpmError
+module Core.IpmError
 
 %access public export
 

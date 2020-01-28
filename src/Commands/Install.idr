@@ -1,9 +1,9 @@
-module Install
-import Paths
-import ParseManifest
-import IpmError
-import ManifestTypes
-import Bash
+module Commands.Install
+import Util.Bash
+import Util.Paths
+import Util.ParseManifest
+import Core.IpmError
+import Core.ManifestTypes
 
 --TODO remove
 %access public export

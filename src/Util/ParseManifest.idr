@@ -1,8 +1,8 @@
-module ParseManifest
-import ManifestTypes
-import IpmError
-import Constants
-import Paths
+module Util.ParseManifest
+import Core.ManifestTypes
+import Core.IpmError
+import Util.Constants
+import Util.Paths
 import Language.JSON
 
 -- TODO remove

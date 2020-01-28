@@ -1,8 +1,8 @@
-module Publish
-import Bash
-import ManifestTypes
-import IpmError
-import ParseManifest
+module Commands.Publish
+import Core.ManifestTypes
+import Core.IpmError
+import Util.Bash
+import Util.ParseManifest
 import Data.String
 
 --TODO remove

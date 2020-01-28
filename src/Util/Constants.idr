@@ -1,4 +1,4 @@
-module src.Constants
+module Util.Constants
 
 %access public export
 

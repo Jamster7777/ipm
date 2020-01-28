@@ -1,4 +1,4 @@
-module src.Paths
+module Util.Paths
 
 %access public export
 

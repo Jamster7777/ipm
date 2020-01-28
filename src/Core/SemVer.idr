@@ -1,5 +1,5 @@
-module SemVer
-import IpmError
+module Core.SemVer
+import Core.IpmError
 
 -- Major, minor, patch, prerelease, build metadata
 data Version = MkVersion Integer Integer Integer
@@ -31,7 +31,7 @@ incrementMinor (MkVersion mj mn p) = MkVersion mj (mn + 1) 0
 incrementPatch : Version -> Version
 incrementPatch (MkVersion mj mn p) = MkVersion mj mn (p + 1)
 
--- data Rule = 
+-- data Rule =
 --
 -- data Range  = EQ_V Version
 --                   | GT_V Version

@@ -1,10 +1,10 @@
 module Main
 
-import ParseManifest
-import ManifestTypes
-import IpmError
-import Install
-import Publish
+import Util.ParseManifest
+import Core.ManifestTypes
+import Core.IpmError
+import Commands.Install
+import Commands.Publish
 
 import Language.JSON
 

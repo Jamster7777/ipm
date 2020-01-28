@@ -1,4 +1,4 @@
-module ManifestTypes
+module Core.ManifestTypes
 
 %access public export
 

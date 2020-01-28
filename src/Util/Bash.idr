@@ -1,6 +1,6 @@
-module Bash
+module Util.Bash
 import System
-import IpmError
+import Core.IpmError
 import Data.Vect
 import Data.String
 
