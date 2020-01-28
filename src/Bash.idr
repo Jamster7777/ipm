@@ -1,6 +1,9 @@
 module Bash
 import System
 import IpmError
+import Data.Vect
+import Data.String
+
 
 -- TODO remove
 %access public export
@@ -78,6 +81,26 @@ promptYesNo prompt action =
     evalYesNo "yes" = False
     evalYesNo "no"  = False
     evalYesNo _     = True
+
+promptNumberedSelection : (prompt : String) -> (options : Vect n String) -> (actions : Vect n (IO ())) -> IO ()
+promptNumberedSelection {n} prompt options actions =
+  do  putStrLn prompt
+      printOptions 1 options
+      res <- getLine
+      case (parsePositive res) of
+        Nothing       => reprompt
+        (Just resInt) => case (integerToFin resInt n) of
+                            (Just i) => index i actions
+                            Nothing  => reprompt
+  where
+    printOptions : Integer -> (options : Vect m String) -> IO ()
+    printOptions n [] = pure ()
+    printOptions n (x :: xs) = do putStrLn ((show n) ++ ": " ++ x)
+                                  printOptions (n+1) xs
+    reprompt : IO ()
+    reprompt = do putStrLn "Not a valid option"
+                  promptNumberedSelection prompt options actions
+
 
 -- TODO why doens't this work
 cd : (path : String) -> IO ()
