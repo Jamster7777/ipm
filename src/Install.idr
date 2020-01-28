@@ -25,11 +25,11 @@ getDependancyPath (MkDependancy _ (PkgLocal path) _) = Right path
 
 
 --
-installDependancy : Dependancy -> IO ()
-installDependancy dep =
-  do  let (Right path) = getDependancyPath dep | Left err => Left err
-      Right manifest <- parseManifest path
-      ?todo
+-- installDependancy : Dependancy -> IO ()
+-- installDependancy dep =
+--   do  let (Right path) = getDependancyPath dep | Left err => Left err
+--       Right manifest <- parseManifest path | Left err =>
+--       ?todo
 
 install : List String -> IO ()
 install args =
