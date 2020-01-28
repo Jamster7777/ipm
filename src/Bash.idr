@@ -89,7 +89,7 @@ promptNumberedSelection {n} prompt options actions =
       res <- getLine
       case (parsePositive res) of
         Nothing       => reprompt
-        (Just resInt) => case (integerToFin resInt n) of
+        (Just resInt) => case (integerToFin (resInt-1) n) of
                             (Just i) => index i actions
                             Nothing  => reprompt
   where
