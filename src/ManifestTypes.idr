@@ -6,7 +6,8 @@ data PkgName = MkPkgName String String -- Namespace and name, e.g. jab36/http
 data PkgSource = PkgUrl String | PkgLocal String -- TODO central repository
 data Version = MkVersion Integer Integer Integer
 data Dependancy = MkDependancy PkgName PkgSource Version
-data Manifest = MkManifest PkgName Version (List Dependancy)
+data PkgModules = MkPkgModules String (List String) -- sourcedir and list of modules
+data Manifest = MkManifest PkgName Version (List Dependancy) PkgModules
 
 Show PkgName where
   show (MkPkgName group name) = group ++ "/" ++ name
@@ -18,4 +19,4 @@ Show Dependancy where
   show (MkDependancy name source version) = (show name) ++ ": " ++ (show version)
 
 Show Manifest where
-  show (MkManifest name version dependancies) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies)
+  show (MkManifest name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies)

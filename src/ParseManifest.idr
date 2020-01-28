@@ -79,25 +79,34 @@ checkDependancies (key :: keys) =
     -- checkDependancy (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
     checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependancy field."))
 
-checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
-checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing
-  where
-    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> Either IpmError Manifest
-    checkKeysHelper [] Nothing _ _ = Left (ManifestFormatError "No package name specified")
-    checkKeysHelper [] _ Nothing _ = Left (ManifestFormatError "No version number specified")
-    checkKeysHelper [] _ _ Nothing = Left (ManifestFormatError "No dependancies specified") -- TODO allow this
-    checkKeysHelper [] (Just name) (Just version) (Just dependancies) = Right (MkManifest name version dependancies)
-    checkKeysHelper (key :: keys) maybeName maybeVersion maybeDependancies =
-      case key of
-        -- JSON parser should deal with duplicate keys
-        ("name", (JString str))          => do  let (Right parsedName)          = checkName str | (Left err) => Left err
-                                                checkKeysHelper keys (Just parsedName) maybeVersion maybeDependancies
-        ("version", (JString str))       => do  let (Right parsedVersion)       = checkVersion str | (Left err) => Left err
-                                                checkKeysHelper keys maybeName (Just parsedVersion) maybeDependancies
-        ("dependancies", (JObject dKeys))=> do  let (Right parsedDependancies)  = checkDependancies dKeys | (Left err) => Left err
-                                                checkKeysHelper keys maybeName maybeVersion (Just parsedDependancies)
-        (invalidKey, _)                  => Left (ManifestFormatError ("Invalid key '" ++ invalidKey ++ "'"))
+checkModules : JSON -> List String
 
+checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
+checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing (MkPkgModules "." [])
+  where
+    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> (modules : PkgModules) -> Either IpmError Manifest
+    checkKeysHelper [] Nothing _ _ _ = Left (ManifestFormatError "No package name specified")
+    checkKeysHelper [] _ Nothing _ _ = Left (ManifestFormatError "No version number specified")
+    checkKeysHelper [] _ _ Nothing _ = Left (ManifestFormatError "No dependancies specified") -- TODO allow this
+    checkKeysHelper [] (Just name) (Just version) (Just dependancies) modules = Right (MkManifest name version dependancies modules)
+
+    checkKeysHelper (("name", (JString str)) :: keys) maybeName maybeVersion maybeDependancies modules =
+      do  let (Right parsedName) = checkName str | (Left err) => Left err
+          checkKeysHelper keys (Just parsedName) maybeVersion maybeDependancies modules
+
+    checkKeysHelper (("version", (JString str)) :: keys) maybeName maybeVersion maybeDependancies modules =
+      do  let (Right parsedVersion) = checkVersion str | (Left err) => Left err
+          checkKeysHelper keys maybeName (Just parsedVersion) maybeDependancies modules
+
+    checkKeysHelper (("dependancies", (JObject dKeys)) :: keys) maybeName maybeVersion maybeDependancies modules =
+      do  let (Right parsedDependancies)  = checkDependancies dKeys | (Left err) => Left err
+          checkKeysHelper keys maybeName maybeVersion (Just parsedDependancies) modules
+
+    checkKeysHelper (("sourcedir", (JString str)) :: keys) maybeName maybeVersion maybeDependancies (MkPkgModules _ moduleList) =
+      checkKeysHelper keys maybeName maybeVersion maybeDependancies (MkPkgModules str moduleList)
+
+    checkKeysHelper (("modules", (JString str)) :: keys) maybeName maybeVersion maybeDependancies (MkPkgModules _ moduleList) =
+      checkKeysHelper keys maybeName maybeVersion maybeDependancies (MkPkgModules str moduleList)
 
 checkParentObject : (manifest: JSON) -> Either IpmError Manifest
 checkParentObject (JObject keys)  = checkKeys keys
