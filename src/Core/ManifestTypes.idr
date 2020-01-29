@@ -13,7 +13,7 @@ Show PkgName where
   show (MkPkgName group name) = group ++ "/" ++ name
 
 Show Version where
-  show (MkVersion major minor patch) = (show major) ++ "." ++ (show minor) ++ "." ++ (show patch)
+  show (MkVersion major minor patch) = "v" ++ (show major) ++ "." ++ (show minor) ++ "." ++ (show patch)
 
 Show Dependancy where
   show (MkDependancy name source version) = (show name) ++ ": " ++ (show version)

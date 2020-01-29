@@ -20,6 +20,8 @@ getMostRecentTag =
     noTag : IO (Either IpmError Version)
     noTag = pure (Left (PublishError "No valid pre-existing version tag. ipm init has not been ran or git tags have been modified manually."))
 
+addTag : Version -> IO ()
+addTag new = bashCommand ("git tag -a " ++ (show new))
 
 -- git push origin v1.5
 
@@ -37,3 +39,4 @@ publish = do  Right old <- getMostRecentTag | Left err => putStrLn (show err)
               putStrLn ("Most recent version: " ++ (show old))
               new <- modifyVersion old
               putStrLn ("new version: " ++ (show new))
+              addTag new
