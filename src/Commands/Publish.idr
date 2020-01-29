@@ -24,6 +24,9 @@ getMostRecentTag =
 addTag : Version -> IO ()
 addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e "  ++ (show new))
 
+pushTag : IO ()
+pushTag = bashCommand ("git push --follow-tags")
+
 -- git push origin v1.5
 
 modifyVersion : Version -> IO Version
@@ -41,3 +44,4 @@ publish = do  Right old <- getMostRecentTag | Left err => putStrLn (show err)
               new <- modifyVersion old
               putStrLn ("new version: " ++ (show new))
               addTag new
+              pushTag
