@@ -4,7 +4,9 @@ import Core.IpmError
 import Util.Constants
 import Util.Paths
 import Language.JSON
+import Semver.Version
 
+import Lightyear.Strings
 -- TODO remove
 %access public export
 
@@ -26,31 +28,9 @@ checkName str =
               Just (MkPkgName group id)
 
 checkVersion : String -> Either IpmError Version
-checkVersion str =
-  do let (Just version) = checkVersionHelper [] (split (== '.') str) | Nothing => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
-     Right version
-where
-  checkVersionHelper : (ints: List Integer) -> (splitString : List String) -> Maybe Version
-  checkVersionHelper ints [] =
-    if ((length ints) /= 3)
-    then Nothing
-    else do let (Just major) = index' 2 ints | Nothing => Nothing
-            let (Just minor) = index' 1 ints | Nothing => Nothing
-            let (Just patch) = index' 0 ints | Nothing => Nothing
-            Just (MkVersion major minor patch)
-
-  checkVersionHelper ints (x :: xs) =
-    case parseNumWithoutSign (unpack x) 0 of
-            (Just i)  => checkVersionHelper (i :: ints) xs
-            Nothing   => Nothing
-  where
-    -- Taken from https://github.com/idris-lang/Idris-dev/blob/master/libs/base/Data/String.idr
-    parseNumWithoutSign : List Char -> Integer -> Maybe Integer
-    parseNumWithoutSign []        acc = Just acc
-    parseNumWithoutSign (c :: cs) acc =
-      if (c >= '0' && c <= '9')
-      then parseNumWithoutSign cs ((acc * 10) + (cast ((ord c) - (ord '0'))))
-      else Nothing
+checkVersion str = case (parse bareVersion str) of
+                    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
+                    (Right (v, b1, b2)) => Right v
 
 checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
 checkDependancies [] = Right []

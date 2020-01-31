@@ -1,10 +1,9 @@
 package ipm
 
 sourcedir = src
-modules = ParseManifest
-        , Locktypes
-main = ParseManifest
-opts = "-p contrib"
+modules = Main
+main = Main
+opts = "-p contrib -p semver"
 
 -- idris --libd
 -- symbolic links
