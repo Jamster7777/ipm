@@ -5,10 +5,10 @@ import Util.Bash
 %access public export
 
 setupGitRepo : IO ()
-setupGitRepo = bashCommand "[ -d \".git/\" ]" (putStrLn "Git repository already exists") initGit
+setupGitRepo = bashCommand "[ -d \".git/\" ]" { onFail = (putStrLn "Git repository already exists") } { onSuccess = initGit } 
 where
   initGit : IO ()
-  initGit = promptYesNo "No git repository found. Initialise a new one?" (bashCommand "git init" doNothing (errorAndExit "Failed to initialise git repository, exiting."))
+  initGit = promptYesNo "No git repository found. Initialise a new one?" (bashCommand "git init" {onFail = (errorAndExit "Failed to initialise git repository, exiting.")})
 
 init : IO ()
 init = do  setupGitRepo

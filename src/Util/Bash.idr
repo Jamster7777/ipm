@@ -8,8 +8,8 @@ import Data.String
 -- TODO remove
 %access public export
 
--- TODO overriding popen implementation
 
+-- TODO taken from idris popen implementation, need to use this directly
 my_modStr : Mode -> String
 my_modStr Read              = "r"
 my_modStr WriteTruncate     = "w"
@@ -29,9 +29,8 @@ my_popen f m = do  ptr <- my_do_popen f (my_modStr m)
                       else pure (Right (FHandle ptr))
 
 -- TODO taken from https://stackoverflow.com/questions/39812465/how-can-i-call-a-subprocess-in-idris
--- need to refactor.
-
--- read the contents of a file
+-- need to reference / refactor.
+-- Read the contents of a file
 readFileH : (fileHandle : File) -> IO String
 readFileH h = loop ""
   where
@@ -49,18 +48,17 @@ execAndReadOutput cmd = do
   pure (Right contents)
 
 
--- end of reference
+-- end of above reference
 
--- TODO tidy
 doNothing : IO ()
-doNothing = putStr ""
+doNothing = pure ()
 
 errorAndExit : (failMessage : String) -> IO ()
 errorAndExit failMessage =
   do  putStrLn failMessage
       exit 1
 
-bashCommand : (command : String) -> { default doNothing onSuccess : IO ()} -> { default doNothing onFail : IO ()} -> IO ()
+bashCommand : (command : String) -> { default doNothing onSuccess : IO () } -> { default doNothing onFail : IO () } -> IO ()
 bashCommand command {onSuccess} {onFail} =
   do  exitCode <- system command
       if (exitCode == 0)
@@ -73,7 +71,7 @@ promptYesNo prompt action =
       res <- getLine
       if (evalYesNo (toLower res))
       then action
-      else doNothing
+      else pure ()
   where
     evalYesNo : String -> Bool
     evalYesNo "y"   = True
@@ -100,8 +98,3 @@ promptNumberedSelection {n} prompt options =
     reprompt : IO (Fin n)
     reprompt = do putStrLn "Not a valid option"
                   promptNumberedSelection prompt options
-
-
--- TODO why doens't this work
-cd : (path : String) -> IO ()
-cd path = bashCommand ("ls " ++ path) {onSuccess=(putStrLn "success!")} {onFail=(putStrLn "faillll!")} --TODO remove

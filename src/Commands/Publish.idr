@@ -6,6 +6,7 @@ import Util.ParseManifest
 import Util.Constants
 import Data.String
 import Data.Vect
+import Semver.Version
 
 --TODO remove
 %access public export
@@ -27,15 +28,13 @@ addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ 
 pushTag : IO ()
 pushTag = bashCommand ("git push --follow-tags")
 
--- git push origin v1.5
-
 modifyVersion : Version -> IO Version
 modifyVersion old =
   do  i <- promptNumberedSelection "What type of release is this?" ("Major" :: "Minor" :: "Patch" :: [])
       case i of
-        FZ            => pure (incrementMajor old)
-        (FS FZ)       => pure (incrementMinor old)
-        (FS (FS FZ))  => pure (incrementPatch old)
+        FZ            => pure (incMajor old)
+        (FS FZ)       => pure (incMinor old)
+        (FS (FS FZ))  => pure (incPatch old)
 
 -- TODO perhaps stash changes before publishing?
 publish : IO ()

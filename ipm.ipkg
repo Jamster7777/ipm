@@ -3,7 +3,7 @@ package ipm
 sourcedir = src
 modules = Main
 main = Main
-opts = "-p contrib -p semver"
+opts = "-p contrib -p semver -p lightyear -p containers"
 
 -- idris --libd
 -- symbolic links

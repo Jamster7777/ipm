@@ -5,8 +5,11 @@ import Util.Constants
 import Util.Paths
 import Language.JSON
 import Semver.Version
-
 import Lightyear.Strings
+
+-- TODO this whole file needs some refactoring (perhaps making more use of
+-- lightyear combinators).
+
 -- TODO remove
 %access public export
 
