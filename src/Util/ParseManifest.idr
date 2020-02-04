@@ -5,6 +5,7 @@ import Util.Constants
 import Util.Paths
 import Language.JSON
 import Semver.Version
+import Semver.Range
 import Lightyear.Strings
 
 -- TODO this whole file needs some refactoring (perhaps making more use of
@@ -35,6 +36,13 @@ checkVersion str = case (parse bareVersion str) of
                     (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
                     (Right (v, b1, b2)) => Right v
 
+checkRange : String -> Either IpmError Range
+checkRange str = case (parse range str) of
+                    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
+                    (Right Nothing)     => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
+                    (Right (Just v))    => Right v
+
+
 checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
 checkDependancies [] = Right []
 checkDependancies (key :: keys) =
@@ -47,13 +55,13 @@ checkDependancies (key :: keys) =
                                     (Right deps) => Right (dep :: deps)
     (id, _) => Left (ManifestFormatError ("The dependancy'" ++ id ++ "' is not defined correctly."))
   where
-    checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeVersion : Maybe Version) -> (maybePath : Maybe String) -> Either IpmError Dependancy
+    checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError Dependancy
     checkDependancy name [] (Just version) (Just path) = Right (MkDependancy name (PkgLocal path) version)
     checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a version."))
     checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a local path."))
 
     checkDependancy name (("version", (JString str)) :: fields) maybeVersion maybePath =
-      do  let (Right parsedVersion) = checkVersion str | Left err => Left err
+      do  let (Right parsedVersion) = checkRange str | Left err => Left err
           checkDependancy name fields (Just parsedVersion) maybePath
 
     checkDependancy name (("path", (JString str)) :: fields) maybeVersion maybePath =

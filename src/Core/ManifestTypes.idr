@@ -1,4 +1,5 @@
 module Core.ManifestTypes
+import Semver.Range
 import Semver.Version
 
 
@@ -6,7 +7,7 @@ import Semver.Version
 
 data PkgName = MkPkgName String String -- Namespace and name, e.g. jab36/http
 data PkgSource = PkgUrl String | PkgLocal String -- TODO central repository
-data Dependancy = MkDependancy PkgName PkgSource Version
+data Dependancy = MkDependancy PkgName PkgSource Range
 data PkgModules = MkPkgModules String (List String) -- sourcedir and list of modules
 data Manifest = MkManifest PkgName Version (List Dependancy) PkgModules
 
@@ -14,7 +15,7 @@ Show PkgName where
   show (MkPkgName group name) = group ++ "/" ++ name
 
 Show Dependancy where
-  show (MkDependancy name source version) = (show name) ++ ": " ++ (show version)
+  show (MkDependancy name source range) = (show name) ++ ": " ++ (show range)
 
 Show PkgModules where
   show (MkPkgModules sourcedir modules) = sourcedir ++ "\n" ++ (show modules)
