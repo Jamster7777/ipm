@@ -14,9 +14,6 @@ import Lightyear.Strings
 -- TODO remove
 %access public export
 
-resolveDependancies : List (Dependancy, Version) -> List (Dependancy, Version)
-resolveDependancies xs = ?resolveDependancies_rhs
-
 -- TODO remove repeated error message
 checkName : String -> Either IpmError PkgName
 checkName str =
@@ -43,7 +40,7 @@ checkRange str = case (parse range str) of
                     (Right (Just v))    => Right v
 
 
-checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List Dependancy)
+checkDependancies : (keys : List (String, JSON)) -> Either IpmError (List ManiDep)
 checkDependancies [] = Right []
 checkDependancies (key :: keys) =
   case key of
@@ -55,8 +52,8 @@ checkDependancies (key :: keys) =
                                     (Right deps) => Right (dep :: deps)
     (id, _) => Left (ManifestFormatError ("The dependancy'" ++ id ++ "' is not defined correctly."))
   where
-    checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError Dependancy
-    checkDependancy name [] (Just version) (Just path) = Right (MkDependancy name (PkgLocal path) version)
+    checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError ManiDep
+    checkDependancy name [] (Just version) (Just path) = Right (MkManiDep name (PkgLocal path) version)
     checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a version."))
     checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a local path."))
 
@@ -83,7 +80,7 @@ jsonListToStringList _ = Nothing
 checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
 checkKeys keys = checkKeysHelper keys Nothing Nothing Nothing (MkPkgModules "." [])
   where
-    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List Dependancy)) -> (modules : PkgModules) -> Either IpmError Manifest
+    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (version : Maybe Version) -> (dependancies : Maybe (List ManiDep)) -> (modules : PkgModules) -> Either IpmError Manifest
     checkKeysHelper [] Nothing _ _ _ = Left (ManifestFormatError "No package name specified")
     checkKeysHelper [] _ Nothing _ _ = Left (ManifestFormatError "No version number specified")
     checkKeysHelper [] _ _ Nothing _ = Left (ManifestFormatError "No dependancies specified") -- TODO allow this
