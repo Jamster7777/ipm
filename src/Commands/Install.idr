@@ -5,6 +5,7 @@ import Util.ParseManifest
 import Core.IpmError
 import Core.ManifestTypes
 import Semver.Version
+import Semver.Range
 
 --TODO remove
 %access public export

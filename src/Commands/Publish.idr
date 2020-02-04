@@ -23,7 +23,7 @@ getMostRecentTag =
     noTag = pure (Left (PublishError "No valid pre-existing version tag. ipm init has not been ran or git tags have been modified manually."))
 
 addTag : Version -> IO ()
-addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e "  ++ (show new))
+addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e v"  ++ (show new))
 
 pushTag : IO ()
 pushTag = bashCommand ("git push --follow-tags")
