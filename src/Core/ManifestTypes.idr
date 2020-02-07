@@ -31,5 +31,12 @@ Show Manifest where
 Show Lock where
   show (MkLock name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies) ++ "\n--- Modules ---\n" ++ (show modules)
 
+
+Eq PkgName where
+  (==) (MkPkgName x z) (MkPkgName y w) = x == y && z == w
+
+Ord PkgName where
+  compare x y = compare (show x) (show y)
+
 getDependancies : Manifest -> List ManiDep
 getDependancies (MkManifest x y xs z) = xs
