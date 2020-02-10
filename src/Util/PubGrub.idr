@@ -5,6 +5,8 @@ import Core.ManifestTypes
 import Core.PubGrubTypes
 import Core.IpmError
 
+-- TODO remove
+%access public export
 
 -- addIncomp : GrubState -> GrubState
 

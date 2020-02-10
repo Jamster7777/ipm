@@ -11,7 +11,7 @@ data Term = MkTerm Bool PkgName Range
 
 Show Term where
   show (MkTerm True n r)  = (show n) ++ " " ++ (show r)
-  show (MkTerm False n r) = "not" ++ (show n) ++ " " ++ (show r)
+  show (MkTerm False n r) = "not " ++ (show n) ++ " " ++ (show r)
 
 Eq Term where
   (==) (MkTerm _ n1 _) (MkTerm _ n2 _) = n1 == n2
@@ -28,7 +28,7 @@ Show Assignment where
 data Incomp = MkIncomp (List Term)
 
 versionAsRange : Version -> Range
-versionAsRange v = MkRange (Closed v False) (Closed v True)
+versionAsRange v = MkRange (Open v False) (Open v True)
 
 negateRange : Range -> (Maybe Range, Maybe Range)
 negateRange (MkRange i1 i2) =
@@ -92,13 +92,17 @@ showIncomps : List (List Term) -> String
 showIncomps [] = ""
 showIncomps (x :: xs) = (showIncomp x) ++ "\n" ++ (showIncomps xs)
 
+showAssignments : List Assignment -> String
+showAssignments [] = ""
+showAssignments (x :: xs) = (show x) ++ "\n" ++ (showAssignments xs)
+
 termFromDep : ManiDep -> Term
 termFromDep (MkManiDep name source range) = MkTerm True name range
 
 data GrubState = MkGrubState (List Assignment) (List (List Term))
 
 Show GrubState where
-  show (MkGrubState xs ys) = "--- Assignments ---\n" ++ (show xs) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps ys)
+  show (MkGrubState xs ys) = "--- Assignments ---\n" ++ (showAssignments xs) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps ys)
 
 initGrubState : PkgName -> Version -> GrubState
 initGrubState n v =

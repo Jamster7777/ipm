@@ -3,8 +3,9 @@ module Main
 import Util.ParseManifest
 import Core.ManifestTypes
 import Core.IpmError
-import Commands.Install
 import Commands.Publish
+import Commands.Plan
+import Util.PubGrub
 
 import Language.JSON
 
@@ -15,6 +16,6 @@ main : IO ()
 main = do args <- getArgs
           let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
           case cmd of
-            "install" => install args
             "publish" => publish
+            "plan"    => plan
             invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
