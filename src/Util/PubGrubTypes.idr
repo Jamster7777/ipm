@@ -64,16 +64,20 @@ findIntersects x (r :: rs) =
 --         findNegatedIntersect pos neg =
 
 -- TODO include causes in here
-data IncompResult = Sat | Con | Inc
+data IncompResult = Sat | Con | Inc | Alm
 
 -- infixr 0 |=?
 
 
-checkIncomp : List Assignment -> List Term -> List IncompResult
-checkIncomp as [] = []
-checkIncomp as [] = []
-checkIncomp as (t :: ts) =
-  ?a
+checkIncomp : List Assignment -> List Term -> (incCount : Integer) -> IncompResult
+checkIncomp as [] 0 = Sat
+checkIncomp as [] 1 = Alm
+checkIncomp as [] _ = Inc
+checkIncomp as (t :: ts) incCount =
+  case (checkTerm as t) of
+    Sat => checkIncomp as ts incCount
+    Con => Con
+    Inc => checkIncomp as ts (incCount+1)
   where
     checkTerm : List Assignment -> Term -> IncompResult
     checkTerm [] i = Inc
@@ -81,10 +85,7 @@ checkIncomp as (t :: ts) =
       if (n1 /= n2) then
         checkTerm as (MkTerm b n2 r)
       else if b then
-        if (satisfied r v) then
-          Sat
-        else
-          Con
+        boolToRes (satisfied r v)
       else
         case (negateRange r) of
           (Nothing, Nothing) => Con
