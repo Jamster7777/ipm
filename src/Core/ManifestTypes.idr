@@ -13,17 +13,25 @@ data PkgModules = MkPkgModules String (List String) -- sourcedir and list of mod
 data Manifest = MkManifest PkgName Version (List ManiDep) PkgModules
 data Lock = MkLock PkgName Version (List LockDep) PkgModules
 
+%name Version v
+
 Show PkgName where
   show (MkPkgName group name) = group ++ "/" ++ name
 
+%name PkgName n
+
 Show ManiDep where
   show (MkManiDep name source range) = (show name) ++ ": " ++ (show range)
+
+%name ManiDep d
 
 Show LockDep where
   show (MkLockDep name source version) = (show name) ++ ": " ++ (show version)
 
 Show PkgModules where
   show (MkPkgModules sourcedir modules) = sourcedir ++ "\n" ++ (show modules)
+
+%name PkgModules m
 
 Show Manifest where
   show (MkManifest name version dependancies modules) = "--- Details ---\n" ++ (show name) ++ ": " ++ (show version) ++ "\n--- Dependancies ---\n" ++ (show dependancies) ++ "\n--- Modules ---\n" ++ (show modules)
