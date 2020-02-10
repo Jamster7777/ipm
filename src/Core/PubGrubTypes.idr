@@ -19,7 +19,7 @@ Eq Term where
 Ord Term where
   compare (MkTerm _ n1 _) (MkTerm _ n2 _) = compare n1 n2
 
-data Assignment = MkAssignment PkgName Version Bool
+data Assignment = Derivation PkgName Version Bool
 
 Show Assignment where
   show (MkAssignment n v True)  = "> " ++ (show n) ++ " " ++ (show v)
@@ -99,12 +99,12 @@ showAssignments (x :: xs) = (show x) ++ "\n" ++ (showAssignments xs)
 termFromDep : ManiDep -> Term
 termFromDep (MkManiDep name source range) = MkTerm True name range
 
-data GrubState = MkGrubState (List Assignment) (List (List Term))
+data GrubState = MkGrubState (List Assignment) (List (List Term)) (List PkgName)
 
 Show GrubState where
-  show (MkGrubState xs ys) = "--- Assignments ---\n" ++ (showAssignments xs) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps ys)
+  show (MkGrubState xs ys zs) = "--- Assignments ---\n" ++ (showAssignments xs) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps ys) ++ "\n--- Changed ---\n" ++ (show zs)
 
 initGrubState : PkgName -> Version -> GrubState
 initGrubState n v =
   do  let initIncomp = [ MkTerm False n (versionAsRange v) ]
-      MkGrubState [ ] [ initIncomp ]
+      MkGrubState [ ] [ initIncomp ] [ n ]
