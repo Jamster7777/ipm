@@ -19,13 +19,16 @@ Eq Term where
 Ord Term where
   compare (MkTerm _ n1 _) (MkTerm _ n2 _) = compare n1 n2
 
-data Assignment = Derivation PkgName Version Bool
+data AssignSource = Derivation Incomp | Decision
+
+data Assignment = MkAssignment PkgName Version AssignSource
 
 Show Assignment where
   show (MkAssignment n v True)  = "> " ++ (show n) ++ " " ++ (show v)
   show (MkAssignment n v False) = "? " ++ (show n) ++ " " ++ (show v)
 
-data Incomp = MkIncomp (List Term)
+Incomp : Type
+Incomp = List Term
 
 versionAsRange : Version -> Range
 versionAsRange v = MkRange (Open v False) (Open v True)
@@ -53,7 +56,7 @@ findIntersects x (r :: rs) =
 -- TODO include causes in here
 data IncompResult = Sat | Con | Inc | Alm
 
-checkIncomp : List Assignment -> List Term -> (incCount : Integer) -> IncompResult
+checkIncomp : List Assignment -> Incomp -> (incCount : Integer) -> IncompResult
 checkIncomp as [] 0 = Sat
 checkIncomp as [] 1 = Alm
 checkIncomp as [] _ = Inc
@@ -81,14 +84,14 @@ checkIncomp as (t :: ts) incCount =
       boolToRes True  = Sat
       boolToRes False = Con
 
-showIncomp : List Term -> String
+showIncomp : Incomp -> String
 showIncomp xs = "{ " ++ (showIncompMiddle xs) ++ " }"
   where
     showIncompMiddle [] = ""
     showIncompMiddle (x :: []) = (show x)
     showIncompMiddle (x :: xs) = (show x) ++ ", " ++ (showIncompMiddle xs)
 
-showIncomps : List (List Term) -> String
+showIncomps : List Incomp -> String
 showIncomps [] = ""
 showIncomps (x :: xs) = (showIncomp x) ++ "\n" ++ (showIncomps xs)
 
@@ -99,7 +102,7 @@ showAssignments (x :: xs) = (show x) ++ "\n" ++ (showAssignments xs)
 termFromDep : ManiDep -> Term
 termFromDep (MkManiDep name source range) = MkTerm True name range
 
-data GrubState = MkGrubState (List Assignment) (List (List Term)) (List PkgName)
+data GrubState = MkGrubState (List Assignment) (List Incomp) (List PkgName)
 
 Show GrubState where
   show (MkGrubState xs ys zs) = "--- Assignments ---\n" ++ (showAssignments xs) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps ys) ++ "\n--- Changed ---\n" ++ (show zs)
