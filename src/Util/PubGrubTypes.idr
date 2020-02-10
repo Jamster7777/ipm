@@ -32,6 +32,13 @@ negateRange (MkRange i1 i2) =
                       else [ (MkRange flipped Unbounded) ]
 
 
+findIntersects : Range -> List Range -> List Range
+findNegatedIntersect x [] = []
+findNegatedIntersect x (r :: rs) =
+  case (intersect x r) of
+    Nothing  => findIntersects x rs
+    (Just i) => i :: (findIntersects x rs)
+
 -- normaliseTerms : List Term -> Maybe (List Term)
 -- normaliseTerms [] = Just []
 -- normaliseTerms xs =
@@ -44,12 +51,39 @@ negateRange (MkRange i1 i2) =
 --         if b1 == b2 then
 --           case (intersect r1 r2) of
 --             Nothing  => Nothing -- These ranges are incompatible
---             (Just i) => normaliseTermsHelper (MkTerm n1 i) terms
+--             (Just i) => normaliseTermsHelper (MkTerm b1 n1 i) terms
 --         else
---           case (intersect r1 r2) of
---             as  => ?as
+--           if b1 == False then
+--
 --       else
 --         (MkTerm b1 n1 r1) :: (normaliseTermsHelper (MkTerm b2 n2 r2) terms)
+--       where
+--         findNegatedIntersect : (pos : Range) -> (neg : Range) -> Maybe Term
+--         findNegatedIntersect pos neg =
+
+-- data SatResult = Sat | Con | Inc | Alm
+
+infixr 0 |=?
+
+
+(|=?) : Term -> List Term -> Boolean
+(|=?) t xs = satHelper t xs 0
+  where
+  satHelper : Term -> List Term -> SatResult
+  satHelper [] t incCounter = True
+  satHelper ((MkTerm b2 n2 r2) :: xs) (MkTerm b1 n1 r1) incCounter =
+    if n1 == n2 then
+      if (b1 == b2) then
+        case (intersect r1 r2) of
+          Nothing  => False -- These ranges are incompatible
+          (Just i) => satHelper xs (MkTerm b1 n1 i)
+
+        case (findIntersects ())
+    else
+      satHelper xs (MkTerm b1 n1 r1)
+
 
 termFromDep : ManiDep -> Term
 termFromDep (MkManiDep name source range) = MkTerm True name range
+
+getNeg
