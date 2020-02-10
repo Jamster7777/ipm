@@ -1,9 +1,10 @@
-module Util.PubGrubTypes
+module Core.PubGrubTypes
 import Semver.Range
 import Semver.Version
 import Semver.Interval
 import Core.ManifestTypes
 
+%access public export
 
 -- TODO make this a nice constructor
 data Term = MkTerm Bool PkgName Range
