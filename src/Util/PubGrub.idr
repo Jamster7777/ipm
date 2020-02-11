@@ -31,14 +31,18 @@ checkIncomp p ((n, t) :: ts) curRes =
     checkTerm p (n, t) =
       case (lookup n p) of
         Nothing  => TInc
-        (Just a) => do  let v = getValue a
-                        case t of
-                          (Pos r) => boolToRes (satisfied r v)
-                          (Neg r) => case (negateRange r) of
-                                        (Nothing, Nothing) => TCon
-                                        (Just l, Nothing)  => boolToRes $ satisfied l v
-                                        (Nothing, Just u)  => boolToRes $ satisfied u v
-                                        (Just l, Just u)   => boolToRes $ (satisfied l v) | (satisfied u v)
+        (Just (Derivation v x)) => ?a_1
+        (Just (Decision v)) => ?a_2
+
+
+        -- do  let v = getValue a
+        --                 case t of
+        --                   (Pos r) => boolToRes (satisfied r v)
+        --                   (Neg r) => case (negateRange r) of
+        --                                 (Nothing, Nothing) => TCon
+        --                                 (Just l, Nothing)  => boolToRes $ satisfied l v
+        --                                 (Nothing, Just u)  => boolToRes $ satisfied u v
+        --                                 (Just l, Just u)   => boolToRes $ (satisfied l v) | (satisfied u v)
     where
       boolToRes : Bool -> TermResult
       boolToRes True  = TSat
@@ -47,19 +51,19 @@ checkIncomp p ((n, t) :: ts) curRes =
 unitProp : GrubState -> GrubState
 unitProp (MkGrubState p is []) = ?unitProp_rhs_2
 unitProp (MkGrubState p is (package :: changed)) =
-  do  let newState = checkIncomps p is package (MkGrubState p is changed)
+  do  let newState = checkIncomps is package (MkGrubState p is changed)
       unitProp newState
   where
-    checkIncomps : PartialSolution -> List Incomp -> PkgName -> GrubState -> GrubState
-    checkIncomps p (i :: is) c gs =
+    checkIncomps : List Incomp -> PkgName -> GrubState -> GrubState
+    checkIncomps (i :: is) c (MkGrubState p allIs changed) =
       if (hasKey c i) then
         case (checkIncomp p (toList i) Sat) of
           Sat => ?conflictResolution -- TODO
-          Con => checkIncomps p is c gs
-          Inc => checkIncomps p is c gs
-          Alm last => ?derivation
+          Con => checkIncomps is c (MkGrubState p allIs changed)
+          Inc => checkIncomps is c (MkGrubState p allIs changed)
+          Alm (n, t) => ?a -- do let new_p = insert
       else
-        checkIncomps p is c gs
+        checkIncomps is c (MkGrubState p allIs changed)
 
 -- Main algorithm
 pubGrub : Manifest -> Either IpmError Lock

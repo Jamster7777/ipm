@@ -16,11 +16,7 @@ getRange (Neg x) = x
 Incomp : Type
 Incomp = Dict PkgName Term
 
-data AssignValue = Derivation Version Incomp | Decision Version
-
-getValue : AssignValue -> Version
-getValue (Derivation v x) = v
-getValue (Decision v) = v
+data AssignValue = Derivation Term Incomp | Decision Version
 
 PartialSolution : Type
 PartialSolution = Dict PkgName AssignValue
@@ -46,7 +42,8 @@ showPartialSolution a = showPartialSolutionHelper (toList a)
   where
     showPartialSolutionHelper : List (PkgName, AssignValue) -> String
     showPartialSolutionHelper [] = ""
-    showPartialSolutionHelper ((n, (Derivation v i)) :: xs) = "> " ++ (show n) ++ " " ++ (show v) ++ (showPartialSolutionHelper xs)
+    showPartialSolutionHelper ((n, (Derivation (Pos r) i)) :: xs) = "> " ++ (show n) ++ " " ++ (show r) ++ (showPartialSolutionHelper xs)
+    showPartialSolutionHelper ((n, (Derivation (Neg r) i)) :: xs) = "> not" ++ (show n) ++ " " ++ (show r) ++ (showPartialSolutionHelper xs)
     showPartialSolutionHelper ((n, (Decision v)) :: xs) = "? " ++ (show n) ++ " " ++ (show v) ++ (showPartialSolutionHelper xs)
 
 Show GrubState where
