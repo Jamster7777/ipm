@@ -15,7 +15,7 @@ negateRange (MkRange i1 i2) =
     negateInterval : Bool -> Interval -> Maybe Range
     negateInterval upper i =
       case (flip i) of
-        Unbounded => Nothing
+        Unbounded =>  Nothing
         flipped   =>  if upper
                       then Just (MkRange flipped Unbounded)
                       else Just (MkRange flipped Unbounded)
