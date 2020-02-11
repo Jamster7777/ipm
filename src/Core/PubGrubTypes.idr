@@ -9,16 +9,25 @@ import Data.AVL.Dict
 
 data Term = Pos Range | Neg Range
 
+getRange : Term -> Range
+getRange (Pos x) = x
+getRange (Neg x) = x
+
 Incomp : Type
 Incomp = Dict PkgName Term
 
 data AssignValue = Derivation Version Incomp | Decision Version
 
-Assignments : Type
-Assignments = Dict PkgName AssignValue
+getValue : AssignValue -> Version
+getValue (Derivation v x) = v
+getValue (Decision v) = v
 
-data IncompResult = Sat | Con Incomp | Inc | Alm Incomp
-data GrubState = MkGrubState Assignments (List Incomp) (List PkgName)
+PartialSolution : Type
+PartialSolution = Dict PkgName AssignValue
+
+data IncompResult = Sat | Con | Inc | Alm (PkgName, Term)
+data TermResult = TSat | TCon | TInc
+data GrubState = MkGrubState PartialSolution (List Incomp) (List PkgName)
 
 showIncomp : Incomp -> String
 showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
@@ -32,13 +41,13 @@ showIncomps : List Incomp -> String
 showIncomps [] = ""
 showIncomps (x :: xs) = (showIncomp x) ++ "\n" ++ (showIncomps xs)
 
-showAssignments : Assignments -> String
-showAssignments a = showAssignmentsHelper (toList a)
+showPartialSolution : PartialSolution -> String
+showPartialSolution a = showPartialSolutionHelper (toList a)
   where
-    showAssignmentsHelper : List (PkgName, AssignValue) -> String
-    showAssignmentsHelper [] = ""
-    showAssignmentsHelper ((n, (Derivation v i)) :: xs) = "> " ++ (show n) ++ " " ++ (show v) ++ (showAssignmentsHelper xs)
-    showAssignmentsHelper ((n, (Decision v)) :: xs) = "? " ++ (show n) ++ " " ++ (show v) ++ (showAssignmentsHelper xs)
+    showPartialSolutionHelper : List (PkgName, AssignValue) -> String
+    showPartialSolutionHelper [] = ""
+    showPartialSolutionHelper ((n, (Derivation v i)) :: xs) = "> " ++ (show n) ++ " " ++ (show v) ++ (showPartialSolutionHelper xs)
+    showPartialSolutionHelper ((n, (Decision v)) :: xs) = "? " ++ (show n) ++ " " ++ (show v) ++ (showPartialSolutionHelper xs)
 
 Show GrubState where
-  show (MkGrubState a is cs) = "--- Assignments ---\n" ++ (showAssignments a) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps is) ++ "\n--- Changed ---\n" ++ (show cs)
+  show (MkGrubState a is cs) = "--- Partial Solution ---\n" ++ (showPartialSolution a) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps is) ++ "\n--- Changed ---\n" ++ (show cs)

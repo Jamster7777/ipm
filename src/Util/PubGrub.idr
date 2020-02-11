@@ -15,48 +15,51 @@ initGrubState n v =
   do  let initIncomp = insert n (Neg (versionAsRange v)) empty
       MkGrubState empty [ initIncomp ] [ n ]
 
--- checkIncomp : List Assignment -> Incomp -> (incCount : Integer) -> IncompResult
--- checkIncomp as [] 0 = Sat
--- checkIncomp as [] 1 = Alm
--- checkIncomp as [] _ = Inc
--- checkIncomp as (t :: ts) incCount =
---   case (checkTerm as t) of
---     Sat => checkIncomp as ts incCount
---     Con => Con
---     Inc => checkIncomp as ts (incCount+1)
---   where
---     checkTerm : List Assignment -> Term -> IncompResult
---     checkTerm [] i = Inc
---     checkTerm ((MkAssignment n1 v _) :: as) (MkTerm b n2 r) =
---       if (n1 /= n2) then
---         checkTerm as (MkTerm b n2 r)
---       else if b then
---         boolToRes (satisfied r v)
---       else
---         case (negateRange r) of
---           (Nothing, Nothing) => Con
---           (Just l, Nothing)  => boolToRes $ satisfied l v
---           (Nothing, Just u)  => boolToRes $ satisfied u v
---           (Just l, Just u)   => boolToRes $ (satisfied l v) | (satisfied u v)
---     where
---       boolToRes : Bool -> IncompResult
---       boolToRes True  = Sat
---       boolToRes False = Con
---
--- -- addIncomp : GrubState -> GrubState
---
--- unitProp : GrubState -> GrubState
--- unitProp (MkGrubState as is []) = ?unitProp_rhs_2
--- unitProp (MkGrubState as is (package :: changed)) =
---   ?unitProp_rhs_3
---   where
---     checkIncomps : GrubState -> GrubState
---     checkIncomps (MkGrubState as (i :: is) _) =
---       case (checkIncomp as i 0) of
---         Sat => ?conflictResolution -- TODO
---         Con => ?k_2
---         Inc => ?k_3
---         Alm => ?k_4
+checkIncomp : PartialSolution -> List (PkgName, Term) -> (curRes : IncompResult) -> IncompResult
+checkIncomp p [] curRes = curRes
+checkIncomp p ((n, t) :: ts) curRes =
+  case (checkTerm p (n, t)) of
+    TSat => checkIncomp p ts curRes
+    TCon => Con
+    TInc => case (curRes) of
+              Sat   => checkIncomp p ts (Alm (n, t))
+              Con   => Con -- Should never happen
+              Inc   => checkIncomp p ts Inc
+              Alm _ => checkIncomp p ts Inc
+  where
+    checkTerm : PartialSolution -> (PkgName, Term) -> TermResult
+    checkTerm p (n, t) =
+      case (lookup n p) of
+        Nothing  => TInc
+        (Just a) => do  let v = getValue a
+                        case t of
+                          (Pos r) => boolToRes (satisfied r v)
+                          (Neg r) => case (negateRange r) of
+                                        (Nothing, Nothing) => TCon
+                                        (Just l, Nothing)  => boolToRes $ satisfied l v
+                                        (Nothing, Just u)  => boolToRes $ satisfied u v
+                                        (Just l, Just u)   => boolToRes $ (satisfied l v) | (satisfied u v)
+    where
+      boolToRes : Bool -> TermResult
+      boolToRes True  = TSat
+      boolToRes False = TCon
+
+unitProp : GrubState -> GrubState
+unitProp (MkGrubState p is []) = ?unitProp_rhs_2
+unitProp (MkGrubState p is (package :: changed)) =
+  do  let newState = checkIncomps p is package (MkGrubState p is changed)
+      unitProp newState
+  where
+    checkIncomps : PartialSolution -> List Incomp -> PkgName -> GrubState -> GrubState
+    checkIncomps p (i :: is) c gs =
+      if (hasKey c i) then
+        case (checkIncomp p (toList i) Sat) of
+          Sat => ?conflictResolution -- TODO
+          Con => checkIncomps p is c gs
+          Inc => checkIncomps p is c gs
+          Alm last => ?derivation
+      else
+        checkIncomps p is c gs
 
 -- Main algorithm
 pubGrub : Manifest -> Either IpmError Lock
