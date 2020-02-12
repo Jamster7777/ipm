@@ -4,6 +4,7 @@ import Semver.Version
 import Core.IpmError
 import Util.Bash
 import Util.Constants
+import Semver.Range
 
 %access public export
 
@@ -14,14 +15,18 @@ import Util.Constants
 cd : String -> IO ()
 cd dir = bashCommand ("cd " ++ dir)
 
-goToPkg : PkgSource -> IO ()
-goToPkg (PkgUrl x)   = do bashCommand ("mkdir " ++ TEMP_DIR)
-                          -- cd TEMP_DIR
-                          bashCommand {inDir=TEMP_DIR} "touch testfile.txt"
-                          -- bashCommand ("rm -rf" ++ TEMP_DIR)
+pDir : PkgName -> String
+pDir n = TEMP_DIR ++ (show n)
+
+goToPkg : ManiDep -> IO ()
+goToPkg (MkManiDep n (PkgUrl u) r) =
+  do  bashCommand ("mkdir " ++ (pDir n))
+      -- cd TEMP_DIR
+      bashCommand ("git clone " ++ u ++ " " ++ (pDir n))
+      -- bashCommand ("rm -rf" ++ TEMP_DIR)
 
 
-goToPkg (PkgLocal x) = ?gotoPkg_rhs_2
+goToPkg (MkManiDep n (PkgLocal p) r) = ?gotoPkg_rhs_2
 
 -- listVersions : ManiDep -> IO (Either IpmError (List Version))
 -- listVersions (MkManiDep n s ) = ?a

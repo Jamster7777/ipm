@@ -7,6 +7,8 @@ import Commands.Publish
 -- import Commands.Plan
 import Util.PubGrub
 import Util.FetchDep
+import Semver.Range
+import Semver.Interval
 
 import Language.JSON
 
@@ -19,5 +21,5 @@ main = do args <- getArgs
           case cmd of
             "publish" => publish
             -- "plan"    => plan
-            "dev"     => goToPkg (PkgUrl "https://github.com/Jamster7777/idris-test-package")
+            "dev"     => goToPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgUrl "https://github.com/Jamster7777/idris-test-package") (MkRange Unbounded Unbounded))
             invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
