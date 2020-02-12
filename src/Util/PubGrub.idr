@@ -15,6 +15,21 @@ initGrubState n v =
   do  let initIncomp = insert n (Neg (versionAsRange v)) empty
       MkGrubState empty [ initIncomp ] [ n ]
 
+-- termSatTerm : Term -> Term -> TermResult
+-- termSatTerm (Pos x) (Pos y) = if (x == y) then
+--                                 TSat
+--                               else
+--                                 case (intersect x y) of
+--                                   Nothing  => TCon
+--                                   (Just x) => TInc
+-- termSatTerm (Pos x) (Neg y) = case (negateRange y) of
+--                                 (Nothing, Nothing) => TCon
+--                                 (Just l, Nothing)  => boolToRes $ satisfied l v
+--                                 (Nothing, Just u)  => boolToRes $ satisfied u v
+--                                 (Just l, Just u)   => boolToRes $ (satisfied l v) | (satisfied u v)
+-- termSatTerm (Neg x) (Pos y) = termSatTerm (Pos y) (Neg x) -- Should return an equivalent result
+-- termSatTerm (Neg x) (Neg y) = termSatTerm (Pos x) (Pos y) -- Should return an equivalent result
+
 checkIncomp : PartialSolution -> List (PkgName, Term) -> (curRes : IncompResult) -> IncompResult
 checkIncomp p [] curRes = curRes
 checkIncomp p ((n, t) :: ts) curRes =
@@ -31,10 +46,8 @@ checkIncomp p ((n, t) :: ts) curRes =
     checkTerm p (n, t) =
       case (lookup n p) of
         Nothing  => TInc
-        (Just (Derivation v x)) => ?a_1
+        (Just (Derivation t c)) => ?a
         (Just (Decision v)) => ?a_2
-
-
         -- do  let v = getValue a
         --                 case t of
         --                   (Pos r) => boolToRes (satisfied r v)
