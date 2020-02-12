@@ -21,5 +21,6 @@ main = do args <- getArgs
           case cmd of
             "publish" => publish
             -- "plan"    => plan
-            "dev"     => goToPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgUrl "https://github.com/Jamster7777/idris-test-package") (MkRange Unbounded Unbounded))
+            "dev-git" => getPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgUrl "https://github.com/Jamster7777/idris-test-package") (MkRange Unbounded Unbounded))
+            "dev-local" => getPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgLocal "/Users/jamie/Documents/Uni/fourth_year/diss/idris-test-package") (MkRange Unbounded Unbounded))
             invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")

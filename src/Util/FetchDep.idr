@@ -18,15 +18,20 @@ cd dir = bashCommand ("cd " ++ dir)
 pDir : PkgName -> String
 pDir n = TEMP_DIR ++ (show n)
 
-goToPkg : ManiDep -> IO ()
-goToPkg (MkManiDep n (PkgUrl u) r) =
-  do  bashCommand ("mkdir " ++ (pDir n))
-      -- cd TEMP_DIR
+rmTempDir : IO ()
+rmTempDir = bashCommand ("rm -rf " ++ TEMP_DIR)
+
+getPkg : ManiDep -> IO ()
+getPkg (MkManiDep n (PkgUrl u) r) =
+  do  rmTempDir -- TODO remove
+      bashCommand ("mkdir -p " ++ (pDir n))
       bashCommand ("git clone " ++ u ++ " " ++ (pDir n))
-      -- bashCommand ("rm -rf" ++ TEMP_DIR)
 
+getPkg (MkManiDep n (PkgLocal p) r) =
+  do  rmTempDir -- TODO remove
+      bashCommand ("mkdir -p " ++ (pDir n))
+      bashCommand {inDir=p} ("cp -r . " ++ (pDir n))
 
-goToPkg (MkManiDep n (PkgLocal p) r) = ?gotoPkg_rhs_2
 
 -- listVersions : ManiDep -> IO (Either IpmError (List Version))
 -- listVersions (MkManiDep n s ) = ?a
