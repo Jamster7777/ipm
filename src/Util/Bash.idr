@@ -58,9 +58,9 @@ errorAndExit failMessage =
   do  putStrLn failMessage
       exit 1
 
-bashCommand : (command : String) -> { default doNothing onSuccess : IO () } -> { default doNothing onFail : IO () } -> IO ()
-bashCommand command {onSuccess} {onFail} =
-  do  exitCode <- system command
+bashCommand : (command : String) -> { default "." inDir : String } -> { default doNothing onSuccess : IO () } -> { default doNothing onFail : IO () } -> IO ()
+bashCommand command {inDir} {onSuccess} {onFail} =
+  do  exitCode <- system ("cd " ++ inDir ++ " && " ++ command)
       if (exitCode == 0)
       then onSuccess
       else onFail

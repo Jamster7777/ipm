@@ -5,6 +5,9 @@ module Util.Constants
 PACKAGE_FILE_NAME : String
 PACKAGE_FILE_NAME = "ipkg.json"
 
+TEMP_DIR : String
+TEMP_DIR = "~/ipm-temp/"
+
 PACKAGE_INSTALL_LOCATION : String
 PACKAGE_INSTALL_LOCATION = "~/ipkg/"
 
