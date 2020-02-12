@@ -40,9 +40,9 @@ readFileH h = loop ""
         Right l <- fGetLine h | Left err => pure acc
         loop (acc ++ l)
 
-execAndReadOutput : (cmd : String) -> IO (Either IpmError String)
-execAndReadOutput cmd = do
-  Right fh <- my_popen cmd Read | Left err => pure (Left (BashError (show err)))
+execAndReadOutput : (cmd : String) -> { default "." inDir : String } -> IO (Either IpmError String)
+execAndReadOutput cmd {inDir} = do
+  Right fh <- my_popen ("cd " ++ inDir ++ " && " ++ cmd) Read | Left err => pure (Left (BashError (show err)))
   contents <- readFileH fh
   pclose fh
   pure (Right contents)

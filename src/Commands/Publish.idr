@@ -7,6 +7,7 @@ import Util.Constants
 import Data.String
 import Data.Vect
 import Semver.Version
+import Util.FetchDep
 
 --TODO remove
 %access public export
@@ -15,9 +16,9 @@ getMostRecentTag : IO (Either IpmError Version)
 getMostRecentTag =
   do  Right tagStr <- (execAndReadOutput "git describe --abbrev=0")
                   | Left err => noTag
-      if (length tagStr) > 0 && (strHead tagStr) == 'v'
-      then pure (checkVersion (trim (strTail tagStr)))
-      else noTag
+      case (parseTag tagStr) of
+        Left err  => noTag
+        Right v   => pure (Right v)
   where
     noTag : IO (Either IpmError Version)
     noTag = pure (Left (PublishError "No valid pre-existing version tag. ipm init has not been ran or git tags have been modified manually."))
