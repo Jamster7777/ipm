@@ -14,14 +14,10 @@ import Util.FetchDep
 
 getMostRecentTag : IO (Either IpmError Version)
 getMostRecentTag =
-  do  Right tagStr <- (execAndReadOutput "git describe --abbrev=0")
-                  | Left err => noTag
-      case (parseTag tagStr) of
-        Left err  => noTag
-        Right v   => pure (Right v)
-  where
-    noTag : IO (Either IpmError Version)
-    noTag = pure (Left (PublishError "No valid pre-existing version tag. ipm init has not been ran or git tags have been modified manually."))
+  do  Right vs <- listVersions | Left err => pure (Left err)
+      case (last' vs) of
+        Nothing  => pure $ Right (MkVersion 0 0 0 [] [])
+        Just v   => pure (Right v)
 
 addTag : Version -> IO ()
 addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e v"  ++ (show new))

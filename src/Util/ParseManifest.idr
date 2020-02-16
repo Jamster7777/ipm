@@ -111,8 +111,8 @@ checkParentObject : (manifest: JSON) -> Either IpmError Manifest
 checkParentObject (JObject keys)  = checkKeys keys
 checkParentObject _               = Left (ManifestFormatError "No parent JSON object")
 
-parseManifest : String -> IO (Either IpmError Manifest)
-parseManifest dir =
+parseManifest : { default "." dir : String } -> IO (Either IpmError Manifest)
+parseManifest {dir} =
   do  Right str     <- readFile ((cleanFilePath dir) ++ PACKAGE_FILE_NAME) | Left fileError => pure (Left (ManifestFormatError ("Error: no " ++ PACKAGE_FILE_NAME ++ " file found for the given path")))
       let Just json =  parse str  | Nothing        => pure (Left (ManifestFormatError ("Error: Invalid JSON format in " ++ PACKAGE_FILE_NAME)))
       pure (checkParentObject json)

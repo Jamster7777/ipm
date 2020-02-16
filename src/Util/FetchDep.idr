@@ -38,9 +38,9 @@ getPkg (MkManiDep n (PkgLocal p) r) =
       bashCommand ("mkdir -p " ++ (pDir n))
       bashCommand {inDir=p} ("cp -r . " ++ (pDir n))
 
-listVersions : PkgName -> IO (Either IpmError (List Version))
-listVersions n =
-  do  (Right raw) <- execAndReadOutput {inDir=(pDir n)} "git tag" | Left err => pure (Left (TagError "Error reading versions"))
+listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
+listVersions {dir} =
+  do  (Right raw) <- execAndReadOutput {inDir=dir} "git tag" | Left err => pure (Left (TagError "Error reading versions"))
       let splitTags = split (== '\n') raw
       pure (Right (tagsToVersions splitTags))
   where
