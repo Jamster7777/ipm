@@ -50,3 +50,10 @@ listVersions {dir} =
       case (parseTag x) of
         Left err => tagsToVersions xs
         Right v  => v :: (tagsToVersions xs)
+
+getManifest : PkgName -> Version -> IO (Either IpmError Manifest)
+getManifest n v =
+    do  Right vs  <- listVersions {dir=(pDir n)} | Left err => pure (Left err)
+        let Just _ = elemIndex v vs              | Nothing  => pure (Left (InvalidVersionError n v))
+        bashCommand {inDir=(pDir n)} ("git checkout " ++ (show v))
+        parseManifest {dir=(pDir n)}
