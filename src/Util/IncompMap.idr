@@ -16,6 +16,8 @@ Incomp = List (PkgName, Term)
 IncompMap : Type
 IncompMap = Dict PkgName (List Incomp)
 
+%name IncompMap m
+
 insertI' : List (PkgName, Term) -> Incomp -> IncompMap -> IncompMap
 insertI' [] i m = m
 insertI' ((n, t) :: xs) i m =
@@ -25,3 +27,11 @@ insertI' ((n, t) :: xs) i m =
 
 insertI : Incomp -> IncompMap -> IncompMap
 insertI i m = insertI' i i m
+
+-- mergeI : PkgName -> Incomp -> IncompMap -> Maybe IncompMap
+-- mergeI n new_i m =
+--   case (lookup n m) of
+--     Nothing   => Nothing
+--     (Just (cur_i :: [])) =>
+--
+--     (Just _) => Nothing
