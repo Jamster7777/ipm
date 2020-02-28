@@ -82,6 +82,8 @@ unitProp (MkGrubState p is (package :: changed)) =
 pubGrub : Manifest -> Either IpmError Lock
 
 -- A dictionary for quickly merging the dependancies of adjacent versions together
+-- The PkgName refers to the dependancy. The first range is the range of the dependancy,
+-- the second is the current range of package versions this dependancy is required for.
 DepMerge : Type
 DepMerge = Dict PkgName (Range, Range)
 
@@ -94,11 +96,13 @@ DepMerge = Dict PkgName (Range, Range)
 --
 -- findDepIncomp : PkgName -> List Incomp ->
 --
--- -- Take an adjacent manifest and combine version numbers if it has any matching dependancies
--- combineAdjacentManifest : Manifest -> List Incomp -> List Incomp
--- combineAdjacentManifest (MkManifest n v [] m) incomps = incomps
--- combineAdjacentManifest (MkManifest n v (d :: ds) m) incomps =
---     do  if ()
+-- Take an adjacent manifest and combine version numbers if it has any matching dependancies
+addManifest : Manifest -> DepMerge -> DepMerge
+combineAdjacentManifest (MkManifest n v [] m) depMerge = incomps
+combineAdjacentManifest (MkManifest n v (d :: ds) m) depMerge =
+    do  if ()
+
+
 
 pubGrubDev : Manifest -> IO ()
 pubGrubDev (MkManifest n v deps m) =
