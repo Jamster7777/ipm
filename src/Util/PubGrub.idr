@@ -81,6 +81,25 @@ unitProp (MkGrubState p is (package :: changed)) =
 -- Main algorithm
 pubGrub : Manifest -> Either IpmError Lock
 
+-- A dictionary for quickly merging the dependancies of adjacent versions together
+DepMerge : Type
+DepMerge = Dict PkgName (Range, Range)
+
+-- -- Take a fresh manifest and convert all of its dependancies to incompatibilties
+-- manifestToIncomps : Manifest -> List Incomp
+-- manifestToIncomps (MkManifest n v [] _) = []
+-- manifestToIncomps (MkManifest pName v ((MkManiDep dName _ r) :: ds) m) =
+--      do let newI = insert dName (Neg r) $ insert pName (Pos (versionAsRange v)) $ empty
+--         newI :: (manifestToIncomps (MkManifest pName v ds m))
+--
+-- findDepIncomp : PkgName -> List Incomp ->
+--
+-- -- Take an adjacent manifest and combine version numbers if it has any matching dependancies
+-- combineAdjacentManifest : Manifest -> List Incomp -> List Incomp
+-- combineAdjacentManifest (MkManifest n v [] m) incomps = incomps
+-- combineAdjacentManifest (MkManifest n v (d :: ds) m) incomps =
+--     do  if ()
+
 pubGrubDev : Manifest -> IO ()
 pubGrubDev (MkManifest n v deps m) =
   do  let grubState = initGrubState n v
