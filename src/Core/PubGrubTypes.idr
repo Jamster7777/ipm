@@ -47,4 +47,4 @@ showPartialSolution a = showPartialSolutionHelper (toList a)
     showPartialSolutionHelper ((n, (Decision v)) :: xs) = "? " ++ (show n) ++ " " ++ (show v) ++ (showPartialSolutionHelper xs)
 
 Show GrubState where
-  show (MkGrubState a is cs) = "--- Partial Solution ---\n" ++ (showPartialSolution a) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps is) ++ "\n--- Changed ---\n" ++ (show cs)
+  show (MkGrubState a is cs) = "--- Partial Solution ---\n" ++ (showPartialSolution a) ++ "\n--- Incompatibilties ---\n" ++ (showIncomps is)
