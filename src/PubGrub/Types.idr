@@ -48,6 +48,10 @@ insertI' ((n, t) :: xs) i m =
 insertI : Incomp -> IncompMap -> IncompMap
 insertI i m = insertI' i i m
 
+getI' : PkgName -> IncompMap -> List Incomp
+getI' n m = case (lookup n m) of
+                Nothing  => []
+                (Just x) => x
 
 --------------------------------------------------------------------------------
 -- The Partial Solution
@@ -67,3 +71,8 @@ data PartialSolution = Dict PkgName (List Assignment)
 
 -- The integer here refers to the current decision level, the PkgName to the variable 'next' in the algorithm's docs
 data GrubState = MkGrubState PartialSolution IncompMap Integer PkgName
+
+%name GrubState state
+
+getI : PkgName -> GrubState -> List Incomp
+getI n (MkGrubState _ is _ _) = getI' n is
