@@ -6,6 +6,8 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 
+%access public export
+
 data Term = Pos Range | Neg Range
 
 Incomp : Type
@@ -27,6 +29,7 @@ insertI' ((n, t) :: xs) i m =
 
 insertI : Incomp -> IncompMap -> IncompMap
 insertI i m = insertI' i i m
+
 
 -- mergeI : PkgName -> Incomp -> IncompMap -> Maybe IncompMap
 -- mergeI n new_i m =
