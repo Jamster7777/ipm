@@ -11,6 +11,25 @@ import Data.AVL.Dict
 
 
 --------------------------------------------------------------------------------
+-- Multi-key dict
+--------------------------------------------------------------------------------
+
+data MultiDict : (k : Type) -> Type -> Type where
+    MkMultiDict : Dict k (List v) -> MultiDict k (List v)
+
+lookup : (Ord k) => k -> MultiDict k (List v) -> List v
+lookup k (MkMultiDict d) =
+    case (lookup k d) of
+        Nothing   => []
+        (Just vs) => vs
+
+insert : (Ord k) => k -> MultiDict k (List v) -> List v
+lookup k (MkMultiDict d) =
+    case (lookup k d) of
+        Nothing   => []
+        (Just vs) => vs
+
+--------------------------------------------------------------------------------
 -- Incompatibilties
 --------------------------------------------------------------------------------
 
@@ -76,3 +95,14 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgName
 
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _) = getI' n is
+
+-- getPS : PkgName -> GrubState -> List Assignment
+-- getPS n (MkGrubState ps _ _ _) = getI' n is
+
+
+--------------------------------------------------------------------------------
+-- Satisfiability check results
+--------------------------------------------------------------------------------
+
+data IncompResult = Sat | Con | Inc | Alm (PkgName, Term)
+data TermResult = TSat | TCon | TInc

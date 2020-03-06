@@ -9,9 +9,13 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 
+termCheck : TermResult
+
+-- incompCheck :
+
 unitPropLoop : GrubState -> (changed : List PkgName) -> List Incomp -> Either IpmError (GrubState, List PkgName)
 unitPropLoop state changed [] = Right (state, changed)
-unitPropLoop state changed (y :: xs) = ?unitPropLoop_rhs_2
+unitPropLoop state changed (i :: is) = ?unitPropLoop_rhs_2
 
 unitProp : GrubState -> (changed : List PkgName) -> Either IpmError GrubState
 unitProp state [] = Right state
