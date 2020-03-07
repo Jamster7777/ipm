@@ -26,3 +26,8 @@ findIntersects x (r :: rs) =
   case (intersect x r) of
     Nothing  => findIntersects x rs
     (Just i) => i :: (findIntersects x rs)
+-- 
+-- rangesIntersect : List Range -> List Range
+-- rangesIntersect xs = ?rangesIntersect_rhs
+-- where
+--     rangesIntersect' : (input : List Range) -> (input : List Range)

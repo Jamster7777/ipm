@@ -10,6 +10,9 @@ import Util.SemverExtras
 import Data.AVL.Dict
 
 termCheck : PkgName -> Term -> List Assignment -> TermResult
+termCheck n x [] =
+    ?termCheck_rhs_1
+termCheck n x (y :: xs) = ?termCheck_rhs_2
 
 -- incompCheck :
 
