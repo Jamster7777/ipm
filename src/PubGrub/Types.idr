@@ -11,23 +11,23 @@ import Data.AVL.Dict
 
 
 --------------------------------------------------------------------------------
--- Multi-key dict
+-- Multi-key dict - turns out this is useless...
 --------------------------------------------------------------------------------
-
-data MultiDict : (k : Type) -> Type -> Type where
-    MkMultiDict : Dict k (List v) -> MultiDict k (List v)
-
-lookup : (Ord k) => k -> MultiDict k (List v) -> List v
-lookup k (MkMultiDict d) =
-    case (lookup k d) of
-        Nothing   => []
-        (Just vs) => vs
-
-insert : (Ord k) => k -> MultiDict k (List v) -> List v
-lookup k (MkMultiDict d) =
-    case (lookup k d) of
-        Nothing   => []
-        (Just vs) => vs
+--
+-- data MultiDict : (k : Type) -> Type -> Type where
+--     MkMultiDict : Dict k (List v) -> MultiDict k (List v)
+--
+-- lookup : (Ord k) => k -> MultiDict k (List v) -> List v
+-- lookup k (MkMultiDict d) =
+--     case (lookup k d) of
+--         Nothing   => []
+--         (Just vs) => vs
+--
+-- insert : (Ord k) => k -> MultiDict k (List v) -> List v
+-- lookup k (MkMultiDict d) =
+--     case (lookup k d) of
+--         Nothing   => []
+--         (Just vs) => vs
 
 --------------------------------------------------------------------------------
 -- Incompatibilties
@@ -81,8 +81,13 @@ data Assignment = Derivation Term Incomp Integer
 -- The version of the decision and the decision level
                 | Decision Version Integer
 
-data PartialSolution = Dict PkgName (List Assignment)
+PartialSolution : Type
+PartialSolution = Dict PkgName (List Assignment)
 
+getPS' : PkgName -> PartialSolution -> List Assignment
+getPS' n p = case (lookup n p) of
+                Nothing  => []
+                (Just x) => x
 
 --------------------------------------------------------------------------------
 -- The State of Version Solving
@@ -96,8 +101,8 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgName
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _) = getI' n is
 
--- getPS : PkgName -> GrubState -> List Assignment
--- getPS n (MkGrubState ps _ _ _) = getI' n is
+getPS : PkgName -> GrubState -> List Assignment
+getPS n (MkGrubState ps _ _ _) = getPS' n ps
 
 
 --------------------------------------------------------------------------------

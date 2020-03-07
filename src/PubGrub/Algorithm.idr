@@ -9,7 +9,7 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 
-termCheck : TermResult
+termCheck : PkgName -> Term -> List Assignment -> TermResult
 
 -- incompCheck :
 
