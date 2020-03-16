@@ -54,8 +54,8 @@ checkDependancies (key :: keys) =
   where
     checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError ManiDep
     checkDependancy name [] (Just version) (Just path) = Right (MkManiDep name (PkgLocal path) version)
-    checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a version."))
-    checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy'" ++ (show name) ++ "' does not specify a local path."))
+    checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy '" ++ (show name) ++ "' does not specify a version."))
+    checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy '" ++ (show name) ++ "' does not specify a local path."))
 
     checkDependancy name (("version", (JString str)) :: fields) maybeVersion maybePath =
       do  let (Right parsedVersion) = checkRange str | Left err => Left err

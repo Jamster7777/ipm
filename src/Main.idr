@@ -24,6 +24,6 @@ main = do args <- getArgs
             -- "plan"    => plan
             "dev-git" => getPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgUrl "https://github.com/Jamster7777/idris-test-package") (MkRange Unbounded Unbounded))
             "dev-local" => do getPkg (MkManiDep (MkPkgName "Jamster7777" "idris-test-package") (PkgLocal "/Users/jamie/Documents/Uni/fourth_year/diss/idris-test-package") (MkRange Unbounded Unbounded))
-                              vs <- (listVersions (MkPkgName "Jamster7777" "idris-test-package")) | Left err => putStrLn (show err)
+                              vs <- (listVersions {dir=(pDir (MkPkgName "Jamster7777" "idris-test-package"))}) | Left err => putStrLn (show err)
                               putStrLn (show vs)
             invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
