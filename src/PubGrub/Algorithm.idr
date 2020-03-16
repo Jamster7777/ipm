@@ -9,10 +9,19 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 
+{-
+Check if a term is satisfied by the PS.
+
+If a decision is come across, stop looping and use that (decisions should be
+the first found if they exist.)
+
+The list of assignments here only apply to this PkgName.
+-}
+
 termCheck : PkgName -> Term -> List Assignment -> TermResult
-termCheck n x [] =
+termCheck n t [] =
     ?termCheck_rhs_1
-termCheck n x (y :: xs) = ?termCheck_rhs_2
+termCheck n t ((Decision v _) :: as) = case 
 
 -- incompCheck :
 
