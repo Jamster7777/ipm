@@ -69,7 +69,12 @@ addTermToWorkingRanges (Neg x) workingRanges =
 |||
 ||| If the partial solution contains a decision, we return a singular range only
 ||| allowing that value.
-psToRanges : List Assignment -> (workingRanges : List Range) -> List Range
-psToRanges [] workingRanges = workingRanges
-psToRanges ((Derivation t _ _) :: as) workingRanges = addTermToWorkingRanges t workingRanges
-psToRanges ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
+psToRanges : List Assignment -> List Range
+psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
+  where
+    psToRanges' : List Assignment -> (workingRanges : List Range) -> List Range
+    psToRanges' [] workingRanges = workingRanges
+    psToRanges' ((Derivation t _ _) :: as) workingRanges =
+      do  let newWRs = (addTermToWorkingRanges t workingRanges)
+          psToRanges' as newWRs
+    psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
