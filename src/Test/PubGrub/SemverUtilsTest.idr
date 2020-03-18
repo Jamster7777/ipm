@@ -65,11 +65,15 @@ testPsToRanges testName input expected =
 testParam : String -> IO ()
 testParam str =
   do  let Right input = parse assignments str | Left err => putStrLn ("Error parsing params: " ++ err)
-      putStrLn (show input)
+      putStrLn ("Input: " ++ (show input))
+      let actual = psToRanges input
+      putStrLn ((show actual))
+
 
 test1 : IO ()
 test1 = testParam """
-# >2.0.0
-# not ^1.0.0
-? 4
+# >1.0.0 <3.0.0
+# >0.0.1 <2.0.0
+# not >=1.5.0 <=1.5.0
+? 1.2
 """
