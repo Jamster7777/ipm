@@ -35,6 +35,10 @@ import Data.AVL.Dict
 
 data Term = Pos Range | Neg Range
 
+Show Term where
+  show (Pos r) = show r
+  show (Neg r) = "not " ++ (show r)
+
 Incomp : Type
 Incomp = List (PkgName, Term)
 
@@ -80,6 +84,10 @@ getI' n m = case (lookup n m) of
 data Assignment = Derivation Term Incomp Integer
 -- The version of the decision and the decision level
                 | Decision Version Integer
+
+Show Assignment where
+  show (Derivation x xs y) = "=>  " ++ (show x)
+  show (Decision v x) = "?   " ++ (show v)
 
 PartialSolution : Type
 PartialSolution = Dict PkgName (List Assignment)
