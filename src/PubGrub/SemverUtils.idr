@@ -1,4 +1,4 @@
-module SemverUtils
+module PubGrub.SemverUtils
 
 import PubGrub.Types
 import Semver.Range
@@ -7,6 +7,8 @@ import Semver.Interval
 import Core.ManifestTypes
 import Core.IpmError
 import Data.AVL.Dict
+
+%access public export
 
 ||| Convert a version to a range which only allows the version
 versionAsRange : Version -> Range
