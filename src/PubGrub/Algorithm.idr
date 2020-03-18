@@ -21,7 +21,7 @@ The list of assignments here only apply to this PkgName.
 termCheck : PkgName -> Term -> List Assignment -> TermResult
 termCheck n t [] =
     ?termCheck_rhs_1
-termCheck n t ((Decision v _) :: as) = case 
+termCheck n t ((Decision v _) :: as) = case
 
 -- incompCheck :
 

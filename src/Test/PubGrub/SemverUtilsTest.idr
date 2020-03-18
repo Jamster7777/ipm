@@ -9,6 +9,8 @@ import Core.ManifestTypes
 import Core.IpmError
 import Data.AVL.Dict
 import Lightyear.Strings
+import Lightyear
+import Lightyear.Char
 
 testPsToRanges : (testName : String) -> (input : List Assignment) -> (expected : List Range) -> IO ()
 testPsToRanges testName input expected =
@@ -21,22 +23,38 @@ testPsToRanges testName input expected =
             putStrLn "Actual:"
             putStrLn (show actual)
 
+
+
+
 -- testPsToRanges1 : IO ()
 -- testPsToRanges1 =
 --   testPsToRanges
 --     "1"
+--     [
+--       Derivation (MkRange )
+--     ]
 
 neg : Parser $ Maybe Assignment
-neg = do  string "not "
+neg = do  string "not"
+          spaces
           r <- range
-          pure (Derivation (Neg r) [] 0)
+          case r of
+            Nothing => pure Nothing
+            Just x  => pure (Just (Derivation (Neg x) [] 0))
 
 pos : Parser $ Maybe Assignment
 pos = do  r <- range
-          pure (Derivation (Pos r) [] 0)
+          case r of
+            Nothing => pure Nothing
+            Just x  => pure (Just (Derivation (Pos x) [] 0))
 
 assignment : Parser $ Maybe Assignment
 assignment = neg <|> pos
 
--- assignments : Parser $ Maybe (List Assignment)
--- assignments = a <- assignment
+assignments : Parser $ List Assignment
+assignments = do  a <- assignment
+                  char '\n'
+                  case a of
+                    Nothing => pure []
+                    Just x  => do rest <- assignments
+                                  pure ([ x ] ++ rest)
