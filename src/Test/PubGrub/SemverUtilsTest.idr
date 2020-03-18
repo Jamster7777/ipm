@@ -19,32 +19,34 @@ import Lightyear.Char
 --------------------------------------------------------------------------------
 
 neg : Parser $ Assignment
-neg = do  char '\n'
-          string "not"
-          spaces
+neg = do  string "not "
           r <- range
           case r of
             Nothing => pure (Derivation (Pos (MkRange Unbounded Unbounded)) [] 0)
             Just x  => pure (Derivation (Neg x) [] 0)
 
 pos : Parser $ Assignment
-pos = do  char '\n'
-          r <- range
+pos = do  r <- range
           case r of
             Nothing => pure (Derivation (Pos (MkRange Unbounded Unbounded)) [] 0)
             Just x  => pure (Derivation (Pos x) [] 0)
 
+der : Parser $ Assignment
+der = do  string "# "
+          neg <|> pos
+
+dec : Parser $ Assignment
+dec = do  string "? "
+          (v, _, _) <- bareVersion
+          pure (Decision v 0)
+
 assignment : Parser $ Assignment
-assignment = neg <|> pos
+assignment = do char '\n'
+                dec <|> der
 
 assignments : Parser $ List Assignment
--- assignments = do  char '\n'
---                   a <- assignment
---                   case a of
---                     Nothing => pure []
---                     Just x  => do rest <- assignments
---                                   pure ([ x ] ++ rest)
 assignments = do  as <- many assignment
+                  char '\n'
                   eof
                   pure as
 
@@ -67,8 +69,7 @@ testParam str =
 
 test1 : IO ()
 test1 = testParam """
->1.0.0
-<2.0.0
-not 1.5.0
->1.2.0
+# >2.0.0
+# not ^1.0.0
+? 4
 """
