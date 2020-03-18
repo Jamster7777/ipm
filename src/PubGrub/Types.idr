@@ -120,6 +120,12 @@ getPS n (MkGrubState ps _ _ _) = getPS' n ps
 data IncompResult = Sat | Con | Inc | Alm (PkgName, Term)
 data TermResult = TSat | TCon | TInc
 
+Eq TermResult where
+  (==) TSat TSat = True
+  (==) TCon TCon = True
+  (==) TInc TInc = True
+  (==) _    _    = False
+  (/=) x    y    = not (x == y)
 
 --------------------------------------------------------------------------------
 -- RangeSet

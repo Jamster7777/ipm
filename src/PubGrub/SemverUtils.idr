@@ -97,4 +97,19 @@ checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
 checkTerm term ps = checkTerm' term ps True TInc
   where
     checkTerm' : (term : List Range) -> (ps : List Range) -> (isFirst : Bool) -> (soFar : TermResult) -> TermResult
-    checkTerm' xs ys isFirst soFar = ?a
+    checkTerm' [] ys isFirst soFar = soFar
+    checkTerm' (x :: xs) ys isFirst soFar =
+      do  let curRes = checkRange x ys
+          let newSoFar = (
+            if
+              isFirst
+            then
+              curRes
+            else if
+              curRes == soFar
+            then
+              curRes
+            else
+              TInc
+          )
+          checkTerm' xs ys False newSoFar
