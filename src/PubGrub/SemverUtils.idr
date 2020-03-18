@@ -80,3 +80,21 @@ psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
       do  let newWRs = (addTermToWorkingRanges t workingRanges)
           psToRanges' as newWRs
     psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
+
+checkRange : Range -> List Range -> TermResult
+checkRange r [] = ?checkRange_rhs_1
+checkRange r (y :: ys) =
+  do  let lCmp = compare True  (lower y) (lower r)
+      let uCmp = compare False (upper y) (upper r)
+      let lIn  = lCmp == GT || lCmp == EQ
+      let uIn  = uCmp == LT || uCmp == EQ
+      case (lIn, uIn) of
+        (True, True)   => TSat
+        (False, False) => TCon
+        _              => TInc
+
+checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
+checkTerm term ps = checkTerm' term ps True TInc
+  where
+    checkTerm' : (term : List Range) -> (ps : List Range) -> (isFirst : Bool) -> (soFar : TermResult) -> TermResult
+    checkTerm' xs ys isFirst soFar = ?a
