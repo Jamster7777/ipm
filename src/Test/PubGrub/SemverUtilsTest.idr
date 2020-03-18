@@ -12,34 +12,41 @@ import Lightyear.Strings
 import Lightyear
 import Lightyear.Char
 
+%access public export
+
 --------------------------------------------------------------------------------
 -- Parser for test files
 --------------------------------------------------------------------------------
 
-neg : Parser $ Maybe Assignment
-neg = do  string "not"
+neg : Parser $ Assignment
+neg = do  char '\n'
+          string "not"
           spaces
           r <- range
           case r of
-            Nothing => pure Nothing
-            Just x  => pure (Just (Derivation (Neg x) [] 0))
+            Nothing => pure (Derivation (Pos (MkRange Unbounded Unbounded)) [] 0)
+            Just x  => pure (Derivation (Neg x) [] 0)
 
-pos : Parser $ Maybe Assignment
-pos = do  r <- range
+pos : Parser $ Assignment
+pos = do  char '\n'
+          r <- range
           case r of
-            Nothing => pure Nothing
-            Just x  => pure (Just (Derivation (Pos x) [] 0))
+            Nothing => pure (Derivation (Pos (MkRange Unbounded Unbounded)) [] 0)
+            Just x  => pure (Derivation (Pos x) [] 0)
 
-assignment : Parser $ Maybe Assignment
+assignment : Parser $ Assignment
 assignment = neg <|> pos
 
 assignments : Parser $ List Assignment
-assignments = do  a <- assignment
-                  char '\n'
-                  case a of
-                    Nothing => pure []
-                    Just x  => do rest <- assignments
-                                  pure ([ x ] ++ rest)
+-- assignments = do  char '\n'
+--                   a <- assignment
+--                   case a of
+--                     Nothing => pure []
+--                     Just x  => do rest <- assignments
+--                                   pure ([ x ] ++ rest)
+assignments = do  as <- many assignment
+                  eof
+                  pure as
 
 
 testPsToRanges : (testName : String) -> (input : List Assignment) -> (expected : List Range) -> IO ()
@@ -55,7 +62,7 @@ testPsToRanges testName input expected =
 
 testParam : String -> IO ()
 testParam str =
-  do  let Right input = parse assignments str | Left err => putStrLn "Error parsing params"
+  do  let Right input = parse assignments str | Left err => putStrLn ("Error parsing params: " ++ err)
       putStrLn (show input)
 
 test1 : IO ()

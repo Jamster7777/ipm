@@ -1,6 +1,7 @@
 package ipm
 
 sourcedir = src
-modules = Main
-main = Main
+modules = Test.PubGrub.SemverUtilsTest
+tests = Test.PubGrub.SemverUtilsTest.test1
+
 opts = "-p contrib -p semver -p lightyear -p containers"
