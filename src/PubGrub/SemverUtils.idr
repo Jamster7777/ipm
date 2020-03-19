@@ -155,6 +155,12 @@ checkRange (x :: xs) y =
         Just i  =>  if (i == y) then TSat else TInc
 
 
+||| Check each range of the partial solution against the ranges of the term.
+|||
+||| If all ranges of the partial solution are satisfied, the whole partial
+||| solution is satisfied. Likewise for contradictions. If any of the ranges
+||| are found to be inconclusive, then the whole partial solution is
+||| inconclusive for this term.
 checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
 checkTerm term ps = checkTerm' term ps True TInc
   where
