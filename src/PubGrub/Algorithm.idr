@@ -38,7 +38,7 @@ unitPropLoop changed (i :: is) =
                                           | Left err => pure (Left err)
                               -- Note the slight deviation from the docs here.
                               unitPropLoop [] (conI :: is)
-          (IAlm (n, t)) => do addPS n (Derivation (not t) i getDecLevel)
+          (IAlm (n, t)) => do addPS n (Derivation (not t) i (getDecLevel gs))
                               unitPropLoop (changed ++ [n]) is
           _             => unitPropLoop changed is
 

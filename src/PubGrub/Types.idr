@@ -137,9 +137,8 @@ addPS n a = do  (MkGrubState ps x y z) <- get
                 put (MkGrubState (addPS' n a ps) x y z)
   -- (MkGrubState (addPS' n a ps) x y z)
 
-getDecLevel : State GrubState (Integer)
-getDecLevel = do (MkGrubState _ _ z _) <- get
-                 pure z
+getDecLevel : GrubState -> Integer
+getDecLevel (MkGrubState _ _ z _) = z
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results
