@@ -87,7 +87,7 @@ psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
 
 
 --------------------------------------------------------------------------------
--- Override interval comparison
+-- Override interval comparison (currently REDUNDANT) TODO
 --------------------------------------------------------------------------------
 
 ||| Compare the lower bound of the first range with the upper bound of the
@@ -141,17 +141,19 @@ cmpUpUp (MkRange _ u1) (MkRange _ u2) = compare False u1 u2
 -- Evaluate a term on the partial solution
 --------------------------------------------------------------------------------
 
+||| Check one range of the partial solution against the ranges of the term.
+|||
+||| If the PS range fits completely within one of the term ranges, then this
+||| part of the PS is satisfied. If it partially intersects one, then it is
+||| inconclusive. If it doesn't fit within any of the sections,
+||| it is condraticted.
 checkRange : List Range -> Range -> TermResult
--- checkRange [] y = TInc
--- checkRange (x :: xs) y =
---   do  let lCmp = compare True  (upper y) (lower r)
---       let uCmp = compare False (upper y) (upper r)
---       let lIn  = lCmp == GT || lCmp == EQ
---       let uIn  = uCmp == LT || uCmp == EQ
---       case (lIn, uIn) of
---         (True, True)   => TSat
---         (False, False) => TInc
---         (False)              => TInc
+checkRange [] y = TCon
+checkRange (x :: xs) y =
+  do  case (intersect x y) of
+        Nothing =>  checkRange xs y
+        Just i  =>  if (i == y) then TSat else TInc
+
 
 checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
 checkTerm term ps = checkTerm' term ps True TInc
