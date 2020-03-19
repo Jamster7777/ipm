@@ -201,35 +201,35 @@ checkTerm term ps = checkTerm' term ps True TInc
 ||| Otherwise, the incompatibility is inconclusive for the given partial
 ||| solution.
 checkIncomp :  Incomp
-            -> PartialSolution
+            -> GrubState --TODO pass PS here?
             -> IncompResult
-checkIncomp i ps = checkIncomp' i ps ISat
+checkIncomp i state = checkIncomp' i state ISat
   where
     checkIncomp' :  Incomp
-                 -> PartialSolution
+                 -> GrubState
                  -> (soFar : IncompResult)
                  -> IncompResult
     -- The function evaluates the final result as it goes, so once all terms
     -- have been evaluated soFar can just be returned.
-    checkIncomp' [] ps soFar = soFar
-    checkIncomp' ((n, t) :: ts) ps soFar =
+    checkIncomp' [] state soFar = soFar
+    checkIncomp' ((n, t) :: ts) state soFar =
       do  let termRanges = termToRanges t
-          let psRanges = psToRanges $ (getPS' n ps)
+          let psRanges = psToRanges $ (getPS n state)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => checkIncomp' ts ps soFar
+            TSat => checkIncomp' ts state soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
             TCon => ICon
             TInc => case soFar of
                       -- This is first instance of an inconclusive term, so the
                       -- term so far is almost satisfied.
-                      ISat => checkIncomp' ts ps (IAlm (n, t))
+                      ISat => checkIncomp' ts state (IAlm (n, t))
                       -- Should be impossible, but defined for totality.
                       ICon => ICon
                       -- The incompatibility remains inconclusive.
-                      IInc => checkIncomp' ts ps IInc
+                      IInc => checkIncomp' ts state IInc
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
-                      (IAlm _) => checkIncomp' ts ps IInc
+                      (IAlm _) => checkIncomp' ts state IInc

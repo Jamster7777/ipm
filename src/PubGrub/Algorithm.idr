@@ -2,11 +2,11 @@ module PubGrub.Algorithm
 
 -- TODO remove redundant ones
 import PubGrub.Types
+import PubGrub.SemverUtils
 import Semver.Range
 import Semver.Version
 import Core.ManifestTypes
 import Core.IpmError
-import Util.SemverExtras
 import Data.AVL.Dict
 
 --------------------------------------------------------------------------------
@@ -28,7 +28,9 @@ import Data.AVL.Dict
 |||   checking.
 unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : List Incomp) -> Either IpmError (GrubState, List PkgName)
 unitPropLoop state changed [] = Right (state, changed)
-unitPropLoop state changed (i :: is) = ?unitPropLoop_rhs_2
+unitPropLoop state changed (i :: is) =
+  case checkIncomp  of
+      case_val => ?unit
 
 ||| The unit propagation part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#unit-propagation
