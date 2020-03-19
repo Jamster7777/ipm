@@ -8,7 +8,7 @@ import Semver.Version
 import Core.ManifestTypes
 import Core.IpmError
 import Data.AVL.Dict
-
+import Control.Monad.State
 --------------------------------------------------------------------------------
 -- The following algorithm is based off of the algorithm described at:
 -- https://github.com/dart-lang/pub/blob/master/doc/solver.md
@@ -34,7 +34,9 @@ unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : L
 unitPropLoop state changed [] = Right (state, changed)
 unitPropLoop state changed (i :: is) =
   case (checkIncomp i state) of
-      ISat          => ?unit_1 -- Run conflictResolution
+      ISat          => do let Right (newState, conI, (n, t)) = conflictResolution state i
+                          let newNewState = addPS n (Derivation (not t) conI (getDecLevel newState))
+                          ?a
       (IAlm (n, t)) => do let newState = addPS n (Derivation (not t) i (getDecLevel state))
                           let newChanged = changed ++ [n]
                           unitPropLoop newState newChanged is
