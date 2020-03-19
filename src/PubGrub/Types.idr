@@ -35,6 +35,10 @@ import Data.AVL.Dict
 
 data Term = Pos Range | Neg Range
 
+not : Term -> Term
+not (Pos x) = Neg x
+not (Neg x) = Pos x
+
 Eq Term where
   (==) (Pos x) (Pos y) = x == y
   (==) (Pos x) (Neg y) = False
@@ -131,6 +135,8 @@ getPS n (MkGrubState ps _ _ _) = getPS' n ps
 addPS : PkgName -> Assignment -> GrubState -> GrubState
 addPS n a (MkGrubState ps x y z) = (MkGrubState (addPS' n a ps) x y z)
 
+getDecLevel : GrubState -> Integer
+getDecLevel (MkGrubState _ _ z _) = z
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

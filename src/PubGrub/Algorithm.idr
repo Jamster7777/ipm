@@ -34,9 +34,11 @@ unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : L
 unitPropLoop state changed [] = Right (state, changed)
 unitPropLoop state changed (i :: is) =
   case (checkIncomp i state) of
-      ISat     => ?unit_1 -- Run conflictResolution
-      (IAlm x) => ?unit_5
-      _        => unitPropLoop state changed is
+      ISat          => ?unit_1 -- Run conflictResolution
+      (IAlm (n, t)) => do let newState = addPS n (Derivation (not t) i (getDecLevel state))
+                          let newChanged = changed ++ [n]
+                          unitPropLoop newState newChanged is
+      _             => unitPropLoop state changed is
 
 
 ||| The unit propagation part of the algorithm, as described at:
