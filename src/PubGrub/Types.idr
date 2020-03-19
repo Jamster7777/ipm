@@ -69,15 +69,15 @@ IncompMap = Dict PkgName (List Incomp)
 
 %name IncompMap m
 
-insertI' : List (PkgName, Term) -> Incomp -> IncompMap -> IncompMap
-insertI' [] i m = m
-insertI' ((n, t) :: xs) i m =
-  case (lookup n m) of
-    Nothing   => insertI' xs i (insert n [i] m)
-    (Just is) => insertI' xs i (insert n (i :: is) m)
-
-insertI : Incomp -> IncompMap -> IncompMap
-insertI i m = insertI' i i m
+addI' : Incomp -> IncompMap -> IncompMap
+addI' i m = addI'' i i m
+  where
+    addI'' : List (PkgName, Term) -> Incomp -> IncompMap -> IncompMap
+    addI'' [] i m = m
+    addI'' ((n, t) :: xs) i m =
+      case (lookup n m) of
+        Nothing   => addI'' xs i (insert n [i] m)
+        (Just is) => addI'' xs i (insert n (i :: is) m)
 
 getI' : PkgName -> IncompMap -> List Incomp
 getI' n m = case (lookup n m) of
@@ -105,6 +105,11 @@ getPS' n p = case (lookup n p) of
                 Nothing  => []
                 (Just x) => x
 
+addPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
+addPS' n a ps = case (lookup n ps) of
+                  Nothing   => insert n [a] ps
+                  (Just as) => insert n (a :: as) ps
+
 --------------------------------------------------------------------------------
 -- The State of Version Solving
 --------------------------------------------------------------------------------
@@ -117,8 +122,14 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgName
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _) = getI' n is
 
+addI : Incomp -> GrubState -> GrubState
+addI i (MkGrubState x is y z) = (MkGrubState x (addI' i is) y z)
+
 getPS : PkgName -> GrubState -> List Assignment
 getPS n (MkGrubState ps _ _ _) = getPS' n ps
+
+addPS : PkgName -> Assignment -> GrubState -> GrubState
+addPS n a (MkGrubState ps x y z) = (MkGrubState (addPS' n a ps) x y z)
 
 
 --------------------------------------------------------------------------------

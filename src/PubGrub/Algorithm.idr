@@ -17,6 +17,10 @@ import Data.AVL.Dict
 -- carried over from this documentation.
 --------------------------------------------------------------------------------
 
+conflictResolution :  (state : GrubState)
+                   -> Incomp
+                   -> Either IpmError (GrubState, Incomp)
+
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.
@@ -29,8 +33,11 @@ import Data.AVL.Dict
 unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : List Incomp) -> Either IpmError (GrubState, List PkgName)
 unitPropLoop state changed [] = Right (state, changed)
 unitPropLoop state changed (i :: is) =
-  case checkIncomp  of
-      case_val => ?unit
+  case (checkIncomp i state) of
+      ISat     => ?unit_1 -- Run conflictResolution
+      (IAlm x) => ?unit_5
+      _        => unitPropLoop state changed is
+
 
 ||| The unit propagation part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#unit-propagation
