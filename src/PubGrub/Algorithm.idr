@@ -25,47 +25,44 @@ conflictResolution :  (state : GrubState)
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.
 |||
-||| @ state is the current state, to be changed and returned.
 ||| @ changed is the remaining package names to be checked in this run of unit
 |||   propagation. It may be modifed in this loop.
 ||| @ packageIs are the incompatibilties which reference the package name we are
 |||   checking.
-unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : List Incomp) -> Either IpmError (GrubState, List PkgName)
-unitPropLoop state changed [] = Right (state, changed)
-unitPropLoop state changed (i :: is) =
-  case (checkIncomp i state) of
-      ISat          => do let Right (newState, conI, (n, t)) = conflictResolution state i
-                          let newNewState = addPS n (Derivation (not t) conI (getDecLevel newState))
-                          ?a
-      (IAlm (n, t)) => do let newState = addPS n (Derivation (not t) i (getDecLevel state))
-                          let newChanged = changed ++ [n]
-                          unitPropLoop newState newChanged is
-      _             => unitPropLoop state changed is
+unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> State GrubState (Either IpmError (List PkgName))
+-- unitPropLoop state changed [] = Right (state, changed)
+-- unitPropLoop state changed (i :: is) =
+--   case (checkIncomp i state) of
+--       ISat          => do let Right (newState, conI, (n, t)) = conflictResolution state i
+--                           let newNewState = addPS n (Derivation (not t) conI (getDecLevel newState))
+--                           ?a
+--       (IAlm (n, t)) => do let newState = addPS n (Derivation (not t) i (getDecLevel state))
+--                           let newChanged = changed ++ [n]
+--                           unitPropLoop newState newChanged is
+--       _             => unitPropLoop state changed is
 
 
 ||| The unit propagation part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#unit-propagation
-unitProp : GrubState -> (changed : List PkgName) -> Either IpmError GrubState
-unitProp state [] = Right state
-unitProp state (package :: changed) =
-    do  let Right (newState, newChanged)
-                    = unitPropLoop state changed (getI package state)
-                    | Left err => Left err
-        unitProp newState newChanged
+unitProp : List PkgName -> State GrubState (Either IpmError ())
+unitProp [] = pure $ Right ()
+unitProp (package :: changed) =
+    do  state <- get
+        (Right newChanged) <- unitPropLoop changed (getI package state)
+                            | (Left err) => pure (Left err)
+        unitProp newChanged
 
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : GrubState -> Either (List (PkgName, Version)) (GrubState, PkgName)
+decMake : State GrubState (Either (List (PkgName, Version)) PkgName)
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
-mainLoop : GrubState -> PkgName -> Either IpmError (List (PkgName, Version))
-mainLoop state next =
-    do  let Right newState
-                    = unitProp state [ next ]
-                    | Left err => Left err
-        let Right (newNewState, newNext)
-                    = decMake newState
-                    | Left solution => Right solution
-        mainLoop newNewState newNext
+mainLoop : PkgName -> State GrubState (Either IpmError (List (PkgName, Version)))
+mainLoop next =
+    do  Right ()      <- unitProp [ next ]
+                       | Left err => pure (Left err)
+        Right newNext <- decMake
+                       | Left solution => pure (Right solution)
+        mainLoop newNext
