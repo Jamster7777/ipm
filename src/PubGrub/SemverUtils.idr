@@ -10,6 +10,10 @@ import Data.AVL.Dict
 
 %access public export
 
+--------------------------------------------------------------------------------
+-- Utilities for converting PubGrub types into sets of Semver ranges.
+--------------------------------------------------------------------------------
+
 ||| Convert a version to a range which only allows the version
 versionAsRange : Version -> Range
 versionAsRange v = MkRange (Closed v False) (Closed v True)
@@ -81,25 +85,81 @@ psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
           psToRanges' as newWRs
     psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
 
-checkRange : Range -> List Range -> TermResult
-checkRange r [] = ?checkRange_rhs_1
-checkRange r (y :: ys) =
-  do  let lCmp = compare True  (lower y) (lower r)
-      let uCmp = compare False (upper y) (upper r)
-      let lIn  = lCmp == GT || lCmp == EQ
-      let uIn  = uCmp == LT || uCmp == EQ
-      case (lIn, uIn) of
-        (True, True)   => TSat
-        (False, False) => TCon
-        _              => TInc
+
+--------------------------------------------------------------------------------
+-- Override interval comparison
+--------------------------------------------------------------------------------
+
+||| Compare the lower bound of the first range with the upper bound of the
+||| second range. Implemented here as the elba/semver package does not compare
+||| intervals which are a mix of upper / lower bounds correctly.
+cmpLowUp : Range -> Range -> Ordering
+cmpLowUp (MkRange l1 _) (MkRange _ u2) = cmpLowUp' l1 u2
+  where
+    cmpLowUp' : Interval -> Interval -> Ordering
+    cmpLowUp' Unbounded Unbounded = LT
+    cmpLowUp' Unbounded u2 = LT
+    cmpLowUp' l1 Unbounded = LT
+    cmpLowUp' (Closed v1 _) (Closed v2 _) =
+      case (v1 `compare` v2) of
+            LT => LT
+            GT => GT
+            EQ => EQ
+    cmpLowUp' (Open v1 _) (Open v2 _) =
+      case (v1 `compare` v2) of
+            LT => LT
+            GT => GT
+            -- Lower bound is greater than upper bound in this case, as it lies
+            -- on the upper side of the version they straddle.
+            EQ => GT
+    cmpLowUp' (Open v1 _) (Closed v2 _) =
+      case (v1 `compare` v2) of
+            LT => LT
+            GT => GT
+            -- As above. In this case the 'upper' bound accepts the version they
+            -- straddle, but the 'lower' bound is above it and doesn't accept it.
+            EQ => GT
+    cmpLowUp' (Closed v1 _) (Open v2 _) =
+      case (v1 `compare` v2) of
+            LT => LT
+            GT => GT
+            -- As above, but in reverse.
+            EQ => GT
+
+||| The compare function from elba/semver works for comparing intervals which
+||| are both lower intervals.
+cmpLowLow : Range -> Range -> Ordering
+cmpLowLow (MkRange l1 _) (MkRange l2 _) = compare True l1 l2
+
+||| The compare function from elba/semver works for comparing intervals which
+||| are both upper intervals.
+cmpUpUp : Range -> Range -> Ordering
+cmpUpUp (MkRange _ u1) (MkRange _ u2) = compare False u1 u2
+
+
+--------------------------------------------------------------------------------
+-- Evaluate a term on the partial solution
+--------------------------------------------------------------------------------
+
+checkRange : List Range -> Range -> TermResult
+-- checkRange [] y = TInc
+-- checkRange (x :: xs) y =
+--   do  let lCmp = compare True  (upper y) (lower r)
+--       let uCmp = compare False (upper y) (upper r)
+--       let lIn  = lCmp == GT || lCmp == EQ
+--       let uIn  = uCmp == LT || uCmp == EQ
+--       case (lIn, uIn) of
+--         (True, True)   => TSat
+--         (False, False) => TInc
+--         (False)              => TInc
 
 checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
 checkTerm term ps = checkTerm' term ps True TInc
   where
-    checkTerm' : (term : List Range) -> (ps : List Range) -> (isFirst : Bool) -> (soFar : TermResult) -> TermResult
-    checkTerm' [] ys isFirst soFar = soFar
-    checkTerm' (x :: xs) ys isFirst soFar =
-      do  let curRes = checkRange x ys
+    checkTerm' : List Range -> List Range -> (isFirst : Bool) -> (soFar : TermResult) -> TermResult
+    checkTerm' xs [] isFirst soFar = soFar
+    checkTerm' xs (y :: ys) isFirst soFar =
+      do  let curRes = checkRange xs y
           let newSoFar = (
             if
               isFirst
