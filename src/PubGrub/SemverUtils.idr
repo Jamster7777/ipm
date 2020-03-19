@@ -181,3 +181,42 @@ checkTerm term ps = checkTerm' term ps True TInc
               TInc
           )
           checkTerm' xs ys False newSoFar
+
+
+||| Evaluate an incompatibility against the partial solution. Based on the
+||| definition of an incompatibility at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#incompatibility
+|||
+||| An incompatibility is satisfied by the partial solution if all terms are
+||| satisfied. It is contradicted if at least one term is contradicted. It is
+||| almost satisfied if all terms are satisfied except one inconclusive term.
+||| Otherwise, the incompatibility is inconclusive for the given partial
+||| solution.
+checkIncomp : Incomp -> PartialSolution -> IncompResult
+checkIncomp i ps = checkIncomp' i ps ISat
+  where
+    checkIncomp' : Incomp -> PartialSolution -> (soFar : IncompResult) -> IncompResult
+    -- The function evaluates the final result as it goes, so once all terms
+    -- have been evaluated soFar can just be returned.
+    checkIncomp' [] ps soFar = soFar
+    checkIncomp' ((n, t) :: ts) ps soFar =
+      do  let termRanges = termToRanges t
+          let psRanges = psToRanges $ (getPS' n ps)
+          case (checkTerm termRanges psRanges) of
+            -- A satsisfied term will not result in a change to soFar, whether
+            -- it's IInc, IAlm or ISat
+            TSat => checkIncomp' ts ps soFar
+            -- Only one contradicted term is required for the whole
+            -- incompatibility to be condraticted.
+            TCon => ICon
+            TInc => case soFar of
+                      -- This is first instance of an inconclusive term, so the
+                      -- term so far is almost satisfied.
+                      ISat => checkIncomp' ts ps (IAlm (n, t))
+                      -- Should be impossible, but defined for totality.
+                      ICon => ICon
+                      -- The incompatibility remains inconclusive.
+                      IInc => checkIncomp' ts ps IInc
+                      -- This is the second instance of an inconclusive term, so
+                      -- the incompatibility can no longer be almost satsified.
+                      (IAlm _) => checkIncomp' ts ps IInc
