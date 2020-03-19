@@ -35,6 +35,14 @@ import Data.AVL.Dict
 
 data Term = Pos Range | Neg Range
 
+Eq Term where
+  (==) (Pos x) (Pos y) = x == y
+  (==) (Pos x) (Neg y) = False
+  (==) (Neg x) (Pos y) = False
+  (==) (Neg x) (Neg y) = x == y
+  (/=) x       y       = not (x == y)
+
+
 Show Term where
   show (Pos r) = show r
   show (Neg r) = "not " ++ (show r)
@@ -117,8 +125,16 @@ getPS n (MkGrubState ps _ _ _) = getPS' n ps
 -- Satisfiability check results
 --------------------------------------------------------------------------------
 
-data IncompResult = Sat | Con | Inc | Alm (PkgName, Term)
+data IncompResult = ISat | ICon | IInc | IAlm (PkgName, Term)
 data TermResult = TSat | TCon | TInc
+
+Eq IncompResult where
+  (==) ISat ISat = True
+  (==) ICon ICon = True
+  (==) IInc IInc = True
+  (==) (IAlm (n1, t1)) (IAlm (n2, t2)) = (n1 == n2) && (t1 == t2)
+  (==) _    _    = False
+  (/=) x    y    = not (x == y)
 
 Eq TermResult where
   (==) TSat TSat = True
