@@ -6,7 +6,7 @@ import Core.ManifestTypes
 import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
-
+import Control.Monad.State
 %access public export
 
 
@@ -132,11 +132,14 @@ addI i (MkGrubState x is y z) = (MkGrubState x (addI' i is) y z)
 getPS : PkgName -> GrubState -> List Assignment
 getPS n (MkGrubState ps _ _ _) = getPS' n ps
 
-addPS : PkgName -> Assignment -> GrubState -> GrubState
-addPS n a (MkGrubState ps x y z) = (MkGrubState (addPS' n a ps) x y z)
+addPS : PkgName -> Assignment -> State GrubState ()
+addPS n a = do  (MkGrubState ps x y z) <- get
+                put (MkGrubState (addPS' n a ps) x y z)
+  -- (MkGrubState (addPS' n a ps) x y z)
 
-getDecLevel : GrubState -> Integer
-getDecLevel (MkGrubState _ _ z _) = z
+getDecLevel : State GrubState (Integer)
+getDecLevel = do (MkGrubState _ _ z _) <- get
+                 pure z
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

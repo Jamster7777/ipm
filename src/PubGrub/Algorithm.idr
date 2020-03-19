@@ -17,9 +17,9 @@ import Control.Monad.State
 -- carried over from this documentation.
 --------------------------------------------------------------------------------
 
-conflictResolution :  (state : GrubState)
-                   -> Incomp
-                   -> Either IpmError (GrubState, Incomp)
+conflictResolution :  Incomp
+                   -> State GrubState (Either IpmError Incomp)
+
 
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
@@ -30,16 +30,17 @@ conflictResolution :  (state : GrubState)
 ||| @ packageIs are the incompatibilties which reference the package name we are
 |||   checking.
 unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> State GrubState (Either IpmError (List PkgName))
--- unitPropLoop state changed [] = Right (state, changed)
--- unitPropLoop state changed (i :: is) =
---   case (checkIncomp i state) of
---       ISat          => do let Right (newState, conI, (n, t)) = conflictResolution state i
---                           let newNewState = addPS n (Derivation (not t) conI (getDecLevel newState))
---                           ?a
---       (IAlm (n, t)) => do let newState = addPS n (Derivation (not t) i (getDecLevel state))
---                           let newChanged = changed ++ [n]
---                           unitPropLoop newState newChanged is
---       _             => unitPropLoop state changed is
+unitPropLoop changed [] = pure $ Right changed
+unitPropLoop changed (i :: is) =
+  do  gs <- get
+      case (checkIncomp i gs) of
+          ISat          => do Right conI <- (conflictResolution i)
+                                          | Left err => pure (Left err)
+                              -- Note the slight deviation from the docs here.
+                              unitPropLoop [] (conI :: is)
+          (IAlm (n, t)) => do addPS n (Derivation (not t) i getDecLevel)
+                              unitPropLoop (changed ++ [n]) is
+          _             => unitPropLoop changed is
 
 
 ||| The unit propagation part of the algorithm, as described at:
