@@ -9,26 +9,29 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 
-{-
-Check if a term is satisfied by the PS.
+--------------------------------------------------------------------------------
+-- The following algorithm is based off of the algorithm described at:
+-- https://github.com/dart-lang/pub/blob/master/doc/solver.md
+--
+-- Termininology such as 'unit propagation' and 'decision making' have been
+-- carried over from this documentation.
+--------------------------------------------------------------------------------
 
-If a decision is come across, stop looping and use that (decisions should be
-the first found if they exist.)
-
-The list of assignments here only apply to this PkgName.
--}
-
-termCheck : PkgName -> Term -> List Assignment -> TermResult
-termCheck n t [] =
-    ?termCheck_rhs_1
-termCheck n t ((Decision v _) :: as) = case
-
--- incompCheck :
-
-unitPropLoop : GrubState -> (changed : List PkgName) -> List Incomp -> Either IpmError (GrubState, List PkgName)
+||| Check each incompatibility involving the package taken from changed.
+||| Manifestation of the 'for each incompatibility' loop in the unit propagation
+||| docs.
+|||
+||| @ state is the current state, to be changed and returned.
+||| @ changed is the remaining package names to be checked in this run of unit
+|||   propagation. It may be modifed in this loop.
+||| @ packageIs are the incompatibilties which reference the package name we are
+|||   checking.
+unitPropLoop : (state : GrubState) -> (changed : List PkgName) -> (packageIs : List Incomp) -> Either IpmError (GrubState, List PkgName)
 unitPropLoop state changed [] = Right (state, changed)
 unitPropLoop state changed (i :: is) = ?unitPropLoop_rhs_2
 
+||| The unit propagation part of the algorithm, as described at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#unit-propagation
 unitProp : GrubState -> (changed : List PkgName) -> Either IpmError GrubState
 unitProp state [] = Right state
 unitProp state (package :: changed) =
@@ -37,8 +40,13 @@ unitProp state (package :: changed) =
                     | Left err => Left err
         unitProp newState newChanged
 
+
+||| The decision making part of the algorithm, as described at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
 decMake : GrubState -> Either (List (PkgName, Version)) (GrubState, PkgName)
 
+||| The main loop of the algorithm, as described at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : GrubState -> PkgName -> Either IpmError (List (PkgName, Version))
 mainLoop state next =
     do  let Right newState
