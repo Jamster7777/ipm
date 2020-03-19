@@ -138,7 +138,7 @@ cmpUpUp (MkRange _ u1) (MkRange _ u2) = compare False u1 u2
 
 
 --------------------------------------------------------------------------------
--- Evaluate a term on the partial solution
+-- Functions for evaluating an incompatibility on the given partial solution.
 --------------------------------------------------------------------------------
 
 ||| Check one range of the partial solution against the ranges of the term.
@@ -147,7 +147,9 @@ cmpUpUp (MkRange _ u1) (MkRange _ u2) = compare False u1 u2
 ||| part of the PS is satisfied. If it partially intersects one, then it is
 ||| inconclusive. If it doesn't fit within any of the sections,
 ||| it is condraticted.
-checkRange : List Range -> Range -> TermResult
+checkRange :  List Range
+           -> Range
+           -> TermResult
 checkRange [] y = TCon
 checkRange (x :: xs) y =
   do  case (intersect x y) of
@@ -161,10 +163,16 @@ checkRange (x :: xs) y =
 ||| solution is satisfied. Likewise for contradictions. If any of the ranges
 ||| are found to be inconclusive, then the whole partial solution is
 ||| inconclusive for this term.
-checkTerm : (term : List Range) -> (ps : List Range) -> TermResult
+checkTerm :  (term : List Range)
+          -> (ps : List Range)
+          -> TermResult
 checkTerm term ps = checkTerm' term ps True TInc
   where
-    checkTerm' : List Range -> List Range -> (isFirst : Bool) -> (soFar : TermResult) -> TermResult
+    checkTerm' :  List Range
+               -> List Range
+               -> (isFirst : Bool)
+               -> (soFar : TermResult)
+               -> TermResult
     checkTerm' xs [] isFirst soFar = soFar
     checkTerm' xs (y :: ys) isFirst soFar =
       do  let curRes = checkRange xs y
@@ -192,10 +200,15 @@ checkTerm term ps = checkTerm' term ps True TInc
 ||| almost satisfied if all terms are satisfied except one inconclusive term.
 ||| Otherwise, the incompatibility is inconclusive for the given partial
 ||| solution.
-checkIncomp : Incomp -> PartialSolution -> IncompResult
+checkIncomp :  Incomp
+            -> PartialSolution
+            -> IncompResult
 checkIncomp i ps = checkIncomp' i ps ISat
   where
-    checkIncomp' : Incomp -> PartialSolution -> (soFar : IncompResult) -> IncompResult
+    checkIncomp' :  Incomp
+                 -> PartialSolution
+                 -> (soFar : IncompResult)
+                 -> IncompResult
     -- The function evaluates the final result as it goes, so once all terms
     -- have been evaluated soFar can just be returned.
     checkIncomp' [] ps soFar = soFar
