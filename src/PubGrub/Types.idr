@@ -139,8 +139,10 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _ _) = getI' n is
 
-addI : Incomp -> GrubState -> GrubState
-addI i (MkGrubState x is y z w) = (MkGrubState x (addI' i is) y z w)
+
+addI : Incomp -> State GrubState ()
+addI i = do  (MkGrubState x is y z w) <- get
+             put (MkGrubState x (addI' i is) y z w)
 
 getPS : PkgName -> GrubState -> List Assignment
 getPS n (MkGrubState ps _ _ _ _) = getPS' n ps

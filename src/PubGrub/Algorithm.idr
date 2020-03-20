@@ -60,15 +60,24 @@ unitProp (package :: changed) =
                             | (Left err) => pure (Left err)
         unitProp newChanged
 
+addRangesAsIncomps : PkgName -> List Range -> State GrubState ()
+addRangesAsIncomps n [] = pure ()
+addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
 decMake : State GrubState (Either (List (PkgName, Version)) PkgName)
 decMake =
   do  gs <- get
+      -- Note that the minimum could be 0 versions.
       let package = minVsInPS gs
       case (max (vsInPS gs package)) of
-        Nothing      => ?a
+                        -- If there are 0 versions available within the allowed
+                        -- ranges, then add these ranges as incompatibilities
+                        -- and move onto unit propagation (note that this is
+                        -- now guarenteed to result in a conflict down the line).
+        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package gs)
+                            pure (Right package)
         Just version => ?a
 
 ||| The main loop of the algorithm, as described at:
