@@ -7,6 +7,8 @@ import Core.IpmError
 import Util.SemverExtras
 import Data.AVL.Dict
 import Control.Monad.State
+import Util.FetchDep
+
 %access public export
 
 
@@ -115,30 +117,46 @@ addPS' n a ps = case (lookup n ps) of
                   (Just as) => insert n (a :: as) ps
 
 --------------------------------------------------------------------------------
+-- Manifest store
+--------------------------------------------------------------------------------
+
+PkgVersions : Type
+PkgVersions = Dict PkgName (List Version)
+
+Manifests : Type
+Manifests = Dict (PkgName, Version) Manifest
+
+
+--------------------------------------------------------------------------------
 -- The State of Version Solving
 --------------------------------------------------------------------------------
 
 -- The integer here refers to the current decision level, the PkgName to the variable 'next' in the algorithm's docs
-data GrubState = MkGrubState PartialSolution IncompMap Integer PkgName
+data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests
 
 %name GrubState state
 
 getI : PkgName -> GrubState -> List Incomp
-getI n (MkGrubState _ is _ _) = getI' n is
+getI n (MkGrubState _ is _ _ _) = getI' n is
 
 addI : Incomp -> GrubState -> GrubState
-addI i (MkGrubState x is y z) = (MkGrubState x (addI' i is) y z)
+addI i (MkGrubState x is y z w) = (MkGrubState x (addI' i is) y z w)
 
 getPS : PkgName -> GrubState -> List Assignment
-getPS n (MkGrubState ps _ _ _) = getPS' n ps
+getPS n (MkGrubState ps _ _ _ _) = getPS' n ps
 
 addPS : PkgName -> Assignment -> State GrubState ()
-addPS n a = do  (MkGrubState ps x y z) <- get
-                put (MkGrubState (addPS' n a ps) x y z)
+addPS n a = do  (MkGrubState ps x y z w) <- get
+                put (MkGrubState (addPS' n a ps) x y z w)
   -- (MkGrubState (addPS' n a ps) x y z)
 
 getDecLevel : GrubState -> Integer
-getDecLevel (MkGrubState _ _ z _) = z
+getDecLevel (MkGrubState _ _ z _ _) = z
+
+pkgDiscover : ManiDep -> State GrubState (IO ())
+pkgDiscover dep =
+  do  pure (fetchPkg dep)
+      ?a
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results
