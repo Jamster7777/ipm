@@ -233,3 +233,27 @@ checkIncomp i state = checkIncomp' i state ISat
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
                       (IAlm _) => checkIncomp' ts state IInc
+
+
+||| Check if a version lies in any of the given list of ranges
+versionInRanges : List Range -> Version -> Bool
+versionInRanges [] v = False
+versionInRanges (r :: rs) v =
+  if
+    (satisfied r v)
+  then
+    True
+  else
+    versionInRanges rs v
+
+||| Find the list of versions which are allowed by the partial solution for a
+||| given package.
+vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
+vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPS' n ps))) vs
+
+vsInPs : PkgName -> GrubState -> List Version
+vsInPs n (MkGrubState ps _ _ pvs mans) =
+  do  let Just vs
+          = lookup n pvs
+          | Nothing  => []
+      vsInPS' n vs ps
