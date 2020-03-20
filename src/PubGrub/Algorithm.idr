@@ -9,6 +9,7 @@ import Core.ManifestTypes
 import Core.IpmError
 import Data.AVL.Dict
 import Control.Monad.State
+import Util.ListExtras
 --------------------------------------------------------------------------------
 -- The following algorithm is based off of the algorithm described at:
 -- https://github.com/dart-lang/pub/blob/master/doc/solver.md
@@ -37,6 +38,12 @@ unitPropLoop changed (i :: is) =
           ISat          => do Right conI <- (conflictResolution i)
                                           | Left err => pure (Left err)
                               -- Note the slight deviation from the docs here.
+                              -- This puts the new incompatibility to the front
+                              -- of the list and clears changed. As the incomp
+                              -- is guarenteed to be almost satisfied, the next
+                              -- iteration of unitPropLoop will perform the same
+                              -- actions that were required here in the docs
+                              -- version.
                               unitPropLoop [] (conI :: is)
           (IAlm (n, t)) => do addPS n (Derivation (not t) i (getDecLevel gs))
                               unitPropLoop (changed ++ [n]) is
@@ -57,6 +64,12 @@ unitProp (package :: changed) =
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
 decMake : State GrubState (Either (List (PkgName, Version)) PkgName)
+decMake =
+  do  gs <- get
+      let package = minVsInPS gs
+      case (max (vsInPS gs package)) of
+        Nothing      => ?a
+        Just version => ?a
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm

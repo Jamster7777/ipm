@@ -153,10 +153,13 @@ addPS n a = do  (MkGrubState ps x y z w) <- get
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z
 
-pkgDiscover : ManiDep -> State GrubState (IO ())
-pkgDiscover dep =
-  do  pure (fetchPkg dep)
-      ?a
+getNextDec : GrubState -> PkgName
+getNextDec (MkGrubState x y z w s) = ?getNextDec_rhs_1
+
+-- pkgDiscover : ManiDep -> State GrubState (IO ())
+-- pkgDiscover dep =
+--   do  pure (fetchPkg dep)
+--       ?a
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results
