@@ -139,15 +139,14 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _ _) = getI' n is
 
-
-addI : Incomp -> State GrubState ()
+addI : Incomp -> StateT GrubState IO ()
 addI i = do  (MkGrubState x is y z w) <- get
              put (MkGrubState x (addI' i is) y z w)
 
 getPS : PkgName -> GrubState -> List Assignment
 getPS n (MkGrubState ps _ _ _ _) = getPS' n ps
 
-addPS : PkgName -> Assignment -> State GrubState ()
+addPS : PkgName -> Assignment -> StateT GrubState IO ()
 addPS n a = do  (MkGrubState ps x y z w) <- get
                 put (MkGrubState (addPS' n a ps) x y z w)
   -- (MkGrubState (addPS' n a ps) x y z)
@@ -155,13 +154,9 @@ addPS n a = do  (MkGrubState ps x y z w) <- get
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z
 
-getNextDec : GrubState -> PkgName
-getNextDec (MkGrubState x y z w s) = ?getNextDec_rhs_1
+getManifest : PkgName -> Version -> GrubState -> Maybe Manifest
+getManifest n v (MkGrubState _ _ _ _ m) = lookup (n, v) m
 
--- pkgDiscover : ManiDep -> State GrubState (IO ())
--- pkgDiscover dep =
---   do  pure (fetchPkg dep)
---       ?a
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

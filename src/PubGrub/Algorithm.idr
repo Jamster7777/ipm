@@ -19,7 +19,7 @@ import Util.ListExtras
 --------------------------------------------------------------------------------
 
 conflictResolution :  Incomp
-                   -> State GrubState (Either IpmError Incomp)
+                   -> StateT GrubState IO (Either IpmError Incomp)
 
 
 ||| Check each incompatibility involving the package taken from changed.
@@ -30,7 +30,7 @@ conflictResolution :  Incomp
 |||   propagation. It may be modifed in this loop.
 ||| @ packageIs are the incompatibilties which reference the package name we are
 |||   checking.
-unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> State GrubState (Either IpmError (List PkgName))
+unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> StateT GrubState IO (Either IpmError (List PkgName))
 unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
@@ -52,7 +52,7 @@ unitPropLoop changed (i :: is) =
 
 ||| The unit propagation part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#unit-propagation
-unitProp : List PkgName -> State GrubState (Either IpmError ())
+unitProp : List PkgName -> StateT GrubState IO (Either IpmError ())
 unitProp [] = pure $ Right ()
 unitProp (package :: changed) =
     do  state <- get
@@ -60,29 +60,31 @@ unitProp (package :: changed) =
                             | (Left err) => pure (Left err)
         unitProp newChanged
 
-addRangesAsIncomps : PkgName -> List Range -> State GrubState ()
+addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
 addRangesAsIncomps n [] = pure ()
 addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : State GrubState (Either (List (PkgName, Version)) PkgName)
+decMake : StateT GrubState IO (Either (List (PkgName, Version)) PkgName)
 decMake =
-  do  gs <- get
+  do  state <- get
       -- Note that the minimum could be 0 versions.
-      let package = minVsInPS gs
-      case (max (vsInPS gs package)) of
+      let package = minVsInPS state
+      case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
                         -- ranges, then add these ranges as incompatibilities
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
-        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package gs)
+        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
                             pure (Right package)
-        Just version => ?a
+        Just version => case (getManifest package version state) of
+                            Nothing  => ?a_2
+                            (Just x) => ?a_3
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
-mainLoop : PkgName -> State GrubState (Either IpmError (List (PkgName, Version)))
+mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
 mainLoop next =
     do  Right ()      <- unitProp [ next ]
                        | Left err => pure (Left err)
