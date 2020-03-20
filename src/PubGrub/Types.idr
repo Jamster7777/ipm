@@ -13,25 +13,6 @@ import Util.FetchDep
 
 
 --------------------------------------------------------------------------------
--- Multi-key dict - turns out this is useless...
---------------------------------------------------------------------------------
---
--- data MultiDict : (k : Type) -> Type -> Type where
---     MkMultiDict : Dict k (List v) -> MultiDict k (List v)
---
--- lookup : (Ord k) => k -> MultiDict k (List v) -> List v
--- lookup k (MkMultiDict d) =
---     case (lookup k d) of
---         Nothing   => []
---         (Just vs) => vs
---
--- insert : (Ord k) => k -> MultiDict k (List v) -> List v
--- lookup k (MkMultiDict d) =
---     case (lookup k d) of
---         Nothing   => []
---         (Just vs) => vs
-
---------------------------------------------------------------------------------
 -- Incompatibilties
 --------------------------------------------------------------------------------
 
@@ -179,27 +160,3 @@ Eq TermResult where
   (==) TInc TInc = True
   (==) _    _    = False
   (/=) x    y    = not (x == y)
-
---------------------------------------------------------------------------------
--- RangeSet
---------------------------------------------------------------------------------
-
--- Stores a min and max value, and then a list of disallowed ranges within this range
-data RangeSet   = ValidRange Range (List Range)
-                | EmptyRange
-
-isValid : Term -> RangeSet -> TermResult
-
--- isValid : Version -> RangeSet -> Bool
--- max v EmptyRange = False
--- max v (ValidRange pos neg) =
---     ?a
-
--- make : List Term -> RangeSet -> RangeSet
--- make [] r = r
--- make ((Pos r) :: ts) (ValidRange pos neg) =
---     case (intersect r pos) of
---         Nothing  => EmptyRange
---         (Just i) => make ts (ValidRange i neg)
--- make ((Neg r) :: ts) (ValidRange pos neg) =
---     case ()
