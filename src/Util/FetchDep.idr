@@ -32,11 +32,16 @@ getPkg : ManiDep -> IO ()
 getPkg (MkManiDep n (PkgUrl u) r) =
   do  rmTempDir -- TODO remove
       bashCommand ("mkdir -p " ++ (pDir n))
-      bashCommand ("git clone " ++ u ++ " " ++ (pDir n))
+      bashCommand
+        {onFail=(errorAndExit ("Error: Could not fetch dependancy '" ++ (show n) ++ "' from url " ++ u))}
+        ("git clone " ++ u ++ " " ++ (pDir n))
 getPkg (MkManiDep n (PkgLocal p) r) =
   do  rmTempDir -- TODO remove
       bashCommand ("mkdir -p " ++ (pDir n))
-      bashCommand {inDir=p} ("cp -r . " ++ (pDir n))
+      bashCommand
+        {inDir=p}
+        {onFail=(errorAndExit ("Error: Could not fetch dependancy '" ++ (show n) ++ "' from path " ++ p))}
+        ("cp -r . " ++ (pDir n))
 
 listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions {dir} =
