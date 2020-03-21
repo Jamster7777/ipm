@@ -71,6 +71,7 @@ getI' n m = case (lookup n m) of
                 Nothing  => []
                 (Just x) => x
 
+
 --------------------------------------------------------------------------------
 -- The Partial Solution
 --------------------------------------------------------------------------------
@@ -135,9 +136,28 @@ addPS n a = do  (MkGrubState ps x y z w) <- get
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z
 
-getManifest : PkgName -> Version -> GrubState -> Maybe Manifest
-getManifest n v (MkGrubState _ _ _ _ m) = lookup (n, v) m
+||| Add a set of ranges as individual positive incompatibilities
+addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
+addRangesAsIncomps n [] = pure ()
+addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
 
+||| Convert all of a package version's dependancies to incompatibilties. Should
+||| only do this the first time a specific package-version combo manifest is
+||| loaded.
+addDepsAsIncomps : Manifest -> StateT GrubState IO ()
+addDepsAsIncomps n v [] = pure ()
+addDepsAsIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
+  do  addI [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ]
+      addDepsAsIncomps (MkManifest n v ds ms)
+
+getManifest : PkgName -> Version -> GrubState -> StateT GrubState IO (Either IpmError Manifest)
+getManifest n v (MkGrubState _ _ _ _ ms) =
+  case (lookup (n, v) ms) of
+    Nothing  => do  Right m <- lift $ checkoutManifest n
+                             | Left err => pure (Left err)
+                    addDepsAsIncomps m
+
+    (Just x) => pure (Right x)
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

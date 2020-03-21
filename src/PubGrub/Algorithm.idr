@@ -60,13 +60,13 @@ unitProp (package :: changed) =
                             | (Left err) => pure (Left err)
         unitProp newChanged
 
-addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
-addRangesAsIncomps n [] = pure ()
-addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
+data DecResult = DecError IpmError
+               | DecSolution (List (PkgName, Version))
+               | DecAction PkgName
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : StateT GrubState IO (Either (List (PkgName, Version)) PkgName)
+decMake : StateT GrubState IO DecResult
 decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
@@ -77,17 +77,17 @@ decMake =
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
         Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
-                            pure (Right package)
-        Just version => case (getManifest package version state) of
-                            Nothing  => ?a_2
-                            (Just x) => ?a_3
+                            pure $ DecAction package
+        Just version => do  Right m <- lift $ getManifest package version state
+                                     | Left err => pure (DecError err)
+                            ?a
 
-||| The main loop of the algorithm, as described at:
-||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
-mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
-mainLoop next =
-    do  Right ()      <- unitProp [ next ]
-                       | Left err => pure (Left err)
-        Right newNext <- decMake
-                       | Left solution => pure (Right solution)
-        mainLoop newNext
+-- ||| The main loop of the algorithm, as described at:
+-- ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
+-- mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
+-- mainLoop next =
+--     do  Right ()      <- unitProp [ next ]
+--                        | Left err => pure (Left err)
+--         Right newNext <- decMake
+--                        | Left solution => pure (Right solution)
+--         mainLoop newNext
