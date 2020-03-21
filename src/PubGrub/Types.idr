@@ -133,6 +133,11 @@ addPS n a = do  (MkGrubState ps x y z w) <- get
                 put (MkGrubState (addPS' n a ps) x y z w)
   -- (MkGrubState (addPS' n a ps) x y z)
 
+addManifest : Manifest -> StateT GrubState IO ()
+addManifest (MkManifest n v xs m) =
+  do  state <- get
+      ?a
+
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z
 
@@ -141,23 +146,28 @@ addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
 addRangesAsIncomps n [] = pure ()
 addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
 
-||| Convert all of a package version's dependancies to incompatibilties. Should
-||| only do this the first time a specific package-version combo manifest is
-||| loaded.
-addDepsAsIncomps : Manifest -> StateT GrubState IO ()
-addDepsAsIncomps n v [] = pure ()
-addDepsAsIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
-  do  addI [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ]
-      addDepsAsIncomps (MkManifest n v ds ms)
+||| Add a list of incompatibilties to the partial solution
+addIs : List Incomp -> StateT GrubState IO ()
+addIs [] = pure ()
+addIs (x :: xs) = do  addI x
+                      addIs xs
 
-getManifest : PkgName -> Version -> GrubState -> StateT GrubState IO (Either IpmError Manifest)
-getManifest n v (MkGrubState _ _ _ _ ms) =
-  case (lookup (n, v) ms) of
-    Nothing  => do  Right m <- lift $ checkoutManifest n
-                             | Left err => pure (Left err)
-                    addDepsAsIncomps m
+||| Convert the dependancies of a package to a list of incompatibilties
+depsToIncomps : Manifest -> List Incomp
+depsToIncomps (MkManifest n v [] ms) = []
+depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
+  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
 
-    (Just x) => pure (Right x)
+-- chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
+-- getManifest n v (MkGrubState _ _ _ _ ms) =
+--   case (lookup (n, v) ms) of
+--     Nothing  => do  Right m <- lift $ checkoutManifest n
+--                              | Left err => pure (Left err)
+--
+--                     let is = depsToIncomps m
+--                     addIs is
+--
+--     (Just x) => pure (Right x)
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results
