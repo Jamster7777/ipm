@@ -10,6 +10,8 @@ import Core.IpmError
 import Data.AVL.Dict
 import Control.Monad.State
 import Util.ListExtras
+import Util.FetchDep
+
 --------------------------------------------------------------------------------
 -- The following algorithm is based off of the algorithm described at:
 -- https://github.com/dart-lang/pub/blob/master/doc/solver.md
@@ -70,17 +72,37 @@ checkNewIncompsForSat (x :: xs) state =
     ISat => True
     _    => checkNewIncompsForSat xs state
 
--- chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
--- getManifest n v (MkGrubState _ _ _ _ ms) =
---   case (lookup (n, v) ms) of
---     Nothing  => do  Right m <- lift $ checkoutManifest n
---                              | Left err => pure (Left err)
---
---                     let is = depsToIncomps m
---                     addIs is
---                     ?a
---     (Just x) => pure (Right ())
-
+||| Part of the decision making step of the algorithm.
+|||
+||| If there is a version of the chosen package which fits the criteria of the
+||| partial solution, then add its dependancies as incompatibilties. Provided
+||| none of these incomps would be instantly satisfied, add the chosen version
+||| of the package to the partial solution as a decision.
+chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
+chooseVersion n v =
+  do  (MkGrubState w x decLevel z mans) <- get
+      -- The manifest for this version may have already been parsed and loaded.
+      -- If it hasn't, then it can be easily located in the temp install folder
+      -- ipm creates for the package, using git tags to change to different
+      -- versions.
+      case (lookup (n, v) mans) of
+        Nothing  => do  Right m <- lift $ checkoutManifest n v
+                                 | Left err => pure (Left err)
+                        -- When fetching a version's manifest for the first time,
+                        -- all of the deps referenced are moved to the temp
+                        -- folder ready to be parsed next time.
+                        fetchDeps m
+                        -- This is the first time the manifest has been parsed,
+                        -- so add the dependancies as incompatibilties
+                        let is = depsToIncomps m
+                        addIs is
+                        ?a
+        (Just m) => do  let is = depsToIncomps m
+                        -- Do NOT add incompatibilties, they have already been added
+                        -- at an earlier step.
+                        let possibleDec = Decision v (decLevel + 1)
+                        ?a
+                        -- if (checkNewIncompsForSat )
 data DecResult = DecError IpmError
                | DecSolution (List (PkgName, Version))
                | DecAction PkgName

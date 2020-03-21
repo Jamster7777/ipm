@@ -28,8 +28,8 @@ pDir n = TEMP_DIR ++ (show n)
 rmTempDir : IO ()
 rmTempDir = bashCommand ("rm -rf " ++ TEMP_DIR)
 
-getPkg : ManiDep -> IO ()
-getPkg (MkManiDep n (PkgUrl u) r) =
+fetchDep : ManiDep -> IO ()
+fetchDep (MkManiDep n (PkgUrl u) r) =
   do  rmTempDir -- TODO remove
       bashCommand ("mkdir -p " ++ (pDir n))
       bashCommand
@@ -42,6 +42,10 @@ getPkg (MkManiDep n (PkgLocal p) r) =
         {inDir=p}
         {onFail=(errorAndExit ("Error: Could not fetch dependancy '" ++ (show n) ++ "' from path " ++ p))}
         ("cp -r . " ++ (pDir n))
+
+fetchDeps : Manifest -> IO ()
+fetchDeps x = ?fetchDeps_rhs
+
 
 listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions {dir} =
