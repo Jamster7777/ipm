@@ -58,12 +58,23 @@ errorAndExit failMessage =
   do  putStrLn failMessage
       exit 1
 
-bashCommand : (command : String) -> { default "." inDir : String } -> { default doNothing onSuccess : IO () } -> { default doNothing onFail : IO () } -> IO ()
-bashCommand command {inDir} {onSuccess} {onFail} =
+bashCommand : (command : String) -> { default "." inDir : String } -> IO Bool
+bashCommand command {inDir} =
   do  exitCode <- system ("cd " ++ inDir ++ " && " ++ command)
-      if (exitCode == 0)
-      then onSuccess
-      else onFail
+      pure (exitCode == 0)
+
+||| Execute a sequence of bash commands, return true if they all succeed and
+||| false as soon as one fails.
+bashCommandSeq : (commands : List String) -> { default "." inDir : String } -> IO Bool
+bashCommandSeq [] {inDir} = pure True
+bashCommandSeq (x :: xs) {inDir} =
+  do  success <- bashCommand x
+      if
+        success
+      then
+        bashCommandSeq xs {inDir=inDir}
+      else
+        pure False
 
 promptYesNo : (prompt : String) -> (action : IO ()) -> IO ()
 promptYesNo prompt action =

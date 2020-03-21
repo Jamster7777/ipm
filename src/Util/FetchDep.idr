@@ -20,32 +20,38 @@ parseTag tagStr =
     Left (TagError (tagStr ++ " is an invalid tag."))
 
 cd : String -> IO ()
-cd dir = bashCommand ("cd " ++ dir)
+cd dir = do  success <- bashCommand ("cd " ++ dir)
+             pure ()
 
 pDir : PkgName -> String
 pDir n = TEMP_DIR ++ (show n)
 
 rmTempDir : IO ()
-rmTempDir = bashCommand ("rm -rf " ++ TEMP_DIR)
+rmTempDir = do  success <- bashCommand ("rm -rf " ++ TEMP_DIR)
+                pure ()
 
-fetchDep : ManiDep -> IO ()
+||| Convert a false value to the given error, a true value to nothing. Used to
+||| avoid repeated code.
+boolToErr : Bool -> IpmError -> Maybe IpmError
+boolToErr True  e = Nothing
+boolToErr False e = Just e
+
+fetchDep : ManiDep -> IO (Maybe IpmError)
 fetchDep (MkManiDep n (PkgUrl u) r) =
-  do  rmTempDir -- TODO remove
-      bashCommand ("mkdir -p " ++ (pDir n))
-      bashCommand
-        {onFail=(errorAndExit ("Error: Could not fetch dependancy '" ++ (show n) ++ "' from url " ++ u))}
+  do  success <- (bashCommandSeq [
+        ("mkdir -p " ++ (pDir n)),
         ("git clone " ++ u ++ " " ++ (pDir n))
-getPkg (MkManiDep n (PkgLocal p) r) =
-  do  rmTempDir -- TODO remove
-      bashCommand ("mkdir -p " ++ (pDir n))
-      bashCommand
-        {inDir=p}
-        {onFail=(errorAndExit ("Error: Could not fetch dependancy '" ++ (show n) ++ "' from path " ++ p))}
-        ("cp -r . " ++ (pDir n))
+        ])
+      pure $ boolToErr success (DepFetchError n u)
+fetchDep (MkManiDep n (PkgLocal p) r) =
+  do  success <- (bashCommandSeq [
+        ("mkdir -p " ++ (pDir n)),
+        ("cp -r " ++ p ++ " " ++ (pDir n))
+        ])
+      pure $ boolToErr success (DepFetchError n p)
 
 fetchDeps : Manifest -> IO ()
 fetchDeps x = ?fetchDeps_rhs
-
 
 listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions {dir} =
