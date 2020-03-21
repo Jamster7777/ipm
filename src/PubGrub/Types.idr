@@ -158,17 +158,6 @@ depsToIncomps (MkManifest n v [] ms) = []
 depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
   [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
 
--- chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
--- getManifest n v (MkGrubState _ _ _ _ ms) =
---   case (lookup (n, v) ms) of
---     Nothing  => do  Right m <- lift $ checkoutManifest n
---                              | Left err => pure (Left err)
---
---                     let is = depsToIncomps m
---                     addIs is
---
---     (Just x) => pure (Right x)
-
 --------------------------------------------------------------------------------
 -- Satisfiability check results
 --------------------------------------------------------------------------------

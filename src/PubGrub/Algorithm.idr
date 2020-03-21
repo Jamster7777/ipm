@@ -60,6 +60,27 @@ unitProp (package :: changed) =
                             | (Left err) => pure (Left err)
         unitProp newChanged
 
+||| Check if any of a list of incompatibilities are satisfied by the state
+||| provided. Used in decision making to ensure that adding a new decision to
+||| the partial solution would not contradict any of the new incompatibilities.
+checkNewIncompsForSat : List Incomp -> GrubState -> Bool
+checkNewIncompsForSat [] state = False
+checkNewIncompsForSat (x :: xs) state =
+  case (checkIncomp x state) of
+    ISat => True
+    _    => checkNewIncompsForSat xs state
+
+-- chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
+-- getManifest n v (MkGrubState _ _ _ _ ms) =
+--   case (lookup (n, v) ms) of
+--     Nothing  => do  Right m <- lift $ checkoutManifest n
+--                              | Left err => pure (Left err)
+--
+--                     let is = depsToIncomps m
+--                     addIs is
+--                     ?a
+--     (Just x) => pure (Right ())
+
 data DecResult = DecError IpmError
                | DecSolution (List (PkgName, Version))
                | DecAction PkgName
@@ -67,20 +88,20 @@ data DecResult = DecError IpmError
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
 decMake : StateT GrubState IO DecResult
-decMake =
-  do  state <- get
-      -- Note that the minimum could be 0 versions.
-      let package = minVsInPS state
-      case (max (vsInPS state package)) of
-                        -- If there are 0 versions available within the allowed
-                        -- ranges, then add these ranges as incompatibilities
-                        -- and move onto unit propagation (note that this is
-                        -- now guarenteed to result in a conflict down the line).
-        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
-                            pure $ DecAction package
-        Just version => do  Right m <- lift $ getManifest package version state
-                                     | Left err => pure (DecError err)
-                            ?a
+-- decMake =
+--   do  state <- get
+--       -- Note that the minimum could be 0 versions.
+--       let package = minVsInPS state
+--       case (max (vsInPS state package)) of
+--                         -- If there are 0 versions available within the allowed
+--                         -- ranges, then add these ranges as incompatibilities
+--                         -- and move onto unit propagation (note that this is
+--                         -- now guarenteed to result in a conflict down the line).
+--         Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
+--                             pure $ DecAction package
+--         Just version => do  Right m <- lift $ getManifest package version state
+--                                      | Left err => pure (DecError err)
+--                             ?a
 
 -- ||| The main loop of the algorithm, as described at:
 -- ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
