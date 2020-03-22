@@ -133,10 +133,19 @@ addPS n a = do  (MkGrubState ps x y z w) <- get
                 put (MkGrubState (addPS' n a ps) x y z w)
   -- (MkGrubState (addPS' n a ps) x y z)
 
+||| Add a manifest to the dictionary of manifests, indexed by package name and
+||| value.
 addManifest : Manifest -> StateT GrubState IO ()
 addManifest (MkManifest n v xs m) =
-  do  state <- get
-      ?a
+  do  (MkGrubState w x y z mans) <- get
+      put (MkGrubState w x y z (insert (n, v) (MkManifest n v xs m) mans))
+
+||| Add a list of available versions for a given package to the dictionary of
+||| package versions.
+addVersionList : PkgName -> List Version -> StateT GrubState IO ()
+addVersionList n vs =
+  do  (MkGrubState w x y pVersions z) <- get
+      put (MkGrubState w x y (insert n vs pVersions) z)
 
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z

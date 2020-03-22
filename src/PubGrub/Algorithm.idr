@@ -78,7 +78,7 @@ checkNewIncompsForSat (x :: xs) state =
 ||| partial solution, then add its dependancies as incompatibilties. Provided
 ||| none of these incomps would be instantly satisfied, add the chosen version
 ||| of the package to the partial solution as a decision.
-chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError ())
+chooseVersion : PkgName -> Version -> StateT GrubState IO (Maybe IpmError)
 chooseVersion n v =
   do  (MkGrubState w x decLevel z mans) <- get
       -- The manifest for this version may have already been parsed and loaded.
@@ -87,15 +87,18 @@ chooseVersion n v =
       -- versions.
       case (lookup (n, v) mans) of
         Nothing  => do  Right m <- lift $ checkoutManifest n v
-                                 | Left err => pure (Left err)
+                                 | Left err => pure (Just err)
+
                         -- When fetching a version's manifest for the first time,
                         -- all of the deps referenced are moved to the temp
                         -- folder ready to be parsed next time.
-                        fetchDeps m
+                        Nothing <- lift $ fetchDeps m
+                                 | Just err => pure (Just err)
                         -- This is the first time the manifest has been parsed,
                         -- so add the dependancies as incompatibilties
                         let is = depsToIncomps m
                         addIs is
+                        addManifest m
                         ?a
         (Just m) => do  let is = depsToIncomps m
                         -- Do NOT add incompatibilties, they have already been added
