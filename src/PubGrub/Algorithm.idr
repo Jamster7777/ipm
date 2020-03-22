@@ -134,15 +134,11 @@ chooseVersion n v =
         Nothing  => do  Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
                         handleNewManifest m
-        (Just m) => do  pure $ Right $ depsToIncomps m
-
-data DecResult = DecError IpmError
-               | DecSolution (List (PkgName, Version))
-               | DecAction PkgName
+        (Just m) => pure $ Right $ depsToIncomps m
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : StateT GrubState IO DecResult
+decMake : StateT GrubState IO (Either IpmError PkgName)
 decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
@@ -153,10 +149,10 @@ decMake =
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
         Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
-                            pure $ DecAction package
+                            pure $ Right package
         Just version => do  Right is <- chooseVersion package version
-                                      | Left err => pure (DecError err)
-                            let possibleDec = Decision version (getDecLevel state)
+                                      | Left err => pure (Left err)
+                            let possibleDec = Decision version ((getDecLevel state) + 1)
                             (MkGrubState ps w x y z) <- get
                             if
                               (checkNewIncompsForSat
@@ -166,18 +162,27 @@ decMake =
                             then
                               -- Don't add a decision to the partial solution if
                               -- it would instantly satisfy an incompatibility.
-                              pure $ DecAction package
+                              pure $ Right package
                             else
                               do  addPS package possibleDec
-                                  pure $ DecAction package
+                                  setDecLevel ((getDecLevel state) + 1)
+                                  pure $ Right package
 
-
--- ||| The main loop of the algorithm, as described at:
--- ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
--- mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
--- mainLoop next =
---     do  Right ()      <- unitProp [ next ]
---                        | Left err => pure (Left err)
---         Right newNext <- decMake
---                        | Left solution => pure (Right solution)
---         mainLoop newNext
+-- checkForSolution : GrubState -> Maybe (List (PkgName, Version))
+-- checkForSolution (MkGrubState x y z w s) = ?checkForSolution_rhs_1
+--   checkForSolution :
+||| The main loop of the algorithm, as described at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
+mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
+mainLoop next =
+    do  Right ()      <- unitProp [ next ]
+                       | Left err => pure (Left err)
+        Right newNext <- decMake
+                       | Left err => pure (Left err)
+        state <- get
+        if
+          (psNoDec state) == []
+        then
+          Right $ getDecs state
+        else
+          mainLoop newNext

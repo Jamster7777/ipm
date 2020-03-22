@@ -260,16 +260,17 @@ vsInPS (MkGrubState ps _ _ pvs mans) n =
           | Nothing  => []
       vsInPS' n vs ps
 
+||| For a list of assignments regarding a package, if they contain a decision
+||| return false. Else return true.
+pkgHasNoDec : List Assignment -> Bool
+pkgHasNoDec [] = True
+pkgHasNoDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
+pkgHasNoDec ((Decision _ _) :: as) = False
+
 ||| Get a list of all packages which do not yet have a decision in the partial
-||| solution. No derivations are made after a decision, so we can do this by
-||| simply looking at the most recent assignment for that package.
+||| solution.
 psNoDec : GrubState -> List PkgName
-psNoDec (MkGrubState ps _ _ _ _) = psNoDec' (toList ps)
-  where
-    psNoDec' : (List (PkgName, (List Assignment))) -> List PkgName
-    psNoDec' [] = []
-    psNoDec' ((n, ((Derivation _ _ _) :: _)) :: xs) = n :: psNoDec' xs
-    psNoDec' ((n, ((Decision _ _ ) :: _)) :: xs)    = psNoDec' xs
+psNoDec (MkGrubState ps _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList ps
 
 ||| Find the package which has the smallest number of versions allowed by the
 ||| partial solution. This is a decent heuristic for improving solve time, as

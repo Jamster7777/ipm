@@ -98,6 +98,8 @@ addPS' n a ps = case (lookup n ps) of
                   Nothing   => insert n [a] ps
                   (Just as) => insert n (a :: as) ps
 
+-- getDecs : List Deici
+
 --------------------------------------------------------------------------------
 -- Manifest store
 --------------------------------------------------------------------------------
@@ -149,6 +151,11 @@ addVersionList n vs =
 
 getDecLevel : GrubState -> Integer
 getDecLevel (MkGrubState _ _ z _ _) = z
+
+setDecLevel : Integer -> StateT GrubState IO ()
+setDecLevel newDecLevel =
+  do  (MkGrubState w x _ y z) <- get
+      put (MkGrubState w x newDecLevel y z)
 
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()

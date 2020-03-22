@@ -10,7 +10,7 @@ max (x :: xs) = Just (max' xs x)
     total
     max' : (Ord a) => List a -> a -> a
     max' [] soFar = soFar
-    max' xs soFar =
+    max' (x :: xs) soFar =
       if x > soFar then
         max' xs x
       else
