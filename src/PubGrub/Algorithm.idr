@@ -72,13 +72,58 @@ checkNewIncompsForSat (x :: xs) state =
     ISat => True
     _    => checkNewIncompsForSat xs state
 
+
+||| Fetch all dependancies specified in the given manifest, and add the list of
+||| available versions to the state.
+fetchDepsAndVersionLists : Manifest -> StateT GrubState IO (Maybe IpmError)
+fetchDepsAndVersionLists (MkManifest n v [] m) = pure Nothing
+fetchDepsAndVersionLists (MkManifest n v (x :: xs) m) =
+  do  dirExists <- lift $ checkDirExists (pDir n)
+      if
+        dirExists
+      then
+        fetchDepsAndVersionLists (MkManifest n v xs m)
+      else
+        do  Nothing  <- lift $ fetchDep x
+                      | Just err => pure (Just err)
+            Right vs <- lift $ listVersions n
+                      | Left err => pure (Just err)
+            addVersionList n vs
+            fetchDepsAndVersionLists (MkManifest n v xs m)
+
+
+-- TODO put these somewhere:
+
+-- When fetching a version's manifest for the first time,
+-- all of the deps referenced are moved to the temp
+-- folder ready to be parsed next time.
+
+-- The list of available versions is also retrieved for
+-- each dependancy, and added to the
+
+-- This is the first time the manifest has been parsed,
+-- so add the dependancies as incompatibilties
+
+
+
+||| TODO
+handleNewManifest :  Manifest
+                  -> StateT GrubState IO (Either IpmError (List Incomp))
+handleNewManifest m =
+  do  Nothing <- fetchDepsAndVersionLists m
+               | Just err => pure (Left err)
+      addManifest m
+      let is = depsToIncomps m
+      addIs is
+      pure $ Right is
+
 ||| Part of the decision making step of the algorithm.
 |||
 ||| If there is a version of the chosen package which fits the criteria of the
 ||| partial solution, then add its dependancies as incompatibilties. Provided
 ||| none of these incomps would be instantly satisfied, add the chosen version
 ||| of the package to the partial solution as a decision.
-chooseVersion : PkgName -> Version -> StateT GrubState IO (Maybe IpmError)
+chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
 chooseVersion n v =
   do  (MkGrubState w x decLevel z mans) <- get
       -- The manifest for this version may have already been parsed and loaded.
@@ -87,25 +132,10 @@ chooseVersion n v =
       -- versions.
       case (lookup (n, v) mans) of
         Nothing  => do  Right m <- lift $ checkoutManifest n v
-                                 | Left err => pure (Just err)
+                                 | Left err => pure (Left err)
+                        handleNewManifest m
+        (Just m) => do  pure $ Right $ depsToIncomps m
 
-                        -- When fetching a version's manifest for the first time,
-                        -- all of the deps referenced are moved to the temp
-                        -- folder ready to be parsed next time.
-                        Nothing <- lift $ fetchDeps m
-                                 | Just err => pure (Just err)
-                        -- This is the first time the manifest has been parsed,
-                        -- so add the dependancies as incompatibilties
-                        let is = depsToIncomps m
-                        addIs is
-                        addManifest m
-                        ?a
-        (Just m) => do  let is = depsToIncomps m
-                        -- Do NOT add incompatibilties, they have already been added
-                        -- at an earlier step.
-                        let possibleDec = Decision v (decLevel + 1)
-                        ?a
-                        -- if (checkNewIncompsForSat )
 data DecResult = DecError IpmError
                | DecSolution (List (PkgName, Version))
                | DecAction PkgName
@@ -113,20 +143,20 @@ data DecResult = DecError IpmError
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
 decMake : StateT GrubState IO DecResult
--- decMake =
---   do  state <- get
---       -- Note that the minimum could be 0 versions.
---       let package = minVsInPS state
---       case (max (vsInPS state package)) of
---                         -- If there are 0 versions available within the allowed
---                         -- ranges, then add these ranges as incompatibilities
---                         -- and move onto unit propagation (note that this is
---                         -- now guarenteed to result in a conflict down the line).
---         Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
---                             pure $ DecAction package
---         Just version => do  Right m <- lift $ getManifest package version state
---                                      | Left err => pure (DecError err)
---                             ?a
+decMake =
+  do  state <- get
+      -- Note that the minimum could be 0 versions.
+      let package = minVsInPS state
+      case (max (vsInPS state package)) of
+                        -- If there are 0 versions available within the allowed
+                        -- ranges, then add these ranges as incompatibilities
+                        -- and move onto unit propagation (note that this is
+                        -- now guarenteed to result in a conflict down the line).
+        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
+                            pure $ DecAction package
+        Just version => do  Right is <- chooseVersion package version
+                                      | Left err => pure (DecError err)
+                            ?a
 
 -- ||| The main loop of the algorithm, as described at:
 -- ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm

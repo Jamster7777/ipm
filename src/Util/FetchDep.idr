@@ -30,6 +30,10 @@ rmTempDir : IO ()
 rmTempDir = do  success <- bashCommand ("rm -rf " ++ TEMP_DIR)
                 pure ()
 
+||| check if a directory exists
+checkDirExists : String -> IO Bool
+checkDirExists path = bashCommand $ "[ -d " ++ path ++ " ]"
+
 ||| Convert a false value to the given error, a true value to nothing. Used to
 ||| avoid repeated code.
 boolToErr : Bool -> IpmError -> Maybe IpmError
@@ -54,17 +58,8 @@ fetchDep (MkManiDep n (PkgLocal p) r) =
         ])
       pure $ boolToErr success (DepFetchError n p)
 
-||| Fetch all dependancies specified in a manifest
-fetchDeps : Manifest -> IO (Maybe IpmError)
-fetchDeps (MkManifest n v [] m) = pure Nothing
-fetchDeps (MkManifest n v (x :: xs) m) =
-  do  res <- fetchDep x
-      case res of
-        Nothing  => fetchDeps (MkManifest n v xs m)
-        Just err => pure $ Just err
-
-listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
-listVersions {dir} =
+listVersions' : { default "." dir : String } -> IO (Either IpmError (List Version))
+listVersions' {dir} =
   do  (Right raw) <- execAndReadOutput {inDir=dir} "git tag" | Left err => pure (Left (TagError "Error reading versions"))
       let splitTags = split (== '\n') raw
       pure (Right (tagsToVersions splitTags))
@@ -76,9 +71,13 @@ listVersions {dir} =
         Left err => tagsToVersions xs
         Right v  => v :: (tagsToVersions xs)
 
+listVersions : PkgName -> IO (Either IpmError (List Version))
+listVersions n = listVersions' {dir=(pDir n)}
+
+
 checkoutManifest : PkgName -> Version -> IO (Either IpmError Manifest)
 checkoutManifest n v =
-    do  Right vs  <- listVersions {dir=(pDir n)} | Left err => pure (Left err)
-        let Just _ = elemIndex v vs              | Nothing  => pure (Left (InvalidVersionError n v))
+    do  Right vs  <- listVersions' {dir=(pDir n)} | Left err => pure (Left err)
+        let Just _ = elemIndex v vs               | Nothing  => pure (Left (InvalidVersionError n v))
         bashCommand {inDir=(pDir n)} ("git checkout " ++ (show v))
         parseManifest {dir=(pDir n)}
