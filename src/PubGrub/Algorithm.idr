@@ -156,7 +156,21 @@ decMake =
                             pure $ DecAction package
         Just version => do  Right is <- chooseVersion package version
                                       | Left err => pure (DecError err)
-                            ?a
+                            let possibleDec = Decision version (getDecLevel state)
+                            (MkGrubState ps w x y z) <- get
+                            if
+                              (checkNewIncompsForSat
+                                is
+                                (MkGrubState (addPS' package possibleDec ps) w x y z)
+                              )
+                            then
+                              -- Don't add a decision to the partial solution if
+                              -- it would instantly satisfy an incompatibility.
+                              pure $ DecAction package
+                            else
+                              do  addPS package possibleDec
+                                  pure $ DecAction package
+
 
 -- ||| The main loop of the algorithm, as described at:
 -- ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
