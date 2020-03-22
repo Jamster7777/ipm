@@ -36,6 +36,10 @@ boolToErr : Bool -> IpmError -> Maybe IpmError
 boolToErr True  e = Nothing
 boolToErr False e = Just e
 
+||| Fetch the given dependancy. Make a directory for the repository within the
+||| temporary ipm install directory. If the source is a git URL, then clone the
+||| repo there. If it is a filepath, then copy the files into the temporary
+||| folder for easy access later.
 fetchDep : ManiDep -> IO (Maybe IpmError)
 fetchDep (MkManiDep n (PkgUrl u) r) =
   do  success <- (bashCommandSeq [
@@ -50,8 +54,14 @@ fetchDep (MkManiDep n (PkgLocal p) r) =
         ])
       pure $ boolToErr success (DepFetchError n p)
 
-fetchDeps : Manifest -> IO ()
-fetchDeps x = ?fetchDeps_rhs
+||| Fetch all dependancies specified in a manifest
+fetchDeps : Manifest -> IO (Maybe IpmError)
+fetchDeps (MkManifest n v [] m) = pure Nothing
+fetchDeps (MkManifest n v (x :: xs) m) =
+  do  res <- fetchDep x
+      case res of
+        Nothing  => fetchDeps (MkManifest n v xs m)
+        Just err => pure $ Just err
 
 listVersions : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions {dir} =
