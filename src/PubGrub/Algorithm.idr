@@ -22,6 +22,7 @@ import Util.FetchDep
 
 conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
+conflictResolution i = ?conflictResolution_rhs
 
 
 ||| Check each incompatibility involving the package taken from changed.
@@ -125,7 +126,7 @@ handleNewManifest m =
 ||| of the package to the partial solution as a decision.
 chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
 chooseVersion n v =
-  do  (MkGrubState w x decLevel z mans) <- get
+  do  (MkGrubState w x decLevel z mans q) <- get
       -- The manifest for this version may have already been parsed and loaded.
       -- If it hasn't, then it can be easily located in the temp install folder
       -- ipm creates for the package, using git tags to change to different
@@ -153,11 +154,11 @@ decMake =
         Just version => do  Right is <- chooseVersion package version
                                       | Left err => pure (Left err)
                             let possibleDec = Decision version ((getDecLevel state) + 1)
-                            (MkGrubState ps w x y z) <- get
+                            (MkGrubState ps w x y z q) <- get
                             if
                               (checkNewIncompsForSat
                                 is
-                                (MkGrubState (addPS' package possibleDec ps) w x y z)
+                                (MkGrubState (addPS' package possibleDec ps) w x y z q)
                               )
                             then
                               -- Don't add a decision to the partial solution if
@@ -168,9 +169,7 @@ decMake =
                                   setDecLevel ((getDecLevel state) + 1)
                                   pure $ Right package
 
--- checkForSolution : GrubState -> Maybe (List (PkgName, Version))
--- checkForSolution (MkGrubState x y z w s) = ?checkForSolution_rhs_1
---   checkForSolution :
+
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))

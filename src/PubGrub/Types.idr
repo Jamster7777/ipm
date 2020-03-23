@@ -113,47 +113,58 @@ Manifests = Dict (PkgName, Version) Manifest
 -- The State of Version Solving
 --------------------------------------------------------------------------------
 
--- The integer here refers to the current decision level, the PkgName to the variable 'next' in the algorithm's docs
-data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests
+||| The type used to keep track of the state of PubGrub version solving.
+|||
+||| - PartialSolution keeps tract of the current assignments.
+||| - IncompMap stores the current incompatibilties/
+||| - Integer stores the current decision level (starts at 0, and increases by
+|||   1 with each decision that is added to the partial solution).
+||| - PkgVersions stores the available versions of packages which have been
+|||   retrieved from their source so far (packages are loaded as they are
+|||   referenced as dependancies).
+||| - Manifests stores the parsed manifest file for each package version once it
+|||   has been parsed, so it doesn't need to be reparsed each time it is
+|||   referenced.
+||| - PkgName stores the name of the root package
+data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName
 
 %name GrubState state
 
 getI : PkgName -> GrubState -> List Incomp
-getI n (MkGrubState _ is _ _ _) = getI' n is
+getI n (MkGrubState _ is _ _ _ _) = getI' n is
 
 addI : Incomp -> StateT GrubState IO ()
-addI i = do  (MkGrubState x is y z w) <- get
-             put (MkGrubState x (addI' i is) y z w)
+addI i = do  (MkGrubState x is y z w q) <- get
+             put (MkGrubState x (addI' i is) y z w q)
 
 getPS : PkgName -> GrubState -> List Assignment
-getPS n (MkGrubState ps _ _ _ _) = getPS' n ps
+getPS n (MkGrubState ps _ _ _ _ _) = getPS' n ps
 
 addPS : PkgName -> Assignment -> StateT GrubState IO ()
-addPS n a = do  (MkGrubState ps x y z w) <- get
-                put (MkGrubState (addPS' n a ps) x y z w)
-  -- (MkGrubState (addPS' n a ps) x y z)
+addPS n a = do  (MkGrubState ps x y z w q) <- get
+                put (MkGrubState (addPS' n a ps) x y z w q)
 
 ||| Add a manifest to the dictionary of manifests, indexed by package name and
 ||| value.
 addManifest : Manifest -> StateT GrubState IO ()
 addManifest (MkManifest n v xs m) =
-  do  (MkGrubState w x y z mans) <- get
-      put (MkGrubState w x y z (insert (n, v) (MkManifest n v xs m) mans))
+  do  (MkGrubState w x y z mans q) <- get
+      put (MkGrubState w x y z (insert (n, v) (MkManifest n v xs m) mans) q)
 
 ||| Add a list of available versions for a given package to the dictionary of
 ||| package versions.
 addVersionList : PkgName -> List Version -> StateT GrubState IO ()
 addVersionList n vs =
-  do  (MkGrubState w x y pVersions z) <- get
-      put (MkGrubState w x y (insert n vs pVersions) z)
+  do  (MkGrubState w x y pVersions z q) <- get
+      put (MkGrubState w x y (insert n vs pVersions) z q)
 
 getDecLevel : GrubState -> Integer
-getDecLevel (MkGrubState _ _ z _ _) = z
+getDecLevel (MkGrubState _ _ z _ _ _) = z
 
 setDecLevel : Integer -> StateT GrubState IO ()
 setDecLevel newDecLevel =
-  do  (MkGrubState w x _ y z) <- get
-      put (MkGrubState w x newDecLevel y z)
+  do  (MkGrubState w x _ y z q) <- get
+      put (MkGrubState w x newDecLevel y z q)
 
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
@@ -174,7 +185,7 @@ depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
 
 -- Extract a list of all decisions from the partial solution
 extractDecs : GrubState -> List (PkgName, Version)
-extractDecs (MkGrubState ps _ _ _ _) = extractDecs' (toList ps)
+extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (toList ps)
   where
     extractDecs' : List (PkgName, List Assignment) -> List (PkgName, Version)
     extractDecs' [] = []

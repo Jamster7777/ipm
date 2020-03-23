@@ -254,7 +254,7 @@ vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPS' n ps))) vs
 ||| Find the list of versions which are allowed by the partial solution for a
 ||| given package, for the given grub state.
 vsInPS : GrubState -> PkgName -> List Version
-vsInPS (MkGrubState ps _ _ pvs mans) n =
+vsInPS (MkGrubState ps _ _ pvs mans _) n =
   do  let Just vs
           = lookup n pvs
           | Nothing  => []
@@ -270,7 +270,7 @@ pkgHasNoDec ((Decision _ _) :: as) = False
 ||| Get a list of all packages which do not yet have a decision in the partial
 ||| solution.
 psNoDec : GrubState -> List PkgName
-psNoDec (MkGrubState ps _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList ps
+psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList ps
 
 ||| Find the package which has the smallest number of versions allowed by the
 ||| partial solution. This is a decent heuristic for improving solve time, as
