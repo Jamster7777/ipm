@@ -113,7 +113,7 @@ assignWithinLimit limit (Decision v level) = level <= limit
 ||| higher than the given level
 backtrackToDecisionLevel : Integer -> PartialSolution -> PartialSolution
 backtrackToDecisionLevel limit (dict, list) =
-  ((fromList (backtrackDict limit (toList dict))), (backtrackList limit list))
+  ((fromList (backtrackDict limit (toList dict))), (filter ((assignWithinLimit limit) . snd) list))
   where
     backtrackDict : Integer -> List (PkgName, (List Assignment)) -> List (PkgName, (List Assignment))
     backtrackDict limit [] = []
@@ -122,8 +122,6 @@ backtrackToDecisionLevel limit (dict, list) =
           case (backtrackedAs) of
             [] => backtrackDict limit xs
             _  => (n, backtrackedAs) :: (backtrackDict limit xs)
-
-    backtrackList : Integer -> List (PkgName, Assignment) -> List (PkgName, Assignment)
 
 
 --------------------------------------------------------------------------------
