@@ -105,15 +105,27 @@ addPS' n a (dict, list) =
         Nothing   => (insert n [a] dict, newList)
         (Just as) => (insert n (a :: as) dict, newList)
 
+assignWithinLimit : Integer -> Assignment -> Bool
+assignWithinLimit limit (Derivation _ _ level) = level <= limit
+assignWithinLimit limit (Decision v level) = level <= limit
+
 ||| Remove all assignments from the partial solution which have a decision level
 ||| higher than the given level
 backtrackToDecisionLevel : Integer -> PartialSolution -> PartialSolution
 backtrackToDecisionLevel limit (dict, list) =
-  ((backtrackDict limit dict), (backtrackList limit list))
+  ((fromList (backtrackDict limit (toList dict))), (backtrackList limit list))
   where
-    backtrackDict : Integer -> (Dict PkgName (List Assignment)) -> (Dict PkgName (List Assignment))
+    backtrackDict : Integer -> List (PkgName, (List Assignment)) -> List (PkgName, (List Assignment))
+    backtrackDict limit [] = []
+    backtrackDict limit ((n, as) :: xs) =
+      do  let backtrackedAs = filter (assignWithinLimit limit) $ as
+          case (backtrackedAs) of
+            [] => backtrackDict limit xs
+            _  => (n, backtrackedAs) :: (backtrackDict limit xs)
 
     backtrackList : Integer -> List (PkgName, Assignment) -> List (PkgName, Assignment)
+
+
 --------------------------------------------------------------------------------
 -- Manifest store
 --------------------------------------------------------------------------------
