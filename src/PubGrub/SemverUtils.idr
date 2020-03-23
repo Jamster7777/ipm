@@ -275,8 +275,8 @@ psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toLi
 
 ||| Filter the partial solution to contain assignments only relevant to a
 ||| specific incompatibility.
-getRelevantAssigments : PartialSolution -> Incomp -> List (PkgName, Assignment)
-getRelevantAssigments (dict, list) i =
+getRelevantAssignments : PartialSolution -> Incomp -> List (PkgName, Assignment)
+getRelevantAssignments (dict, list) i =
   do  let relPkgs = map fst i
       let relPkgsSet = fromList relPkgs
       filter (\x => contains (fst x) relPkgsSet) list

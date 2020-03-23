@@ -29,18 +29,19 @@ failCondition state [] = True
 failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
 failCondition state _ = False
 
+findSatisfier : List (PkgName, Assignment)
+
 conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i =
   do  state <- get
       if
-        (failCondition i state)
+        (failCondition state i)
       then
         -- TODO add error reporting code here.
         pure $ Left VersionSolvingFail
       else
-        do  
-
+        do  ?a
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.
