@@ -7,6 +7,7 @@ import Semver.Interval
 import Core.ManifestTypes
 import Core.IpmError
 import Data.AVL.Dict
+import Data.AVL.Set
 
 %access public export
 
@@ -271,6 +272,14 @@ pkgHasNoDec ((Decision _ _) :: as) = False
 ||| solution.
 psNoDec : GrubState -> List PkgName
 psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst ps
+
+||| Filter the partial solution to contain assignments only relevant to a
+||| specific incompatibility.
+getRelevantAssigments : PartialSolution -> Incomp -> List (PkgName, Assignment)
+getRelevantAssigments (dict, list) i =
+  do  let relPkgs = map fst i
+      let relPkgsSet = fromList relPkgs
+      filter (\x => contains (fst x) relPkgsSet) list
 
 ||| Find the package which has the smallest number of versions allowed by the
 ||| partial solution. This is a decent heuristic for improving solve time, as
