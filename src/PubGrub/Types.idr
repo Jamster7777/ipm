@@ -98,8 +98,6 @@ addPS' n a ps = case (lookup n ps) of
                   Nothing   => insert n [a] ps
                   (Just as) => insert n (a :: as) ps
 
--- getDecs : List Deici
-
 --------------------------------------------------------------------------------
 -- Manifest store
 --------------------------------------------------------------------------------
@@ -173,6 +171,22 @@ depsToIncomps : Manifest -> List Incomp
 depsToIncomps (MkManifest n v [] ms) = []
 depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
   [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
+
+-- Extract a list of all decisions from the partial solution
+extractDecs : GrubState -> List (PkgName, Version)
+extractDecs (MkGrubState ps _ _ _ _) = extractDecs' (toList ps)
+  where
+    extractDecs' : List (PkgName, List Assignment) -> List (PkgName, Version)
+    extractDecs' [] = []
+    extractDecs' (x :: xs) =
+      case (extractDecs'' x) of
+        Nothing  => extractDecs' xs
+        Just dec => dec :: (extractDecs' xs)
+      where
+        extractDecs'' : (PkgName, List Assignment) -> Maybe (PkgName, Version)
+        extractDecs'' (n, []) = Nothing
+        extractDecs'' (n, ((Derivation v _ _) :: as)) = extractDecs'' (n, as)
+        extractDecs'' (n, ((Decision v _) :: as)) = Just (n, v)
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

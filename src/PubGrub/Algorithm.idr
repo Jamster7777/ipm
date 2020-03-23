@@ -183,6 +183,6 @@ mainLoop next =
         if
           (psNoDec state) == []
         then
-          Right $ getDecs state
+          pure $ Right $ extractDecs state
         else
           mainLoop newNext
