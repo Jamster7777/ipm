@@ -85,18 +85,25 @@ Show Assignment where
   show (Derivation x xs y) = "=>  " ++ (show x)
   show (Decision v x) = "?   " ++ (show v)
 
+||| The partial solution is stored in 2 formats:
+|||
+||| - a dictionary, so that the assignments for a particular package can be
+|||   retrieved quickly.
+||| - a list, so that the assignments can be retreived in order.
 PartialSolution : Type
-PartialSolution = Dict PkgName (List Assignment)
+PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
 
 getPS' : PkgName -> PartialSolution -> List Assignment
-getPS' n p = case (lookup n p) of
+getPS' n ps = case (lookup n (fst ps)) of
                 Nothing  => []
                 (Just x) => x
 
 addPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
-addPS' n a ps = case (lookup n ps) of
-                  Nothing   => insert n [a] ps
-                  (Just as) => insert n (a :: as) ps
+addPS' n a (dict, list) =
+  do  let newList = (n, a) :: list
+      case (lookup n dict) of
+        Nothing   => (insert n [a] dict, newList)
+        (Just as) => (insert n (a :: as) dict, newList)
 
 --------------------------------------------------------------------------------
 -- Manifest store
@@ -166,6 +173,11 @@ setDecLevel newDecLevel =
   do  (MkGrubState w x _ y z q) <- get
       put (MkGrubState w x newDecLevel y z q)
 
+
+||| Return the root package name which is stored in the state.
+getRootPkg : GrubState -> PkgName
+getRootPkg (MkGrubState _ _ _ _ _ root) = root
+
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
 addRangesAsIncomps n [] = pure ()
@@ -185,19 +197,14 @@ depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
 
 -- Extract a list of all decisions from the partial solution
 extractDecs : GrubState -> List (PkgName, Version)
-extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (toList ps)
+extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (snd ps)
   where
-    extractDecs' : List (PkgName, List Assignment) -> List (PkgName, Version)
+    extractDecs' : List (PkgName, Assignment) -> List (PkgName, Version)
     extractDecs' [] = []
-    extractDecs' (x :: xs) =
-      case (extractDecs'' x) of
-        Nothing  => extractDecs' xs
-        Just dec => dec :: (extractDecs' xs)
-      where
-        extractDecs'' : (PkgName, List Assignment) -> Maybe (PkgName, Version)
-        extractDecs'' (n, []) = Nothing
-        extractDecs'' (n, ((Derivation v _ _) :: as)) = extractDecs'' (n, as)
-        extractDecs'' (n, ((Decision v _) :: as)) = Just (n, v)
+    extractDecs' ((n, (Derivation v _ _)) :: as) =
+      extractDecs' as
+    extractDecs' ((n, (Decision v _)) :: as)     =
+      (n, v) :: (extractDecs' as)
 
 --------------------------------------------------------------------------------
 -- Satisfiability check results

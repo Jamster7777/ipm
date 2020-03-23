@@ -20,10 +20,26 @@ import Util.FetchDep
 -- carried over from this documentation.
 --------------------------------------------------------------------------------
 
+||| Define the fail condition for conflict resolution. If the incompatibility
+||| has no terms or a singular positive term that refers to the root package
+||| version, that indicates that the root package can't be selected and thus
+||| that version solving has failed. Return true if these conditions are met.
+failCondition : GrubState -> Incomp -> Bool
+failCondition state [] = True
+failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
+failCondition state _ = False
+
 conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
-conflictResolution i = ?conflictResolution_rhs
-
+conflictResolution i =
+  do  state <- get
+      if
+        (failCondition i state)
+      then
+        -- TODO add error reporting code here.
+        pure $ Left VersionSolvingFail
+      else
+        do  
 
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation

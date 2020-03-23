@@ -270,7 +270,7 @@ pkgHasNoDec ((Decision _ _) :: as) = False
 ||| Get a list of all packages which do not yet have a decision in the partial
 ||| solution.
 psNoDec : GrubState -> List PkgName
-psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList ps
+psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst ps
 
 ||| Find the package which has the smallest number of versions allowed by the
 ||| partial solution. This is a decent heuristic for improving solve time, as
