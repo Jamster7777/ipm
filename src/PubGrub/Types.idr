@@ -105,6 +105,15 @@ addPS' n a (dict, list) =
         Nothing   => (insert n [a] dict, newList)
         (Just as) => (insert n (a :: as) dict, newList)
 
+||| Remove all assignments from the partial solution which have a decision level
+||| higher than the given level
+backtrackToDecisionLevel : Integer -> PartialSolution -> PartialSolution
+backtrackToDecisionLevel limit (dict, list) =
+  ((backtrackDict limit dict), (backtrackList limit list))
+  where
+    backtrackDict : Integer -> (Dict PkgName (List Assignment)) -> (Dict PkgName (List Assignment))
+
+    backtrackList : Integer -> List (PkgName, Assignment) -> List (PkgName, Assignment)
 --------------------------------------------------------------------------------
 -- Manifest store
 --------------------------------------------------------------------------------
