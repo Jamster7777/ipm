@@ -33,11 +33,24 @@ getPSForPkg' n ps = case (lookup n (fst ps)) of
 
 ||| Filter the partial solution to contain assignments only relevant to a
 ||| specific incompatibility.
-getRelevantAssignments : PartialSolution -> Incomp -> List (PkgName, Assignment)
-getRelevantAssignments (dict, list) i =
+getRelevantPS : PartialSolution -> Incomp -> PartialSolution
+getRelevantPS (dict, list) i =
   do  let relPkgs = map fst i
       let relPkgsSet = fromList relPkgs
-      filter (\x => contains (fst x) relPkgsSet) list
+      let filteredDict = filterDict dict i empty
+      let filteredList = filter (\x => contains (fst x) relPkgsSet) list
+      (filteredDict, filteredList)
+  where
+    filterDict :  Dict PkgName (List Assignment)
+               -> Incomp
+               -> (soFar : Dict PkgName (List Assignment))
+               -> Dict PkgName (List Assignment)
+    filterDict old [] soFar = soFar
+    filterDict old ((n, t) :: ts) soFar =
+      case (lookup n old) of
+        -- 'Nothing' should be impossible, so its not pattern matched. (This way
+        -- an error will be thrown exposing the bug).
+        (Just as) => filterDict old ts (insert n as soFar)
 
 
 --------------------------------------------------------------------------------
@@ -82,4 +95,4 @@ backtrackOne (dict, (n, a) :: xs) =
   case (lookup n dict) of
     -- 'Nothing' should be impossible, so its not pattern matched. (This way
     -- an error will be thrown exposing the bug).
-    (Just (a :: as)) => ((insert n as dict), xs)
+    (Just (a :: as)) => Just ((insert n as dict), xs)

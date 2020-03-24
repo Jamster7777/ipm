@@ -35,11 +35,17 @@ failCondition state [] = True
 failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
 failCondition state _ = False
 
-||| Find the 'satisfier', the earliest assignment in the partial solution for
-||| which the incompatibility is satisfied.
-findSatisfier : PartialSolution -> List (PkgName, Assignment)
-findSatisfier ps = ?findSatisfier_rhs_1
+||| Backtrack the partial solution to the 'satisfier', the earliest assignment
+||| for which the incompatibility is satisfied.
+findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
+findSatisfier ps i =
+  do  let Just backtracked = backtrackOne ps
+                           | Nothing => Nothing
+      case (checkIncomp i backtracked) of
+        a => ?a
 
+||| The conflict resolution part of the algorithm, as described at:
+||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#conflict-resolution
 conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i =
@@ -50,8 +56,8 @@ conflictResolution i =
         -- TODO add error reporting code here.
         pure $ Left VersionSolvingFail
       else
-        do  let relAssign = getRelevantAssignments (getPartialSolution state) i
-            let (satisfier :: rest) = findSatisfier relAssign
+        do  let relPS = getRelevantPS (getPartialSolution state) i
+            let psAtSatisfier = findSatisfier relPS
             ?a
 
 
