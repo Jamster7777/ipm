@@ -109,6 +109,21 @@ extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (snd ps)
     extractDecs' ((n, (Decision v _)) :: as)     =
       (n, v) :: (extractDecs' as)
 
+||| Find the list of versions which are allowed by the partial solution for a
+||| given package, for the given grub state.
+vsInPS : GrubState -> PkgName -> List Version
+vsInPS (MkGrubState ps _ _ pvs mans _) n =
+  do  let Just vs
+          = lookup n pvs
+          | Nothing  => []
+      vsInPS' n vs ps
+
+||| Get a list of all packages which do not yet have a decision in the partial
+||| solution.
+psNoDec : GrubState -> List PkgName
+psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst ps
+
+
 --------------------------------------------------------------------------------
 -- Special setters for GrubState
 --------------------------------------------------------------------------------
@@ -143,3 +158,33 @@ addIs : List Incomp -> StateT GrubState IO ()
 addIs [] = pure ()
 addIs (x :: xs) = do  addI x
                       addIs xs
+
+
+--------------------------------------------------------------------------------
+-- Utils
+--------------------------------------------------------------------------------
+
+||| Find the package which has the smallest number of versions allowed by the
+||| partial solution. This is a decent heuristic for improving solve time, as
+||| conflicts are more likely to be found quickly for packages with fewer
+||| versions to choose from.
+minVsInPS : GrubState -> PkgName
+minVsInPS state =
+  do  let (k :: ks) = psNoDec state
+      minVsInPS' state ks k (length (vsInPS state k))
+  where
+    minVsInPS' :  GrubState
+               -> List PkgName
+               -> (minName : PkgName)
+               -> (minVal : Nat)
+               -> PkgName
+    minVsInPS' state [] minName minVal = minName
+    minVsInPS' state (n :: ns) minName minVal =
+      do  let val = length $ vsInPS state n
+          if
+            (val < minVal)
+          then
+            minVsInPS' state ns n val
+          else
+            minVsInPS' state ns minName minVal
+            minVsInPS' state ns minName minVal

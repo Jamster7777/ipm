@@ -5,8 +5,9 @@ import Core.ManifestTypes
 import Semver.Version
 import Data.AVL.Dict
 
+
 --------------------------------------------------------------------------------
--- The Partial Solution
+-- Type definitions
 --------------------------------------------------------------------------------
 
 -- The term describing the derivation, the incompatibility which is the cause, and the decision level
@@ -26,10 +27,33 @@ Show Assignment where
 PartialSolution : Type
 PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
 
+
+--------------------------------------------------------------------------------
+-- Getters
+--------------------------------------------------------------------------------
+
 getPSForPkg' : PkgName -> PartialSolution -> List Assignment
 getPSForPkg' n ps = case (lookup n (fst ps)) of
                 Nothing  => []
                 (Just x) => x
+
+||| Find the list of versions which are allowed by the partial solution for a
+||| given package.
+vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
+vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPS' n ps))) vs
+
+||| Filter the partial solution to contain assignments only relevant to a
+||| specific incompatibility.
+getRelevantAssignments : PartialSolution -> Incomp -> List (PkgName, Assignment)
+getRelevantAssignments (dict, list) i =
+  do  let relPkgs = map fst i
+      let relPkgsSet = fromList relPkgs
+      filter (\x => contains (fst x) relPkgsSet) list
+
+
+--------------------------------------------------------------------------------
+-- Setters
+--------------------------------------------------------------------------------
 
 addToPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
 addToPS' n a (dict, list) =
@@ -37,6 +61,11 @@ addToPS' n a (dict, list) =
       case (lookup n dict) of
         Nothing   => (insert n [a] dict, newList)
         (Just as) => (insert n (a :: as) dict, newList)
+
+
+--------------------------------------------------------------------------------
+-- Utils
+--------------------------------------------------------------------------------
 
 assignWithinLimit : Integer -> Assignment -> Bool
 assignWithinLimit limit (Derivation _ _ level) = level <= limit
@@ -55,3 +84,10 @@ backtrackToDecisionLevel limit (dict, list) =
           case (backtrackedAs) of
             [] => backtrackDict limit xs
             _  => (n, backtrackedAs) :: (backtrackDict limit xs)
+
+||| For a list of assignments regarding a package, if they contain a decision
+||| return false. Else return true.
+pkgHasNoDec : List Assignment -> Bool
+pkgHasNoDec [] = True
+pkgHasNoDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
+pkgHasNoDec ((Decision _ _) :: as) = False
