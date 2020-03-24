@@ -42,7 +42,10 @@ findSatisfier ps i =
   do  let Just backtracked = backtrackOne ps
                            | Nothing => Nothing
       case (checkIncomp i backtracked) of
-        a => ?a
+        ISat  => case (findSatisfier backtracked i) of
+                    Nothing        => Just backtracked
+                    Just earlier   => Just earlier
+        _     => Nothing
 
 ||| The conflict resolution part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#conflict-resolution
