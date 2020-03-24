@@ -93,13 +93,13 @@ Show Assignment where
 PartialSolution : Type
 PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
 
-getPS' : PkgName -> PartialSolution -> List Assignment
-getPS' n ps = case (lookup n (fst ps)) of
+getPSForPkg' : PkgName -> PartialSolution -> List Assignment
+getPSForPkg' n ps = case (lookup n (fst ps)) of
                 Nothing  => []
                 (Just x) => x
 
-addPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
-addPS' n a (dict, list) =
+addToPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
+addToPS' n a (dict, list) =
   do  let newList = (n, a) :: list
       case (lookup n dict) of
         Nothing   => (insert n [a] dict, newList)
@@ -232,12 +232,13 @@ addI : Incomp -> StateT GrubState IO ()
 addI i = do  (MkGrubState x is y z w q) <- get
              put (MkGrubState x (addI' i is) y z w q)
 
-getPS : PkgName -> GrubState -> List Assignment
-getPS n (MkGrubState ps _ _ _ _ _) = getPS' n ps
+getPSForPkg : PkgName -> GrubState -> List Assignment
+getPSForPkg n (MkGrubState ps _ _ _ _ _) = getPSForPkg' n ps
 
-addPS : PkgName -> Assignment -> StateT GrubState IO ()
-addPS n a = do  (MkGrubState ps x y z w q) <- get
-                put (MkGrubState (addPS' n a ps) x y z w q)
+addToPS : PkgName -> Assignment -> StateT GrubState IO ()
+addToPS n a =
+  do  (MkGrubState ps x y z w q) <- get
+      put (MkGrubState (addToPS' n a ps) x y z w q)
 
 ||| Add a manifest to the dictionary of manifests, indexed by package name and
 ||| value.
