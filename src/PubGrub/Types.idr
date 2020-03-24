@@ -181,7 +181,16 @@ getRootPkg (MkGrubState _ _ _ _ _ root) = root
 
 
 --------------------------------------------------------------------------------
--- Setters for GrubState
+-- Stateless setters for GrubState
+--------------------------------------------------------------------------------
+
+setPartialSolution' : PartialSolution -> GrubState -> GrubState
+setPartialSolution' ps (MkGrubState _ iMap decLevel pVersions mans root) =
+  (MkGrubState ps iMap decLevel pVersions mans root)
+
+
+--------------------------------------------------------------------------------
+-- Stateful setters for GrubState
 --------------------------------------------------------------------------------
 
 setPartialSolution : PartialSolution -> StateT GrubState IO ()
@@ -194,8 +203,8 @@ setIncompMap iMap =
   do  (MkGrubState ps _ decLevel pVersions mans root) <- get
       put (MkGrubState ps iMap decLevel pVersions mans root)
 
-setDecisionLevel : DecisionLevel -> StateT GrubState IO ()
-setIncompMap decLevel =
+setDecisionLevel : Integer -> StateT GrubState IO ()
+setDecisionLevel decLevel =
   do  (MkGrubState ps iMap _ pVersions mans root) <- get
       put (MkGrubState ps iMap decLevel pVersions mans root)
 
@@ -209,7 +218,6 @@ setManifests mans =
   do  (MkGrubState ps iMap decLevel pVersions _ root) <- get
       put (MkGrubState ps iMap decLevel pVersions mans root)
 
--- No definition for setRootPkg as this should never change.
 
 
 --------------------------------------------------------------------------------

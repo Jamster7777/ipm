@@ -143,12 +143,12 @@ handleNewManifest m =
 ||| of the package to the partial solution as a decision.
 chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
 chooseVersion n v =
-  do  (MkGrubState w x decLevel z mans q) <- get
+  do  state <- get
       -- The manifest for this version may have already been parsed and loaded.
       -- If it hasn't, then it can be easily located in the temp install folder
       -- ipm creates for the package, using git tags to change to different
       -- versions.
-      case (lookup (n, v) mans) of
+      case (lookup (n, v) (getManifests state)) of
         Nothing  => do  Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
                         handleNewManifest m
@@ -171,19 +171,22 @@ decMake =
         Just version => do  Right is <- chooseVersion package version
                                       | Left err => pure (Left err)
                             let possibleDec = Decision version ((getDecLevel state) + 1)
-                            (MkGrubState ps w x y z q) <- get
+                            state <- get
+                            let possibleNewPS = (addPS' package possibleDec (getPartialSolution state))
                             if
                               (checkNewIncompsForSat
                                 is
-                                (MkGrubState (addPS' package possibleDec ps) w x y z q)
+                                -- Use a stateless setter to experiment with a]
+                                -- theoretical state
+                                (setPartialSolution' possibleNewPS state)
                               )
                             then
                               -- Don't add a decision to the partial solution if
                               -- it would instantly satisfy an incompatibility.
                               pure $ Right package
                             else
-                              do  addPS package possibleDec
-                                  setDecLevel ((getDecLevel state) + 1)
+                              do  setPartialSolution possibleNewPS
+                                  setDecisionLevel ((getDecisionLevel state) + 1)
                                   pure $ Right package
 
 
