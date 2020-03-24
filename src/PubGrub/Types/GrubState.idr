@@ -12,6 +12,8 @@ import Semver.Version
 import Control.Monad.State
 import Data.AVL.Dict
 
+%access public export
+
 --------------------------------------------------------------------------------
 -- The State of Version Solving
 --------------------------------------------------------------------------------

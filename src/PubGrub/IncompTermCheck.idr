@@ -1,7 +1,12 @@
 module PubGrub.IncompTermCheck
 
 import PubGrub.Types.Incomp
+import PubGrub.Types.Term
+import PubGrub.Types.Assignment
+import PubGrub.Types.GrubState
+import PubGrub.SemverUtils
 import Core.ManifestTypes
+import Semver.Range
 import Semver.Version
 
 %access public export
@@ -104,7 +109,7 @@ checkIncomp i state = checkIncomp' i state ISat
     checkIncomp' [] state soFar = soFar
     checkIncomp' ((n, t) :: ts) state soFar =
       do  let termRanges = termToRanges t
-          let psRanges = psToRanges $ (getPS n state)
+          let psRanges = psToRanges $ (getPSForPkg n state)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat

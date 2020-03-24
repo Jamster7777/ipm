@@ -1,7 +1,13 @@
 module PubGrub.Algorithm
 
 -- TODO remove redundant ones
-import PubGrub.Types
+import PubGrub.Types.Assignment
+import PubGrub.Types.GrubState
+import PubGrub.Types.Incomp
+import PubGrub.Types.PackageTracking
+import PubGrub.Types.PartialSolution
+import PubGrub.Types.Term
+import PubGrub.IncompTermCheck
 import PubGrub.SemverUtils
 import Semver.Range
 import Semver.Version
@@ -65,7 +71,7 @@ unitPropLoop changed (i :: is) =
                               -- actions that were required here in the docs
                               -- version.
                               unitPropLoop [] (conI :: is)
-          (IAlm (n, t)) => do addPS n (Derivation (not t) i (getDecLevel gs))
+          (IAlm (n, t)) => do addToPS n (Derivation (not t) i (getDecisionLevel gs))
                               unitPropLoop (changed ++ [n]) is
           _             => unitPropLoop changed is
 
@@ -166,13 +172,13 @@ decMake =
                         -- ranges, then add these ranges as incompatibilities
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
-        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPS package state)
+        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
                             pure $ Right package
         Just version => do  Right is <- chooseVersion package version
                                       | Left err => pure (Left err)
-                            let possibleDec = Decision version ((getDecLevel state) + 1)
+                            let possibleDec = Decision version ((getDecisionLevel state) + 1)
                             state <- get
-                            let possibleNewPS = (addPS' package possibleDec (getPartialSolution state))
+                            let possibleNewPS = (addToPS' package possibleDec (getPartialSolution state))
                             if
                               (checkNewIncompsForSat
                                 is
