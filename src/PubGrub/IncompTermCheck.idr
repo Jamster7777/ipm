@@ -3,6 +3,7 @@ module PubGrub.IncompTermCheck
 import PubGrub.Types.Incomp
 import PubGrub.Types.Term
 import PubGrub.Types.Assignment
+import PubGrub.Types.PartialSolution
 import PubGrub.Types.GrubState
 import PubGrub.SemverUtils
 import Core.ManifestTypes
@@ -96,35 +97,35 @@ checkTerm term ps = checkTerm' term ps True TInc
 ||| Otherwise, the incompatibility is inconclusive for the given partial
 ||| solution.
 checkIncomp :  Incomp
-            -> GrubState --TODO pass PS here?
+            -> PartialSolution
             -> IncompResult
-checkIncomp i state = checkIncomp' i state ISat
+checkIncomp i ps = checkIncomp' i ps ISat
   where
     checkIncomp' :  Incomp
-                 -> GrubState
+                 -> PartialSolution
                  -> (soFar : IncompResult)
                  -> IncompResult
     -- The function evaluates the final result as it goes, so once all terms
     -- have been evaluated soFar can just be returned.
-    checkIncomp' [] state soFar = soFar
-    checkIncomp' ((n, t) :: ts) state soFar =
+    checkIncomp' [] ps soFar = soFar
+    checkIncomp' ((n, t) :: ts) ps soFar =
       do  let termRanges = termToRanges t
-          let psRanges = psToRanges $ (getPSForPkg n state)
+          let psRanges = psToRanges $ (getPSForPkg' n ps)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => checkIncomp' ts state soFar
+            TSat => checkIncomp' ts ps soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
             TCon => ICon
             TInc => case soFar of
                       -- This is first instance of an inconclusive term, so the
                       -- term so far is almost satisfied.
-                      ISat => checkIncomp' ts state (IAlm (n, t))
+                      ISat => checkIncomp' ts ps (IAlm (n, t))
                       -- Should be impossible, but defined for totality.
                       ICon => ICon
                       -- The incompatibility remains inconclusive.
-                      IInc => checkIncomp' ts state IInc
+                      IInc => checkIncomp' ts ps IInc
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
-                      (IAlm _) => checkIncomp' ts state IInc
+                      (IAlm _) => checkIncomp' ts ps IInc

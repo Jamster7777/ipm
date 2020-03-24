@@ -60,15 +60,6 @@ getRootPkg (MkGrubState _ _ _ _ _ root) = root
 
 
 --------------------------------------------------------------------------------
--- Stateless setters for GrubState
---------------------------------------------------------------------------------
-
-setPartialSolution' : PartialSolution -> GrubState -> GrubState
-setPartialSolution' ps (MkGrubState _ iMap decLevel pVersions mans root) =
-  (MkGrubState ps iMap decLevel pVersions mans root)
-
-
---------------------------------------------------------------------------------
 -- Stateful setters for GrubState
 --------------------------------------------------------------------------------
 

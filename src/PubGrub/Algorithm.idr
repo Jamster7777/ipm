@@ -48,6 +48,8 @@ conflictResolution i =
         pure $ Left VersionSolvingFail
       else
         do  ?a
+
+
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.
@@ -60,7 +62,7 @@ unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> StateT G
 unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
-      case (checkIncomp i gs) of
+      case (checkIncomp i (getPartialSolution gs)) of
           ISat          => do Right conI <- (conflictResolution i)
                                           | Left err => pure (Left err)
                               -- Note the slight deviation from the docs here.
@@ -89,12 +91,12 @@ unitProp (package :: changed) =
 ||| Check if any of a list of incompatibilities are satisfied by the state
 ||| provided. Used in decision making to ensure that adding a new decision to
 ||| the partial solution would not contradict any of the new incompatibilities.
-checkNewIncompsForSat : List Incomp -> GrubState -> Bool
-checkNewIncompsForSat [] state = False
-checkNewIncompsForSat (x :: xs) state =
-  case (checkIncomp x state) of
+checkNewIncompsForSat : List Incomp -> PartialSolution -> Bool
+checkNewIncompsForSat [] ps = False
+checkNewIncompsForSat (x :: xs) ps =
+  case (checkIncomp x ps) of
     ISat => True
-    _    => checkNewIncompsForSat xs state
+    _    => checkNewIncompsForSat xs ps
 
 
 ||| Fetch all dependancies specified in the given manifest, and add the list of
@@ -182,9 +184,7 @@ decMake =
                             if
                               (checkNewIncompsForSat
                                 is
-                                -- Use a stateless setter to experiment with a]
-                                -- theoretical state
-                                (setPartialSolution' possibleNewPS state)
+                                possibleNewPS
                               )
                             then
                               -- Don't add a decision to the partial solution if
