@@ -73,3 +73,13 @@ backtrackToDecisionLevel limit (dict, list) =
           case (backtrackedAs) of
             [] => backtrackDict limit xs
             _  => (n, backtrackedAs) :: (backtrackDict limit xs)
+
+||| Backtrack the partial solution by one assignment. Removes the assignment from
+||| both the list and dictionary components of the partial solution.
+backtrackOne : PartialSolution -> Maybe PartialSolution
+backtrackOne (dict, []) = Nothing
+backtrackOne (dict, (n, a) :: xs) =
+  case (lookup n dict) of
+    -- 'Nothing' should be impossible, so its not pattern matched. (This way
+    -- an error will be thrown exposing the bug).
+    (Just (a :: as)) => ((insert n as dict), xs)

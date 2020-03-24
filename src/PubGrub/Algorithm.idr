@@ -35,7 +35,10 @@ failCondition state [] = True
 failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
 failCondition state _ = False
 
-findSatisfier : List (PkgName, Assignment)
+||| Find the 'satisfier', the earliest assignment in the partial solution for
+||| which the incompatibility is satisfied.
+findSatisfier : PartialSolution -> List (PkgName, Assignment)
+findSatisfier ps = ?findSatisfier_rhs_1
 
 conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
@@ -47,7 +50,9 @@ conflictResolution i =
         -- TODO add error reporting code here.
         pure $ Left VersionSolvingFail
       else
-        do  ?a
+        do  let relAssign = getRelevantAssignments (getPartialSolution state) i
+            let (satisfier :: rest) = findSatisfier relAssign
+            ?a
 
 
 ||| Check each incompatibility involving the package taken from changed.
