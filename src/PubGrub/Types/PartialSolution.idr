@@ -1,23 +1,17 @@
 module PubGrub.PartialSolution
 import PubGrub.Types.Term
 import PubGrub.Types.Incomp
+import PubGrub.Types.Assignment
 import Core.ManifestTypes
 import Semver.Version
 import Data.AVL.Dict
+import Data.AVL.Set
 
+%access public export
 
 --------------------------------------------------------------------------------
 -- Type definitions
 --------------------------------------------------------------------------------
-
--- The term describing the derivation, the incompatibility which is the cause, and the decision level
-data Assignment = Derivation Term Incomp Integer
--- The version of the decision and the decision level
-                | Decision Version Integer
-
-Show Assignment where
-  show (Derivation x xs y) = "=>  " ++ (show x)
-  show (Decision v x) = "?   " ++ (show v)
 
 ||| The partial solution is stored in 2 formats:
 |||
@@ -36,11 +30,6 @@ getPSForPkg' : PkgName -> PartialSolution -> List Assignment
 getPSForPkg' n ps = case (lookup n (fst ps)) of
                 Nothing  => []
                 (Just x) => x
-
-||| Find the list of versions which are allowed by the partial solution for a
-||| given package.
-vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
-vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPS' n ps))) vs
 
 ||| Filter the partial solution to contain assignments only relevant to a
 ||| specific incompatibility.
@@ -84,10 +73,3 @@ backtrackToDecisionLevel limit (dict, list) =
           case (backtrackedAs) of
             [] => backtrackDict limit xs
             _  => (n, backtrackedAs) :: (backtrackDict limit xs)
-
-||| For a list of assignments regarding a package, if they contain a decision
-||| return false. Else return true.
-pkgHasNoDec : List Assignment -> Bool
-pkgHasNoDec [] = True
-pkgHasNoDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
-pkgHasNoDec ((Decision _ _) :: as) = False

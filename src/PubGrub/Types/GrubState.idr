@@ -1,5 +1,17 @@
 module PubGrub.GrubState
 
+import PubGrub.Types.Assignment
+import PubGrub.Types.Incomp
+import PubGrub.Types.PackageTracking
+import PubGrub.Types.PartialSolution
+import PubGrub.Types.Term
+import PubGrub.SemverUtils
+import Core.ManifestTypes
+import Semver.Range
+import Semver.Version
+import Control.Monad.State
+import Data.AVL.Dict
+
 --------------------------------------------------------------------------------
 -- The State of Version Solving
 --------------------------------------------------------------------------------
@@ -186,5 +198,4 @@ minVsInPS state =
           then
             minVsInPS' state ns n val
           else
-            minVsInPS' state ns minName minVal
             minVsInPS' state ns minName minVal

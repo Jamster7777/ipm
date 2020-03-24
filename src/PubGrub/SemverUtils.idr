@@ -1,6 +1,9 @@
 module PubGrub.SemverUtils
 
-import PubGrub.Types
+import PubGrub.Types.Term
+import PubGrub.Types.Assignment
+import PubGrub.Types.Incomp
+import PubGrub.Types.PartialSolution
 import Semver.Range
 import Semver.Version
 import Semver.Interval
@@ -95,3 +98,14 @@ versionInRanges (r :: rs) v =
     True
   else
     versionInRanges rs v
+
+||| Convert the dependancies of a package to a list of incompatibilties
+depsToIncomps : Manifest -> List Incomp
+depsToIncomps (MkManifest n v [] ms) = []
+depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
+  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
+
+||| Find the list of versions which are allowed by the partial solution for a
+||| given package.
+vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
+vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPSForPkg' n ps))) vs

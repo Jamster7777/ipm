@@ -1,6 +1,10 @@
 module PubGrub.IncompTermCheck
+
+import PubGrub.Types.Incomp
 import Core.ManifestTypes
-import PubGrub.Incompatibility
+import Semver.Version
+
+%access public export
 
 --------------------------------------------------------------------------------
 -- Types for results of checks

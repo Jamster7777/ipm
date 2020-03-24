@@ -1,6 +1,8 @@
 module PubGrub.Types.Incomp
+
 import PubGrub.Types.Term
 import Core.ManifestTypes
+import Semver.Version
 import Semver.Range
 import Data.AVL.Dict
 
@@ -51,14 +53,3 @@ getI' : PkgName -> IncompMap -> List Incomp
 getI' n m = case (lookup n m) of
                 Nothing  => []
                 (Just x) => x
-
-
---------------------------------------------------------------------------------
--- Utils
---------------------------------------------------------------------------------
-
-||| Convert the dependancies of a package to a list of incompatibilties
-depsToIncomps : Manifest -> List Incomp
-depsToIncomps (MkManifest n v [] ms) = []
-depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
-  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
