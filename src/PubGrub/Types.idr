@@ -156,6 +156,67 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 
 %name GrubState state
 
+
+--------------------------------------------------------------------------------
+-- Getters for GrubState
+--------------------------------------------------------------------------------
+
+getPartialSolution : GrubState -> PartialSolution
+getPartialSolution (MkGrubState ps _ _ _ _ _) = ps
+
+getIncompMap : GrubState -> IncompMap
+getIncompMap (MkGrubState _ iMap _ _ _ _) = iMap
+
+getDecisionLevel : GrubState -> Integer
+getDecisionLevel (MkGrubState _ _ decLevel _ _ _) = decLevel
+
+getPkgVersions : GrubState -> PkgVersions
+getPkgVersions (MkGrubState _ _ _ pVersions _ _) = pVersions
+
+getManifests : GrubState -> Manifests
+getManifests (MkGrubState _ _ _ _ mans _) = mans
+
+getRootPkg : GrubState -> PkgName
+getRootPkg (MkGrubState _ _ _ _ _ root) = root
+
+
+--------------------------------------------------------------------------------
+-- Setters for GrubState
+--------------------------------------------------------------------------------
+
+setPartialSolution : PartialSolution -> StateT GrubState IO ()
+setPartialSolution ps =
+  do  (MkGrubState _ iMap decLevel pVersions mans root) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root)
+
+setIncompMap : IncompMap -> StateT GrubState IO ()
+setIncompMap iMap =
+  do  (MkGrubState ps _ decLevel pVersions mans root) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root)
+
+setDecisionLevel : DecisionLevel -> StateT GrubState IO ()
+setIncompMap decLevel =
+  do  (MkGrubState ps iMap _ pVersions mans root) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root)
+
+setPkgVersions : PkgVersions -> StateT GrubState IO ()
+setPkgVersions pVersions =
+  do  (MkGrubState ps iMap decLevel _ mans root) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root)
+
+setManifests : Manifests -> StateT GrubState IO ()
+setManifests mans =
+  do  (MkGrubState ps iMap decLevel pVersions _ root) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root)
+
+-- No definition for setRootPkg as this should never change.
+
+
+--------------------------------------------------------------------------------
+-- TODO: Special setters for GrubState
+--------------------------------------------------------------------------------
+
+
 getI : PkgName -> GrubState -> List Incomp
 getI n (MkGrubState _ is _ _ _ _) = getI' n is
 
@@ -193,9 +254,7 @@ setDecLevel newDecLevel =
       put (MkGrubState w x newDecLevel y z q)
 
 
-||| Return the root package name which is stored in the state.
-getRootPkg : GrubState -> PkgName
-getRootPkg (MkGrubState _ _ _ _ _ root) = root
+
 
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
