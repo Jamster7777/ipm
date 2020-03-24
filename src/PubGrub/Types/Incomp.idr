@@ -53,3 +53,9 @@ getI' : PkgName -> IncompMap -> List Incomp
 getI' n m = case (lookup n m) of
                 Nothing  => []
                 (Just x) => x
+
+||| Get the term in an incompatibility for a specific package, if it exists.
+getTermForPkg : PkgName -> Incomp -> Maybe Term
+getTermForPkg search [] = Nothing
+getTermForPkg search ((n, t) :: xs) =
+  if (n == search) then Just t else getTermForPkg search xs

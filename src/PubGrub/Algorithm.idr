@@ -59,11 +59,18 @@ conflictResolution i =
         -- TODO add error reporting code here.
         pure $ Left VersionSolvingFail
       else
-        do  let relPS = getRelevantPS (getPartialSolution state) i
-            let psAtSatisfier = findSatisfier relPS
+        do  let relPS
+                = getRelevantPS (getPartialSolution state) i
+            -- 'Nothing' should be impossible (for both of maybes) so it is not
+            -- pattern matched. (This way an error will be thrown exposing the
+            -- bug).
+            let Just psAtSatisfier
+                = findSatisfier relPS i
+            let (satisfierName, satisfierAssignment)
+                = getMostRecentAssignment psAtSatisfier
+            let Just term
+                = getTermForPkg satisfierName i
             ?a
-
-
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.

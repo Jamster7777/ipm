@@ -48,9 +48,13 @@ getRelevantPS (dict, list) i =
     filterDict old [] soFar = soFar
     filterDict old ((n, t) :: ts) soFar =
       case (lookup n old) of
-        -- 'Nothing' should be impossible, so its not pattern matched. (This way
+        -- 'Nothing' should be impossible, so it is not pattern matched. (This way
         -- an error will be thrown exposing the bug).
         (Just as) => filterDict old ts (insert n as soFar)
+
+||| TODO
+getMostRecentAssignment : PartialSolution -> (PkgName, Assignment)
+getMostRecentAssignment (dict, (a :: as)) = a
 
 
 --------------------------------------------------------------------------------
