@@ -1,4 +1,9 @@
 module PubGrub.PartialSolution
+import PubGrub.Types.Term
+import PubGrub.Types.Incomp
+import Core.ManifestTypes
+import Semver.Version
+import Data.AVL.Dict
 
 --------------------------------------------------------------------------------
 -- The Partial Solution

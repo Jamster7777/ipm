@@ -1,4 +1,5 @@
-module PubGrub.Incompatibility
+module PubGrub.Types.Incomp
+import PubGrub.Types.Term
 import Core.ManifestTypes
 import Semver.Range
 import Data.AVL.Dict
@@ -6,25 +7,8 @@ import Data.AVL.Dict
 %access public export
 
 --------------------------------------------------------------------------------
--- Incompatibilties
+-- Type definition
 --------------------------------------------------------------------------------
-
-data Term = Pos Range | Neg Range
-
-not : Term -> Term
-not (Pos x) = Neg x
-not (Neg x) = Pos x
-
-Eq Term where
-  (==) (Pos x) (Pos y) = x == y
-  (==) (Pos x) (Neg y) = False
-  (==) (Neg x) (Pos y) = False
-  (==) (Neg x) (Neg y) = x == y
-  (/=) x       y       = not (x == y)
-
-Show Term where
-  show (Pos r) = show r
-  show (Neg r) = "not " ++ (show r)
 
 Incomp : Type
 Incomp = List (PkgName, Term)
@@ -48,6 +32,11 @@ IncompMap = Dict PkgName (List Incomp)
 
 %name IncompMap m
 
+
+--------------------------------------------------------------------------------
+-- Getters and setters
+--------------------------------------------------------------------------------
+
 addI' : Incomp -> IncompMap -> IncompMap
 addI' i m = addI'' i i m
   where
@@ -62,3 +51,14 @@ getI' : PkgName -> IncompMap -> List Incomp
 getI' n m = case (lookup n m) of
                 Nothing  => []
                 (Just x) => x
+
+
+--------------------------------------------------------------------------------
+-- Utils
+--------------------------------------------------------------------------------
+
+||| Convert the dependancies of a package to a list of incompatibilties
+depsToIncomps : Manifest -> List Incomp
+depsToIncomps (MkManifest n v [] ms) = []
+depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
+  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))

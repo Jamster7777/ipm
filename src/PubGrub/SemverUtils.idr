@@ -69,7 +69,6 @@ addTermToWorkingRanges (Neg x) workingRanges =
         unionNegation (x :: xs) workingRanges =
           (addTermToWorkingRanges (Pos x) workingRanges) ++ (unionNegation xs workingRanges)
 
-
 ||| Convert the partial solution for a particular package to a list of ranges,
 ||| which represent an intersection of the partial solution, i.e. all allowed
 ||| versions within the partial solution.
@@ -86,63 +85,6 @@ psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
           psToRanges' as newWRs
     psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
 
-
---------------------------------------------------------------------------------
--- Override interval comparison (currently REDUNDANT) TODO
---------------------------------------------------------------------------------
-
-||| Compare the lower bound of the first range with the upper bound of the
-||| second range. Implemented here as the elba/semver package does not compare
-||| intervals which are a mix of upper / lower bounds correctly.
-cmpLowUp : Range -> Range -> Ordering
-cmpLowUp (MkRange l1 _) (MkRange _ u2) = cmpLowUp' l1 u2
-  where
-    cmpLowUp' : Interval -> Interval -> Ordering
-    cmpLowUp' Unbounded Unbounded = LT
-    cmpLowUp' Unbounded u2 = LT
-    cmpLowUp' l1 Unbounded = LT
-    cmpLowUp' (Closed v1 _) (Closed v2 _) =
-      case (v1 `compare` v2) of
-            LT => LT
-            GT => GT
-            EQ => EQ
-    cmpLowUp' (Open v1 _) (Open v2 _) =
-      case (v1 `compare` v2) of
-            LT => LT
-            GT => GT
-            -- Lower bound is greater than upper bound in this case, as it lies
-            -- on the upper side of the version they straddle.
-            EQ => GT
-    cmpLowUp' (Open v1 _) (Closed v2 _) =
-      case (v1 `compare` v2) of
-            LT => LT
-            GT => GT
-            -- As above. In this case the 'upper' bound accepts the version they
-            -- straddle, but the 'lower' bound is above it and doesn't accept it.
-            EQ => GT
-    cmpLowUp' (Closed v1 _) (Open v2 _) =
-      case (v1 `compare` v2) of
-            LT => LT
-            GT => GT
-            -- As above, but in reverse.
-            EQ => GT
-
-||| The compare function from elba/semver works for comparing intervals which
-||| are both lower intervals.
-cmpLowLow : Range -> Range -> Ordering
-cmpLowLow (MkRange l1 _) (MkRange l2 _) = compare True l1 l2
-
-||| The compare function from elba/semver works for comparing intervals which
-||| are both upper intervals.
-cmpUpUp : Range -> Range -> Ordering
-cmpUpUp (MkRange _ u1) (MkRange _ u2) = compare False u1 u2
-
-
---------------------------------------------------------------------------------
--- Functions for evaluating an incompatibility on the given partial solution.
---------------------------------------------------------------------------------
-
-
 ||| Check if a version lies in any of the given list of ranges
 versionInRanges : List Range -> Version -> Bool
 versionInRanges [] v = False
@@ -158,6 +100,11 @@ versionInRanges (r :: rs) v =
 ||| given package.
 vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
 vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPS' n ps))) vs
+
+--------------------------------------------------------------------------------
+-- Functions for evaluating an incompatibility on the given partial solution.
+--------------------------------------------------------------------------------
+
 
 ||| Find the list of versions which are allowed by the partial solution for a
 ||| given package, for the given grub state.

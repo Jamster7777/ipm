@@ -85,5 +85,61 @@ setManifests mans =
 
 
 --------------------------------------------------------------------------------
--- TODO: Special setters for GrubState
+-- Special getters for GrubState
 --------------------------------------------------------------------------------
+
+getI : PkgName -> GrubState -> List Incomp
+getI n (MkGrubState _ is _ _ _ _) = getI' n is
+
+addI : Incomp -> StateT GrubState IO ()
+addI i = do  (MkGrubState x is y z w q) <- get
+             put (MkGrubState x (addI' i is) y z w q)
+
+getPSForPkg : PkgName -> GrubState -> List Assignment
+getPSForPkg n (MkGrubState ps _ _ _ _ _) = getPSForPkg' n ps
+
+||| Extract a list of all decisions from the partial solution
+extractDecs : GrubState -> List (PkgName, Version)
+extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (snd ps)
+  where
+    extractDecs' : List (PkgName, Assignment) -> List (PkgName, Version)
+    extractDecs' [] = []
+    extractDecs' ((n, (Derivation v _ _)) :: as) =
+      extractDecs' as
+    extractDecs' ((n, (Decision v _)) :: as)     =
+      (n, v) :: (extractDecs' as)
+
+--------------------------------------------------------------------------------
+-- Special setters for GrubState
+--------------------------------------------------------------------------------
+
+addToPS : PkgName -> Assignment -> StateT GrubState IO ()
+addToPS n a =
+  do  (MkGrubState ps x y z w q) <- get
+      put (MkGrubState (addToPS' n a ps) x y z w q)
+
+||| Add a manifest to the dictionary of manifests, indexed by package name and
+||| value.
+addManifest : Manifest -> StateT GrubState IO ()
+addManifest (MkManifest n v xs m) =
+  do  (MkGrubState w x y z mans q) <- get
+      put (MkGrubState w x y z (insert (n, v) (MkManifest n v xs m) mans) q)
+
+||| Add a list of available versions for a given package to the dictionary of
+||| package versions.
+addVersionList : PkgName -> List Version -> StateT GrubState IO ()
+addVersionList n vs =
+  do  (MkGrubState w x y pVersions z q) <- get
+      put (MkGrubState w x y (insert n vs pVersions) z q)
+
+
+||| Add a set of ranges as individual positive incompatibilities
+addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
+addRangesAsIncomps n [] = pure ()
+addRangesAsIncomps n (x :: xs) = addI [ (n, (Pos x)) ]
+
+||| Add a list of incompatibilties to the partial solution
+addIs : List Incomp -> StateT GrubState IO ()
+addIs [] = pure ()
+addIs (x :: xs) = do  addI x
+                      addIs xs
