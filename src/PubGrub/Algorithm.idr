@@ -39,13 +39,19 @@ failCondition state _ = False
 ||| for which the incompatibility is satisfied.
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
 findSatisfier ps i =
-  do  let Just backtracked = backtrackOne ps
-                           | Nothing => Nothing
-      case (checkIncomp i backtracked) of
-        ISat  => case (findSatisfier backtracked i) of
-                    Nothing        => Just backtracked
-                    Just earlier   => Just earlier
-        _     => Nothing
+  case (checkIncomp i ps) of
+    ISat  => do let Just backtracked = backtrackOne ps
+                                     | Nothing => Nothing
+                case (findSatisfier ps i) of
+                          Nothing        => Just ps
+                          Just earlier   => Just earlier
+    _     => Nothing
+
+findPartialSatisfier :  PartialSolution
+                     -> Incomp
+                     -> (satisfier : Assignment)
+                     -> Maybe PartialSolution
+findPartialSatisfier ps i satisfier = ?findPartialSatisfier_rhs
 
 ||| The conflict resolution part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#conflict-resolution
