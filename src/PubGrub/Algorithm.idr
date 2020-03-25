@@ -35,8 +35,6 @@ failCondition state [] = True
 failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
 failCondition state _ = False
 
-constructPriorCause : Incomp -> Incomp -> PkgName -> Incomp
-
 ||| Backtrack the partial solution to the 'satisfier', the earliest assignment
 ||| for which the incompatibility is satisfied.
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
@@ -108,8 +106,6 @@ conflictResolution i isFirst =
                 = getMostRecentAssignment psAtSatisfier
             let (satisfierName, satisfierAssignment)
                 = satisfier
-            let Just term
-                = getTermForPkg satisfierName i
             let previousSatisfierLevel
                 = getPreviousSatisfierLevel psAtSatisfier i satisfier
             if
@@ -128,8 +124,28 @@ conflictResolution i isFirst =
                 do  setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
             else
-              ?a
-
+                  -- The pattern match on the derivation should always succeed
+                  -- here, so no decision pattern matching is done to ensure a
+                  -- bug doesn't go unnoticed.
+              do  let (Derivation satisfierTerm satisfierCause _)
+                      = satisfierAssignment
+                  -- Construct the 'prior cause' incompatibility. This is a
+                  -- union of the incompatibility passed to conflict resolution
+                  -- and the cause of the satisfier assignment, exluding the
+                  -- package referenced in satisfier. This incomp is passed to
+                  -- the next iteration of conflict resolution.
+                  let priorCause
+                      = filter (\x => (fst x) /= satisfierName) (i ++ satisfierCause)
+                  let Just term
+                      = getTermForPkg satisfierName i
+                  case (checkTerm (termToRanges term) (termToRanges satisfierTerm)) of
+                    TSat => conflictResolution priorCause False
+                    -- If satisfier does not fully satisfy term, then add
+                    -- the resultant terms of (not satisfier) U term to the
+                    -- prior cause
+                    _    => do  let newPriorCause
+                                    = priorCause ++ [ (satisfierName, (not satisfierTerm)), (satisfierName, term) ]
+                                conflictResolution newPriorCause False
 
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
