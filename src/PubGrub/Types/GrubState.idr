@@ -31,7 +31,8 @@ import Data.AVL.Dict
 |||   has been parsed, so it doesn't need to be reparsed each time it is
 |||   referenced.
 ||| - PkgName stores the name of the root package
-data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName
+||| - Bool stores whether the verbose stdout should be used for version solving.
+data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool
 
 %name GrubState state
 
@@ -41,22 +42,25 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 --------------------------------------------------------------------------------
 
 getPartialSolution : GrubState -> PartialSolution
-getPartialSolution (MkGrubState ps _ _ _ _ _) = ps
+getPartialSolution (MkGrubState ps _ _ _ _ _ _) = ps
 
 getIncompMap : GrubState -> IncompMap
-getIncompMap (MkGrubState _ iMap _ _ _ _) = iMap
+getIncompMap (MkGrubState _ iMap _ _ _ _ _) = iMap
 
 getDecisionLevel : GrubState -> Integer
-getDecisionLevel (MkGrubState _ _ decLevel _ _ _) = decLevel
+getDecisionLevel (MkGrubState _ _ decLevel _ _ _ _) = decLevel
 
 getPkgVersions : GrubState -> PkgVersions
-getPkgVersions (MkGrubState _ _ _ pVersions _ _) = pVersions
+getPkgVersions (MkGrubState _ _ _ pVersions _ _ _) = pVersions
 
 getManifests : GrubState -> Manifests
-getManifests (MkGrubState _ _ _ _ mans _) = mans
+getManifests (MkGrubState _ _ _ _ mans _ _) = mans
 
 getRootPkg : GrubState -> PkgName
-getRootPkg (MkGrubState _ _ _ _ _ root) = root
+getRootPkg (MkGrubState _ _ _ _ _ root _) = root
+
+isVerbose : GrubState -> Bool
+isVerbose (MkGrubState _ _ _ _ _ _ verbose) = verbose
 
 
 --------------------------------------------------------------------------------
@@ -65,28 +69,31 @@ getRootPkg (MkGrubState _ _ _ _ _ root) = root
 
 setPartialSolution : PartialSolution -> StateT GrubState IO ()
 setPartialSolution ps =
-  do  (MkGrubState _ iMap decLevel pVersions mans root) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root)
+  do  (MkGrubState _ iMap decLevel pVersions mans root verbose) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
 
 setIncompMap : IncompMap -> StateT GrubState IO ()
 setIncompMap iMap =
-  do  (MkGrubState ps _ decLevel pVersions mans root) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root)
+  do  (MkGrubState ps _ decLevel pVersions mans root verbose) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
 
 setDecisionLevel : Integer -> StateT GrubState IO ()
 setDecisionLevel decLevel =
-  do  (MkGrubState ps iMap _ pVersions mans root) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root)
+  do  (MkGrubState ps iMap _ pVersions mans root verbose) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
 
 setPkgVersions : PkgVersions -> StateT GrubState IO ()
 setPkgVersions pVersions =
-  do  (MkGrubState ps iMap decLevel _ mans root) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root)
+  do  (MkGrubState ps iMap decLevel _ mans root verbose) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
 
 setManifests : Manifests -> StateT GrubState IO ()
 setManifests mans =
-  do  (MkGrubState ps iMap decLevel pVersions _ root) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root)
+  do  (MkGrubState ps iMap decLevel pVersions _ root verbose) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+
+-- No setters for root package or verbose as these shouldn't be changed during
+-- version solving.
 
 
 --------------------------------------------------------------------------------
@@ -123,7 +130,7 @@ vsInPS state n =
 ||| Get a list of all packages which do not yet have a decision in the partial
 ||| solution.
 psNoDec : GrubState -> List PkgName
-psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst ps
+psNoDec state = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst (getPartialSolution state)
 
 
 --------------------------------------------------------------------------------
