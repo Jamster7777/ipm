@@ -80,15 +80,14 @@ getPreviousSatisfierLevel ps i satisfier =
       case (findPreviousSatisfier backtracked i satisfier) of
           Nothing   => 1
           Just psAtPrevSatisfier => do  let (n, a) = getMostRecentAssignment psAtPrevSatisfier
-                                        case a of
-                                          (Derivation _ _ l) => l
-                                          (Decision _ l)     => l
+                                        getDecLevel a
 
 ||| The conflict resolution part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#conflict-resolution
 conflictResolution :  Incomp
+                   -> (isFirst : Bool)
                    -> StateT GrubState IO (Either IpmError Incomp)
-conflictResolution i =
+conflictResolution i isFirst =
   do  state <- get
       if
         (failCondition state i)
@@ -111,7 +110,25 @@ conflictResolution i =
                 = getTermForPkg satisfierName i
             let previousSatisfierLevel
                 = getPreviousSatisfierLevel psAtSatisfier i satisfier
-            ?a
+            if
+              (isDec satisfierAssignment)
+              ||
+              ((getDecLevel satisfierAssignment) /= previousSatisfierLevel)
+            then
+              if
+                not isFirst
+              -- TODO find a way to not repeat this?
+              then
+                do  addI i
+                    backtrackToDecisionLevel previousSatisfierLevel
+                    pure $ Right i
+              else
+                do  backtrackToDecisionLevel previousSatisfierLevel
+                    pure $ Right i
+            else
+              ?a
+
+
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation
 ||| docs.
@@ -125,7 +142,7 @@ unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
       case (checkIncomp i (getPartialSolution gs)) of
-          ISat          => do Right conI <- (conflictResolution i)
+          ISat          => do Right conI <- (conflictResolution i True)
                                           | Left err => pure (Left err)
                               -- Note the slight deviation from the docs here.
                               -- This puts the new incompatibility to the front

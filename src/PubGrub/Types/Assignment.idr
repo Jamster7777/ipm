@@ -30,3 +30,12 @@ pkgHasNoDec : List Assignment -> Bool
 pkgHasNoDec [] = True
 pkgHasNoDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
 pkgHasNoDec ((Decision _ _) :: as) = False
+
+||| Return true if the assignment is a decision
+isDec : Assignment -> Bool
+isDec (Derivation _ _ _) = False
+isDec (Decision _ _) = True
+
+getDecLevel : Assignment -> Integer
+getDecLevel (Derivation _ _ l) = l
+getDecLevel (Decision _ l) = l
