@@ -160,7 +160,8 @@ unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
       case (checkIncomp i (getPartialSolution gs)) of
-          ISat          => do Right conI <- (conflictResolution i True)
+          ISat          => do pr $ "[unitPropLoop] Following incompatibility satisfied: " ++ (show i)
+                              Right conI <- (conflictResolution i True)
                                           | Left err => pure (Left err)
                               -- Note the slight deviation from the docs here.
                               -- This puts the new incompatibility to the front
@@ -170,9 +171,11 @@ unitPropLoop changed (i :: is) =
                               -- actions that were required here in the docs
                               -- version.
                               unitPropLoop [] (conI :: is)
-          (IAlm (n, t)) => do addToPS n (Derivation (not t) i (getDecisionLevel gs))
+          (IAlm (n, t)) => do pr $ "[unitPropLoop] Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
+                              addToPS n (Derivation (not t) i (getDecisionLevel gs))
                               unitPropLoop (changed ++ [n]) is
-          _             => unitPropLoop changed is
+          _             => do pr $ "[unitPropLoop] Following incompatibility inconclusive:" ++ (show i)
+                              unitPropLoop changed is
 
 
 ||| The unit propagation part of the algorithm, as described at:
@@ -181,8 +184,11 @@ unitProp : List PkgName -> StateT GrubState IO (Either IpmError ())
 unitProp [] = pure $ Right ()
 unitProp (package :: changed) =
     do  state <- get
+        pr $ "[unitProp] Started with changed=" ++ (show (package :: changed))
         (Right newChanged) <- unitPropLoop changed (getI package state)
                             | (Left err) => pure (Left err)
+        pr $ "[unitProp] Loop finished"
+        
         unitProp newChanged
 
 ||| Check if any of a list of incompatibilities are satisfied by the state
@@ -297,10 +303,13 @@ decMake =
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
 mainLoop next =
-    do  Right ()      <- unitProp [ next ]
+    do  pr $ "[mainLoop] started with next=" ++ (show next)
+        Right ()      <- unitProp [ next ]
                        | Left err => pure (Left err)
+        pr $ "[mainLoop] unitProp complete" ++ (show next)
         Right newNext <- decMake
                        | Left err => pure (Left err)
+        pr $ "[mainLoop] decision making complete, returning: " ++ (show newNext)
         state <- get
         if
           (psNoDec state) == []

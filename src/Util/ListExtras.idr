@@ -15,3 +15,12 @@ max (x :: xs) = Just (max' xs x)
         max' xs x
       else
         max' xs soFar
+
+||| Custom implementation for showing a list, splitting the elements onto new
+||| lines insteasd of the standard format.
+public export
+total
+showList : List a -> (a -> String) -> String
+showList [] f = ""
+showList (x :: xs) f =
+  (f x) ++ "\n" ++ (showList xs f)

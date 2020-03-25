@@ -16,8 +16,8 @@ data Assignment = Derivation Term Incomp Integer
                 | Decision Version Integer
 
 Show Assignment where
-  show (Derivation x xs y) = "=>  " ++ (show x)
-  show (Decision v x) = "?   " ++ (show v)
+  show (Derivation x xs y) = "~ " ++ (show x)
+  show (Decision v x) = "? " ++ (show v)
 
 
 --------------------------------------------------------------------------------

@@ -200,6 +200,11 @@ minVsInPS state =
           else
             minVsInPS' state ns minName minVal
 
+
+--------------------------------------------------------------------------------
+-- Debug
+--------------------------------------------------------------------------------
+
 ||| print function used to print verbose debug commentary of the PubGrub
 ||| algorithm as it executes, provided the verbose option is turned on.
 pr : String -> StateT GrubState IO ()
@@ -211,3 +216,8 @@ pr msg =
         lift $ printLn msg
       else
         pure ()
+
+prState : StateT GrubState IO ()
+prState =
+  do  state <- get
+      lift $ printLn "Update on GrubState\n"

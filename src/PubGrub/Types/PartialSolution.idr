@@ -3,6 +3,7 @@ import PubGrub.Types.Term
 import PubGrub.Types.Incomp
 import PubGrub.Types.Assignment
 import Core.ManifestTypes
+import Util.ListExtras
 import Semver.Version
 import Data.AVL.Dict
 import Data.AVL.Set
@@ -20,6 +21,21 @@ import Data.AVL.Set
 ||| - a list, so that the assignments can be retreived in order.
 PartialSolution : Type
 PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
+
+
+--------------------------------------------------------------------------------
+-- 'Show' implementation
+--------------------------------------------------------------------------------
+
+showAssignPair : (PkgName, Assignment) -> String
+showAssignPair (n, (Decision v l)) = (show l) ++ "? " ++ (show n) ++ " " ++ (show v)
+showAssignPair (n, (Derivation r i l)) = (show l) ++ "~ " ++ (show n) ++ " " ++ (show r) ++ " (caused by: " ++ (show i) ++ ")"
+
+show : PartialSolution -> String
+show (_, list) =
+  "Partial Solution\n--------------------------"
+  ++
+  (showList list showAssignPair)
 
 
 --------------------------------------------------------------------------------
