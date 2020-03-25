@@ -43,15 +43,46 @@ findSatisfier ps i =
     ISat  => do let Just backtracked = backtrackOne ps
                                      | Nothing => Nothing
                 case (findSatisfier ps i) of
-                          Nothing        => Just ps
-                          Just earlier   => Just earlier
+                    Nothing        => Just ps
+                    Just earlier   => Just earlier
     _     => Nothing
 
-findPartialSatisfier :  PartialSolution
+||| Backtrack the partial solution to 'previous satisfier', the earliest
+||| assignment before satisfier such that incompatibility is satisfied by the
+||| partial solution up to and including that assignment plus satisfier.
+|||
+||| TODO avoid repeated code?
+findPreviousSatisfier :  PartialSolution
                      -> Incomp
-                     -> (satisfier : Assignment)
+                     -> (satisfier : (PkgName, Assignment))
                      -> Maybe PartialSolution
-findPartialSatisfier ps i satisfier = ?findPartialSatisfier_rhs
+findPreviousSatisfier ps i (n, a) =
+  case (checkIncomp i (addToPS' n a ps)) of
+    ISat => do let Just backtracked = backtrackOne ps
+                                    | Nothing => Nothing
+               case (findPreviousSatisfier ps i (n, a)) of
+                  Nothing        => Just ps
+                  Just earlier   => Just earlier
+    _    => Nothing
+
+||| Call findPreviousSatisfier and return the decision level of the previous
+||| satisfier. If there is no such assignment, return a decision level of 1.
+getPreviousSatisfierLevel :  PartialSolution
+                          -> Incomp
+                          -> (satisfier : (PkgName, Assignment))
+                          -> Integer
+getPreviousSatisfierLevel ps i satisfier =
+  -- we backtrack the PS by one before finding partial satisfier,
+  -- so that satisfier cannot equal partial satisfier.
+  do  let Just backtracked
+           = backtrackOne ps
+           | Nothing => 1
+      case (findPreviousSatisfier backtracked i satisfier) of
+          Nothing   => 1
+          Just psAtPrevSatisfier => do  let (n, a) = getMostRecentAssignment psAtPrevSatisfier
+                                        case a of
+                                          (Derivation _ _ l) => l
+                                          (Decision _ l)     => l
 
 ||| The conflict resolution part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#conflict-resolution
@@ -72,10 +103,14 @@ conflictResolution i =
             -- bug).
             let Just psAtSatisfier
                 = findSatisfier relPS i
-            let (satisfierName, satisfierAssignment)
+            let satisfier
                 = getMostRecentAssignment psAtSatisfier
+            let (satisfierName, satisfierAssignment)
+                = satisfier
             let Just term
                 = getTermForPkg satisfierName i
+            let previousSatisfierLevel
+                = getPreviousSatisfierLevel psAtSatisfier i satisfier
             ?a
 ||| Check each incompatibility involving the package taken from changed.
 ||| Manifestation of the 'for each incompatibility' loop in the unit propagation

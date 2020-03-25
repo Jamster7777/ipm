@@ -97,6 +97,6 @@ backtrackOne : PartialSolution -> Maybe PartialSolution
 backtrackOne (dict, []) = Nothing
 backtrackOne (dict, (n, a) :: xs) =
   case (lookup n dict) of
-    -- 'Nothing' should be impossible, so its not pattern matched. (This way
+    -- 'Nothing' should be impossible, so it is not pattern matched. (This way
     -- an error will be thrown exposing the bug).
     (Just (a :: as)) => Just ((insert n as dict), xs)
