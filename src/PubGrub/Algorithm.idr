@@ -35,6 +35,8 @@ failCondition state [] = True
 failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
 failCondition state _ = False
 
+constructPriorCause : Incomp -> Incomp -> PkgName -> Incomp
+
 ||| Backtrack the partial solution to the 'satisfier', the earliest assignment
 ||| for which the incompatibility is satisfied.
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
@@ -120,10 +122,10 @@ conflictResolution i isFirst =
               -- TODO find a way to not repeat this?
               then
                 do  addI i
-                    backtrackToDecisionLevel previousSatisfierLevel
+                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
               else
-                do  backtrackToDecisionLevel previousSatisfierLevel
+                do  setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
             else
               ?a
