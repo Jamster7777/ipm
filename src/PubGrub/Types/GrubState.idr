@@ -199,3 +199,15 @@ minVsInPS state =
             minVsInPS' state ns n val
           else
             minVsInPS' state ns minName minVal
+
+||| print function used to print verbose debug commentary of the PubGrub
+||| algorithm as it executes, provided the verbose option is turned on.
+pr : String -> StateT GrubState IO ()
+pr msg =
+  do  state <- get
+      if
+        (isVerbose state)
+      then
+        lift $ printLn msg
+      else
+        pure ()
