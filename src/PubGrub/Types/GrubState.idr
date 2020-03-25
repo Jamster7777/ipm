@@ -94,18 +94,15 @@ setManifests mans =
 --------------------------------------------------------------------------------
 
 getI : PkgName -> GrubState -> List Incomp
-getI n (MkGrubState _ is _ _ _ _) = getI' n is
-
-addI : Incomp -> StateT GrubState IO ()
-addI i = do  (MkGrubState x is y z w q) <- get
-             put (MkGrubState x (addI' i is) y z w q)
+getI n state = getI' n (getIncompMap state)
 
 getPSForPkg : PkgName -> GrubState -> List Assignment
-getPSForPkg n (MkGrubState ps _ _ _ _ _) = getPSForPkg' n ps
+getPSForPkg n state = getPSForPkg' n (getPartialSolution state)
 
 ||| Extract a list of all decisions from the partial solution
 extractDecs : GrubState -> List (PkgName, Version)
-extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (snd ps)
+extractDecs state =
+  extractDecs' (snd (getPartialSolution state))
   where
     extractDecs' : List (PkgName, Assignment) -> List (PkgName, Version)
     extractDecs' [] = []
@@ -117,11 +114,11 @@ extractDecs (MkGrubState ps _ _ _ _ _) = extractDecs' (snd ps)
 ||| Find the list of versions which are allowed by the partial solution for a
 ||| given package, for the given grub state.
 vsInPS : GrubState -> PkgName -> List Version
-vsInPS (MkGrubState ps _ _ pvs mans _) n =
+vsInPS state n =
   do  let Just vs
-          = lookup n pvs
+          = lookup n (getPkgVersions state)
           | Nothing  => []
-      vsInPS' n vs ps
+      vsInPS' n vs (getPartialSolution state)
 
 ||| Get a list of all packages which do not yet have a decision in the partial
 ||| solution.
@@ -133,25 +130,28 @@ psNoDec (MkGrubState ps _ _ _ _ _) = map fst $ filter (pkgHasNoDec . snd) $ toLi
 -- Special setters for GrubState
 --------------------------------------------------------------------------------
 
+addI : Incomp -> StateT GrubState IO ()
+addI i = do  state <- get
+             setIncompMap (addI' i (getIncompMap state))
+
 addToPS : PkgName -> Assignment -> StateT GrubState IO ()
 addToPS n a =
-  do  (MkGrubState ps x y z w q) <- get
-      put (MkGrubState (addToPS' n a ps) x y z w q)
+  do  state <- get
+      setPartialSolution (addToPS' n a (getPartialSolution state))
 
 ||| Add a manifest to the dictionary of manifests, indexed by package name and
 ||| value.
 addManifest : Manifest -> StateT GrubState IO ()
 addManifest (MkManifest n v xs m) =
-  do  (MkGrubState w x y z mans q) <- get
-      put (MkGrubState w x y z (insert (n, v) (MkManifest n v xs m) mans) q)
+  do  state <- get
+      setManifests (insert (n, v) (MkManifest n v xs m) (getManifests state))
 
 ||| Add a list of available versions for a given package to the dictionary of
 ||| package versions.
 addVersionList : PkgName -> List Version -> StateT GrubState IO ()
 addVersionList n vs =
-  do  (MkGrubState w x y pVersions z q) <- get
-      put (MkGrubState w x y (insert n vs pVersions) z q)
-
+  do  state <- get
+      setPkgVersions (insert n vs (getPkgVersions state))
 
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
