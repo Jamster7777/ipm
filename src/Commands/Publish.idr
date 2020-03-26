@@ -12,13 +12,6 @@ import Util.FetchDep
 --TODO remove
 %access public export
 
-getMostRecentTag : IO (Either IpmError Version)
-getMostRecentTag =
-  do  Right vs <- listVersions | Left err => pure (Left err)
-      case (last' vs) of
-        Nothing  => pure $ Right (MkVersion 0 0 0 [] [])
-        Just v   => pure (Right v)
-
 addTag : Version -> IO ()
 addTag new = bashCommand ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e v"  ++ (show new))
 

@@ -74,6 +74,12 @@ listVersions' {dir} =
 listVersions : PkgName -> IO (Either IpmError (List Version))
 listVersions n = listVersions' {dir=(pDir n)}
 
+getMostRecentVersion : { default "." dir : String } -> IO (Either IpmError Version)
+getMostRecentVersion {dir} =
+  do  Right vs <- listVersions' {dir=dir} | Left err => pure (Left err)
+      case (last' vs) of
+        Nothing  => pure $ Right (MkVersion 0 0 0 [] [])
+        Just v   => pure (Right v)
 
 checkoutManifest : PkgName -> Version -> IO (Either IpmError Manifest)
 checkoutManifest n v =
