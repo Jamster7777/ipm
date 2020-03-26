@@ -255,10 +255,12 @@ fetchVersion n v =
       -- ipm creates for the package, using git tags to change to different
       -- versions.
       case (lookup (n, v) (getManifests state)) of
-        Nothing  => do  Right m <- lift $ checkoutManifest n v
+        Nothing  => do  pr $ "[fetchVersion] The manifest for this version has not been parsed before, handling new manifest file."
+                        Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
                         handleNewManifest m
-        (Just m) => pure $ Right $ depsToIncomps m
+        (Just m) => do  pr $ "[fetchVersion] The manifest for this version has been parsed before, returning it."
+                        pure $ Right $ depsToIncomps m
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
@@ -276,7 +278,7 @@ decMake =
         Nothing      => do  pr $ "[decMake] No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
                             addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
                             pure $ Right package
-        Just version => do  pr $ "[decMake] Fetching latest compatibile version: " (show version)
+        Just version => do  pr $ "[decMake] Fetching latest compatibile version: " ++ (show version)
                             Right is <- fetchVersion package version
                                       | Left err => pure (Left err)
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
@@ -288,11 +290,13 @@ decMake =
                                 possibleNewPS
                               )
                             then
-                              -- Don't add a decision to the partial solution if
-                              -- it would instantly satisfy an incompatibility.
-                              pure $ Right package
+                              do  pr $ "[decMake] Not adding decision to the partial solution, as it would instantly satisfy one of the new incompatibilties."
+                                  -- Don't add a decision to the partial solution if
+                                  -- it would instantly satisfy an incompatibility.
+                                  pure $ Right package
                             else
-                              do  setPartialSolution possibleNewPS
+                              do  pr $ "[decMake] Adding decision to the partial solution."
+                                  setPartialSolution possibleNewPS
                                   setDecisionLevel ((getDecisionLevel state) + 1)
                                   pure $ Right package
 
@@ -308,6 +312,7 @@ mainLoop next =
         Right newNext <- decMake
                        | Left err => pure (Left err)
         pr $ "[mainLoop] decision making complete, returning: " ++ (show newNext)
+        prS
         state <- get
         if
           (psNoDec state) == []
