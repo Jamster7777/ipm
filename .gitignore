@@ -1,2 +1,4 @@
 *.ibc
 out/
+python-venv/
+.vscode/
