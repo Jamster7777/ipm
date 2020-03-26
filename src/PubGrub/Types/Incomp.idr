@@ -2,6 +2,8 @@ module PubGrub.Types.Incomp
 
 import PubGrub.Types.Term
 import Core.ManifestTypes
+import Util.Constants
+import Util.ListExtras
 import Semver.Version
 import Semver.Range
 import Data.AVL.Dict
@@ -17,6 +19,16 @@ Incomp = List (PkgName, Term)
 
 %name Incomp i
 
+IncompMap : Type
+IncompMap = (Dict PkgName (List Incomp), List Incomp)
+
+%name IncompMap m
+
+
+--------------------------------------------------------------------------------
+-- 'Show' implementations
+--------------------------------------------------------------------------------
+
 showIncomp : Incomp -> String
 showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
   where
@@ -25,24 +37,23 @@ showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
     showIncompMiddle ((n, (Pos r)) :: []) = (show n) ++ " " ++ (show r)
     showIncompMiddle ((n, (Neg r)) :: xs) = "not " ++ (show n) ++ " " ++ (show r) ++ ", " ++ (showIncompMiddle xs)
 
-showIncomps : List Incomp -> String
-showIncomps [] = ""
-showIncomps (x :: xs) = (showIncomp x) ++ "\n" ++ (showIncomps xs)
-
-IncompMap : Type
-IncompMap = Dict PkgName (List Incomp)
-
-%name IncompMap m
-
+-- TODO be able to retrieve incompatibilties in a list properly
+showIncomps : IncompMap -> String
+showIncomps iMap =
+  "Incompatibilties"
+  ++
+  PR_SEP
+  ++
+  (showList (snd iMap) showIncomp)
 
 --------------------------------------------------------------------------------
 -- Getters and setters
 --------------------------------------------------------------------------------
 
 addI' : Incomp -> IncompMap -> IncompMap
-addI' i m = addI'' i i m
+addI' i (dict, list) = (addI'' i i dict, i :: list)
   where
-    addI'' : List (PkgName, Term) -> Incomp -> IncompMap -> IncompMap
+    addI'' : List (PkgName, Term) -> Incomp -> Dict PkgName (List Incomp) -> Dict PkgName (List Incomp)
     addI'' [] i m = m
     addI'' ((n, t) :: xs) i m =
       case (lookup n m) of
@@ -50,9 +61,10 @@ addI' i m = addI'' i i m
         (Just is) => addI'' xs i (insert n (i :: is) m)
 
 getI' : PkgName -> IncompMap -> List Incomp
-getI' n m = case (lookup n m) of
-                Nothing  => []
-                (Just x) => x
+getI' n (dict, list) =
+  case (lookup n dict) of
+    Nothing  => []
+    (Just x) => x
 
 ||| Get the term in an incompatibility for a specific package, if it exists.
 getTermForPkg : PkgName -> Incomp -> Maybe Term

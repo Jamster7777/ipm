@@ -7,6 +7,7 @@ import PubGrub.Types.PartialSolution
 import PubGrub.Types.Term
 import PubGrub.SemverUtils
 import Core.ManifestTypes
+import Util.Constants
 import Semver.Range
 import Semver.Version
 import Control.Monad.State
@@ -220,4 +221,6 @@ pr msg =
 prState : StateT GrubState IO ()
 prState =
   do  state <- get
-      lift $ printLn "Update on GrubState\n"
+      lift $ printLn $ "Update on GrubState" ++ PR_SEP
+      lift $ printLn $ (showPS (getPartialSolution state))
+      

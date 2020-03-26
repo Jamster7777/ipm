@@ -4,6 +4,7 @@ import PubGrub.Types.Incomp
 import PubGrub.Types.Assignment
 import Core.ManifestTypes
 import Util.ListExtras
+import Util.Constants
 import Semver.Version
 import Data.AVL.Dict
 import Data.AVL.Set
@@ -31,9 +32,11 @@ showAssignPair : (PkgName, Assignment) -> String
 showAssignPair (n, (Decision v l)) = (show l) ++ "? " ++ (show n) ++ " " ++ (show v)
 showAssignPair (n, (Derivation r i l)) = (show l) ++ "~ " ++ (show n) ++ " " ++ (show r) ++ " (caused by: " ++ (show i) ++ ")"
 
-show : PartialSolution -> String
-show (_, list) =
-  "Partial Solution\n--------------------------"
+showPS : PartialSolution -> String
+showPS (_, list) =
+  "Partial Solution"
+  ++
+  PR_SEP
   ++
   (showList list showAssignPair)
 
