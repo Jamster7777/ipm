@@ -221,6 +221,7 @@ pr msg =
 prState : StateT GrubState IO ()
 prState =
   do  state <- get
-      lift $ printLn $ "Update on GrubState" ++ PR_SEP
-      lift $ printLn $ (showPS (getPartialSolution state))
-      
+      lift $ printLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
+      lift $ printLn $ (showPS (getPartialSolution state)) ++ PR_SEP
+      lift $ printLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
+      lift $ printLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
