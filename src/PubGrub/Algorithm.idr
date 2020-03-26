@@ -88,12 +88,12 @@ conflictResolution :  Incomp
                    -> (isFirst : Bool)
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i isFirst =
-  do  pr $ "[conflictResolution] Loop started with i=" ++ (showIncomp i)
+  do  pr "conflictResolution" $ "Loop started with i=" ++ (showIncomp i)
       state <- get
       if
         (failCondition state i)
       then
-        do  pr $ "[conflictResolution] Incompatibilty is empty / only refers to the root package, version solving has failed."
+        do  pr "conflictResolution" $ "Incompatibilty is empty / only refers to the root package, version solving has failed."
             -- TODO add error reporting code here.
             pure $ Left VersionSolvingFail
       else
@@ -106,12 +106,12 @@ conflictResolution i isFirst =
                 = findSatisfier relPS i
             let satisfier
                 = getMostRecentAssignment psAtSatisfier
-            pr $ "[conflictResolution] Satisfier is: " ++ (showAssignPair satisfier)
+            pr "conflictResolution" $ "Satisfier is: " ++ (showAssignPair satisfier)
             let (satisfierName, satisfierAssignment)
                 = satisfier
             let previousSatisfierLevel
                 = getPreviousSatisfierLevel psAtSatisfier i satisfier
-            pr $ "[conflictResolution] Previous satisfier level is: " ++ (show previousSatisfierLevel)
+            pr "conflictResolution" $ "Previous satisfier level is: " ++ (show previousSatisfierLevel)
             if
               (isDec satisfierAssignment)
               ||
@@ -121,13 +121,13 @@ conflictResolution i isFirst =
                 not isFirst
               -- TODO find a way to not repeat this?
               then
-                do  pr $ "[conflictResolution] Incompatibilty is different from original input, so adding it to the partial solution."
+                do  pr "conflictResolution" $ "Incompatibilty is different from original input, so adding it to the partial solution."
                     addI i
-                    pr $ "[conflictResolution] Backtracking partial solution to previousSatisfierLevel."
+                    pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
               else
-                do  pr $ "[conflictResolution] Backtracking partial solution to previousSatisfierLevel."
+                do  pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
             else
@@ -143,10 +143,10 @@ conflictResolution i isFirst =
                   -- the next iteration of conflict resolution.
                   let priorCause
                       = filter (\x => (fst x) /= satisfierName) (i ++ satisfierCause)
-                  pr $ "[conflictResolution] priorCause=" ++ (show priorCause)
+                  pr "conflictResolution" $ "priorCause=" ++ (show priorCause)
                   let Just term
                       = getTermForPkg satisfierName i
-                  pr $ "[conflictResolution] term=" ++ (show term)
+                  pr "conflictResolution" $ "term=" ++ (show term)
                   case (checkTerm (termToRanges term) (termToRanges satisfierTerm)) of
                     TSat => conflictResolution priorCause False
                     -- If satisfier does not fully satisfy term, then add
@@ -154,7 +154,7 @@ conflictResolution i isFirst =
                     -- prior cause
                     _    => do  let newPriorCause
                                     = priorCause ++ [ (satisfierName, (not satisfierTerm)), (satisfierName, term) ]
-                                pr $ "[conflictResolution] Satisfier does not fully satisfy term, so now priorCause=" ++ (show priorCause)
+                                pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause=" ++ (show priorCause)
                                 conflictResolution newPriorCause False
 
 ||| Check each incompatibility involving the package taken from changed.
@@ -170,10 +170,10 @@ unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
       case (checkIncomp i (getPartialSolution gs)) of
-          ISat          => do pr $ "[unitPropLoop] Following incompatibility satisfied: " ++ (show i)
+          ISat          => do pr "unitPropLoop" $ "Following incompatibility satisfied: " ++ (show i)
                               Right conI <- (conflictResolution i True)
                                           | Left err => pure (Left err)
-                              pr $ "[unitPropLoop] Conflict resolution returned with incompatibility: " ++ (show conI)
+                              pr "unitPropLoop" $ "Conflict resolution returned with incompatibility: " ++ (show conI)
                               prS
                               -- Note the slight deviation from the docs here.
                               -- This puts the new incompatibility to the front
@@ -183,10 +183,10 @@ unitPropLoop changed (i :: is) =
                               -- actions that were required here in the docs
                               -- version.
                               unitPropLoop [] (conI :: is)
-          (IAlm (n, t)) => do pr $ "[unitPropLoop] Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
+          (IAlm (n, t)) => do pr "unitPropLoop" $ "Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
                               addToPS n (Derivation (not t) i (getDecisionLevel gs))
                               unitPropLoop (changed ++ [n]) is
-          _             => do pr $ "[unitPropLoop] Following incompatibility inconclusive:" ++ (show i)
+          _             => do pr "unitPropLoop" $ "Following incompatibility inconclusive:" ++ (show i)
                               unitPropLoop changed is
 
 
@@ -196,10 +196,10 @@ unitProp : List PkgName -> StateT GrubState IO (Either IpmError ())
 unitProp [] = pure $ Right ()
 unitProp (package :: changed) =
     do  state <- get
-        pr $ "[unitProp] Started with changed=" ++ (show (package :: changed))
+        pr "unitProp" $ "Started with changed=" ++ (show (package :: changed))
         (Right newChanged) <- unitPropLoop changed (getI package state)
                             | (Left err) => pure (Left err)
-        pr $ "[unitProp] Loop finished"
+        pr "unitProp" $ "Loop finished"
         prS
         unitProp newChanged
 
@@ -222,10 +222,10 @@ fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
       if
         dirExists
       then
-        do  pr $ "[fetchDepsAndVersionLists] This package has already been fetched, skipping: " ++ (show pN)
+        do  pr "fetchDepsAndVersionLists" $ "This package has already been fetched, skipping: " ++ (show pN)
             fetchDepsAndVersionLists (MkManifest n v xs m)
       else
-        do  pr $ "[fetchDepsAndVersionLists] Fetching new package from source: " ++ (show pN)
+        do  pr "fetchDepsAndVersionLists" $ "Fetching new package from source: " ++ (show pN)
             Nothing  <- lift $ fetchDep (MkManiDep pN s r)
                       | Just err => pure (Just err)
             Right vs <- lift $ listVersions pN
@@ -268,11 +268,11 @@ fetchVersion n v =
       -- ipm creates for the package, using git tags to change to different
       -- versions.
       case (lookup (n, v) (getManifests state)) of
-        Nothing  => do  pr $ "[fetchVersion] The manifest for this version has not been parsed before, handling new manifest file."
+        Nothing  => do  pr "fetchVersion" $ "The manifest for this version has not been parsed before, handling new manifest file."
                         Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
                         handleNewManifest m
-        (Just m) => do  pr $ "[fetchVersion] The manifest for this version has been parsed before, returning it."
+        (Just m) => do  pr "fetchVersion" $ "The manifest for this version has been parsed before, returning it."
                         pure $ Right $ depsToIncomps m
 
 ||| The decision making part of the algorithm, as described at:
@@ -282,16 +282,16 @@ decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
       let package = minVsInPS state
-      pr $ "[decMake] Decision making started, choosing package=" ++ (show package)
+      pr "decMake" $ "Decision making started, choosing package=" ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
                         -- ranges, then add these ranges as incompatibilities
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
-        Nothing      => do  pr $ "[decMake] No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
+        Nothing      => do  pr "decMake" $ "No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
                             addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
                             pure $ Right package
-        Just version => do  pr $ "[decMake] Fetching latest compatibile version: " ++ (show version)
+        Just version => do  pr "decMake" $ "Fetching latest compatibile version: " ++ (show version)
                             Right is <- fetchVersion package version
                                       | Left err => pure (Left err)
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
@@ -303,12 +303,12 @@ decMake =
                                 possibleNewPS
                               )
                             then
-                              do  pr $ "[decMake] Not adding decision to the partial solution, as it would instantly satisfy one of the new incompatibilties."
+                              do  pr "decMake" $ "Not adding decision to the partial solution, as it would instantly satisfy one of the new incompatibilties."
                                   -- Don't add a decision to the partial solution if
                                   -- it would instantly satisfy an incompatibility.
                                   pure $ Right package
                             else
-                              do  pr $ "[decMake] Adding decision to the partial solution."
+                              do  pr "decMake" $ "Adding decision to the partial solution."
                                   setPartialSolution possibleNewPS
                                   setDecisionLevel ((getDecisionLevel state) + 1)
                                   pure $ Right package
@@ -318,13 +318,13 @@ decMake =
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
 mainLoop next =
-    do  pr $ "[mainLoop] started with next=" ++ (show next)
+    do  pr "mainLoop" $ "Started with next=" ++ (show next)
         Right ()      <- unitProp [ next ]
                        | Left err => pure (Left err)
-        pr $ "[mainLoop] unitProp complete" ++ (show next)
+        pr "mainLoop" $ "UnitProp complete" ++ (show next)
         Right newNext <- decMake
                        | Left err => pure (Left err)
-        pr $ "[mainLoop] decision making complete, returning: " ++ (show newNext)
+        pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
         prS
         state <- get
         if
