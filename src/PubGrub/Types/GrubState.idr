@@ -39,6 +39,15 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 
 
 --------------------------------------------------------------------------------
+-- Constructors
+--------------------------------------------------------------------------------
+
+initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
+initGrubState (MkManifest n vv xs m) v verbose =
+  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) (initManifests n v (MkManifest n vv xs m)) n verbose
+
+
+--------------------------------------------------------------------------------
 -- Getters for GrubState
 --------------------------------------------------------------------------------
 
