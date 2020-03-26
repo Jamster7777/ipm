@@ -27,18 +27,6 @@ IncompMap = (Dict PkgName (List Incomp), List Incomp)
 
 
 --------------------------------------------------------------------------------
--- Constructors
---------------------------------------------------------------------------------
-
-emptyIncompMap : IncompMap
-emptyIncompMap = (empty, [])
-
-||| Used to create the inital incompatibility featuring the root package.
-initIncompMap : PkgName -> Version -> IncompMap
-initIncompMap n v = ?initIncompMap_rh
-
-
---------------------------------------------------------------------------------
 -- 'Show' implementations
 --------------------------------------------------------------------------------
 
@@ -84,6 +72,19 @@ getTermForPkg : PkgName -> Incomp -> Maybe Term
 getTermForPkg search [] = Nothing
 getTermForPkg search ((n, t) :: xs) =
   if (n == search) then Just t else getTermForPkg search xs
+
+
+--------------------------------------------------------------------------------
+-- Constructors
+--------------------------------------------------------------------------------
+
+emptyIncompMap : IncompMap
+emptyIncompMap = (empty, [])
+
+||| Used to create the inital incompatibility featuring the root package.
+initIncompMap : PkgName -> Version -> IncompMap
+initIncompMap n v =
+  addI' [ (n, Neg (versionAsRange v)) ] emptyIncompMap
 
 
 --------------------------------------------------------------------------------
