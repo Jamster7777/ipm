@@ -88,12 +88,14 @@ conflictResolution :  Incomp
                    -> (isFirst : Bool)
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i isFirst =
-  do  state <- get
+  do  pr $ "[conflictResolution] Loop started with i=" ++ (showIncomp i)
+      state <- get
       if
         (failCondition state i)
       then
-        -- TODO add error reporting code here.
-        pure $ Left VersionSolvingFail
+        do  pr $ "[conflictResolution] Incompatibilty is empty / only refers to the root package, version solving has failed."
+            -- TODO add error reporting code here.
+            pure $ Left VersionSolvingFail
       else
         do  let relPS
                 = getRelevantPS (getPartialSolution state) i
@@ -104,10 +106,12 @@ conflictResolution i isFirst =
                 = findSatisfier relPS i
             let satisfier
                 = getMostRecentAssignment psAtSatisfier
+            pr $ "[conflictResolution] Satisfier is: " ++ (showAssignPair satisfier)
             let (satisfierName, satisfierAssignment)
                 = satisfier
             let previousSatisfierLevel
                 = getPreviousSatisfierLevel psAtSatisfier i satisfier
+            pr $ "[conflictResolution] Previous satisfier level is: " ++ (show previousSatisfierLevel)
             if
               (isDec satisfierAssignment)
               ||
@@ -117,11 +121,14 @@ conflictResolution i isFirst =
                 not isFirst
               -- TODO find a way to not repeat this?
               then
-                do  addI i
+                do  pr $ "[conflictResolution] Incompatibilty is different from original input, so adding it to the partial solution."
+                    addI i
+                    pr $ "[conflictResolution] Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
               else
-                do  setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                do  pr $ "[conflictResolution] Backtracking partial solution to previousSatisfierLevel."
+                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
                     pure $ Right i
             else
                   -- The pattern match on the derivation should always succeed
@@ -136,8 +143,10 @@ conflictResolution i isFirst =
                   -- the next iteration of conflict resolution.
                   let priorCause
                       = filter (\x => (fst x) /= satisfierName) (i ++ satisfierCause)
+                  pr $ "[conflictResolution] priorCause=" ++ (show priorCause)
                   let Just term
                       = getTermForPkg satisfierName i
+                  pr $ "[conflictResolution] term=" ++ (show term)
                   case (checkTerm (termToRanges term) (termToRanges satisfierTerm)) of
                     TSat => conflictResolution priorCause False
                     -- If satisfier does not fully satisfy term, then add
@@ -145,6 +154,7 @@ conflictResolution i isFirst =
                     -- prior cause
                     _    => do  let newPriorCause
                                     = priorCause ++ [ (satisfierName, (not satisfierTerm)), (satisfierName, term) ]
+                                pr $ "[conflictResolution] Satisfier does not fully satisfy term, so now priorCause=" ++ (show priorCause)
                                 conflictResolution newPriorCause False
 
 ||| Check each incompatibility involving the package taken from changed.
@@ -163,6 +173,8 @@ unitPropLoop changed (i :: is) =
           ISat          => do pr $ "[unitPropLoop] Following incompatibility satisfied: " ++ (show i)
                               Right conI <- (conflictResolution i True)
                                           | Left err => pure (Left err)
+                              pr $ "[unitPropLoop] Conflict resolution returned with incompatibility: " ++ (show conI)
+                              prS
                               -- Note the slight deviation from the docs here.
                               -- This puts the new incompatibility to the front
                               -- of the list and clears changed. As the incomp
@@ -201,7 +213,6 @@ checkNewIncompsForSat (x :: xs) ps =
     ISat => True
     _    => checkNewIncompsForSat xs ps
 
-
 ||| Fetch all dependancies specified in the given manifest, and add the list of
 ||| available versions to the state, if this has not already been done for them.
 fetchDepsAndVersionLists : Manifest -> StateT GrubState IO (Maybe IpmError)
@@ -211,9 +222,11 @@ fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
       if
         dirExists
       then
-        fetchDepsAndVersionLists (MkManifest n v xs m)
+        do  pr $ "[fetchDepsAndVersionLists] This package has already been fetched, skipping: " ++ (show pN)
+            fetchDepsAndVersionLists (MkManifest n v xs m)
       else
-        do  Nothing  <- lift $ fetchDep (MkManiDep pN s r)
+        do  pr $ "[fetchDepsAndVersionLists] Fetching new package from source: " ++ (show pN)
+            Nothing  <- lift $ fetchDep (MkManiDep pN s r)
                       | Just err => pure (Just err)
             Right vs <- lift $ listVersions pN
                       | Left err => pure (Just err)
