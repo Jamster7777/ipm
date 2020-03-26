@@ -16,3 +16,6 @@ PUBLISH_TEMPLATE_MESSAGE_LOCATION = "/home/jamie/Documents/uni/diss/ipm/assets/d
 
 PR_SEP : String
 PR_SEP = "\n--------------------------\n"
+
+VERBOSE_FNAME_WIDTH : Nat
+VERBOSE_FNAME_WIDTH = fromIntegerNat 30

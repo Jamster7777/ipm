@@ -208,13 +208,14 @@ minVsInPS state =
 
 ||| print function used to print verbose debug commentary of the PubGrub
 ||| algorithm as it executes, provided the verbose option is turned on.
-pr : String -> StateT GrubState IO ()
-pr msg =
+pr : String -> String -> StateT GrubState IO ()
+pr fName msg =
   do  state <- get
       if
         (isVerbose state)
       then
-        lift $ printLn msg
+        do  let spaces = VERBOSE_FNAME_WIDTH `minus` (length fName)
+            lift $ printLn $ "[" ++ fName ++ "]" ++ (pack (replicate spaces ' ')) ++ msg
       else
         pure ()
 
