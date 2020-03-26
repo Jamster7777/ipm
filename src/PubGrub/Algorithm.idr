@@ -188,7 +188,7 @@ unitProp (package :: changed) =
         (Right newChanged) <- unitPropLoop changed (getI package state)
                             | (Left err) => pure (Left err)
         pr $ "[unitProp] Loop finished"
-
+        prS
         unitProp newChanged
 
 ||| Check if any of a list of incompatibilities are satisfied by the state

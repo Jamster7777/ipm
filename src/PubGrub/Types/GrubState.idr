@@ -218,10 +218,17 @@ pr msg =
       else
         pure ()
 
-prState : StateT GrubState IO ()
-prState =
+||| Print a summary of the current state of version solving, for verbose output
+||| / debugging purposes.
+prS : StateT GrubState IO ()
+prS =
   do  state <- get
-      lift $ printLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
-      lift $ printLn $ (showPS (getPartialSolution state)) ++ PR_SEP
-      lift $ printLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
-      lift $ printLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
+      if
+        (isVerbose state)
+      then
+        do  lift $ printLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
+            lift $ printLn $ (showPS (getPartialSolution state)) ++ PR_SEP
+            lift $ printLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
+            lift $ printLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
+      else
+        pure ()
