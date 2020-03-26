@@ -216,14 +216,14 @@ checkNewIncompsForSat (x :: xs) ps =
 ||| Fetch all dependancies specified in the given manifest, and add the list of
 ||| available versions to the state, if this has not already been done for them.
 fetchDepsAndVersionLists : Manifest -> StateT GrubState IO (Maybe IpmError)
-fetchDepsAndVersionLists (MkManifest n v [] m) = pure Nothing
-fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
+fetchDepsAndVersionLists (MkManifest n [] m) = pure Nothing
+fetchDepsAndVersionLists (MkManifest n ((MkManiDep pN s r) :: xs) m) =
   do  dirExists <- lift $ checkDirExists (pDir pN)
       if
         dirExists
       then
         do  pr "fetchDepsAndVersionLists" $ "This package has already been fetched, skipping: " ++ (show pN)
-            fetchDepsAndVersionLists (MkManifest n v xs m)
+            fetchDepsAndVersionLists (MkManifest n xs m)
       else
         do  pr "fetchDepsAndVersionLists" $ "Fetching new package from source: " ++ (show pN)
             Nothing  <- lift $ fetchDep (MkManiDep pN s r)
@@ -231,7 +231,7 @@ fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
             Right vs <- lift $ listVersions pN
                       | Left err => pure (Just err)
             addVersionList pN vs
-            fetchDepsAndVersionLists (MkManifest n v xs m)
+            fetchDepsAndVersionLists (MkManifest n xs m)
 
 ||| When fetching a version's manifest for the first time, all of the dependancies
 ||| referenced are fetched from their source (either remote git or local git),
@@ -244,12 +244,13 @@ fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
 |||
 ||| Return the dependancies in the manifest as incompatibilties
 handleNewManifest :  Manifest
+                  -> Version
                   -> StateT GrubState IO (Either IpmError (List Incomp))
-handleNewManifest m =
+handleNewManifest m v =
   do  Nothing <- fetchDepsAndVersionLists m
                | Just err => pure (Left err)
-      addManifest m
-      let is = depsToIncomps m
+      addManifest m v
+      let is = depsToIncomps m v
       addIs is
       pure $ Right is
 
@@ -271,9 +272,9 @@ fetchVersion n v =
         Nothing  => do  pr "fetchVersion" $ "The manifest for this version has not been parsed before, handling new manifest file."
                         Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
-                        handleNewManifest m
+                        handleNewManifest m v
         (Just m) => do  pr "fetchVersion" $ "The manifest for this version has been parsed before, returning it."
-                        pure $ Right $ depsToIncomps m
+                        pure $ Right $ depsToIncomps m v
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
@@ -335,5 +336,4 @@ mainLoop next =
 
 public export
 pubGrub : Manifest -> IO (Either IpmError (List (PkgName, Version)))
-pubGrub (MkManifest n _ deps _) =
-  
+pubGrub m = ?a

@@ -92,7 +92,7 @@ initIncompMap n v =
 --------------------------------------------------------------------------------
 
 ||| Convert the dependancies of a package to a list of incompatibilties
-depsToIncomps : Manifest -> List Incomp
-depsToIncomps (MkManifest n v [] ms) = []
-depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
-  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
+depsToIncomps : Manifest -> Version -> List Incomp
+depsToIncomps (MkManifest n [] ms) v = []
+depsToIncomps (MkManifest n ((MkManiDep dName _ dRange) :: ds) ms) v =
+  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n ds ms) v)

@@ -43,8 +43,8 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 --------------------------------------------------------------------------------
 
 initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
-initGrubState (MkManifest n vv xs m) v verbose =
-  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) (initManifests n v (MkManifest n vv xs m)) n verbose
+initGrubState (MkManifest n xs m) v verbose =
+  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) (initManifests n v (MkManifest n xs m)) n verbose
 
 
 --------------------------------------------------------------------------------
@@ -158,10 +158,10 @@ addToPS n a =
 
 ||| Add a manifest to the dictionary of manifests, indexed by package name and
 ||| value.
-addManifest : Manifest -> StateT GrubState IO ()
-addManifest (MkManifest n v xs m) =
+addManifest : Manifest -> Version -> StateT GrubState IO ()
+addManifest (MkManifest n xs m) v =
   do  state <- get
-      setManifests (insert (n, v) (MkManifest n v xs m) (getManifests state))
+      setManifests (insert (n, v) (MkManifest n xs m) (getManifests state))
 
 ||| Add a list of available versions for a given package to the dictionary of
 ||| package versions.
