@@ -203,21 +203,21 @@ checkNewIncompsForSat (x :: xs) ps =
 
 
 ||| Fetch all dependancies specified in the given manifest, and add the list of
-||| available versions to the state.
+||| available versions to the state, if this has not already been done for them.
 fetchDepsAndVersionLists : Manifest -> StateT GrubState IO (Maybe IpmError)
 fetchDepsAndVersionLists (MkManifest n v [] m) = pure Nothing
-fetchDepsAndVersionLists (MkManifest n v (x :: xs) m) =
-  do  dirExists <- lift $ checkDirExists (pDir n)
+fetchDepsAndVersionLists (MkManifest n v ((MkManiDep pN s r) :: xs) m) =
+  do  dirExists <- lift $ checkDirExists (pDir pN)
       if
         dirExists
       then
         fetchDepsAndVersionLists (MkManifest n v xs m)
       else
-        do  Nothing  <- lift $ fetchDep x
+        do  Nothing  <- lift $ fetchDep (MkManiDep pN s r)
                       | Just err => pure (Just err)
-            Right vs <- lift $ listVersions n
+            Right vs <- lift $ listVersions pN
                       | Left err => pure (Just err)
-            addVersionList n vs
+            addVersionList pN vs
             fetchDepsAndVersionLists (MkManifest n v xs m)
 
 ||| When fetching a version's manifest for the first time, all of the dependancies
