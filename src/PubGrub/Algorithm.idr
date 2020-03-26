@@ -220,22 +220,16 @@ fetchDepsAndVersionLists (MkManifest n v (x :: xs) m) =
             addVersionList n vs
             fetchDepsAndVersionLists (MkManifest n v xs m)
 
-
--- TODO put these somewhere:
-
--- When fetching a version's manifest for the first time,
--- all of the deps referenced are moved to the temp
--- folder ready to be parsed next time.
-
--- The list of available versions is also retrieved for
--- each dependancy, and added to the
-
--- This is the first time the manifest has been parsed,
--- so add the dependancies as incompatibilties
-
-
-
-||| TODO
+||| When fetching a version's manifest for the first time, all of the dependancies
+||| referenced are fetched from their source (either remote git or local git),
+||| being placed in the ipm temp folder under their package name. This means
+||| that the manifest for each version will be there ready to be parsed when
+||| it comes to using these packages in decision making.
+||| The list of available versions is also retrieved for each dependancy,
+||| and added to the dictionary in GrubState so version solving can use them to
+||| select versions.
+|||
+||| Return the dependancies in the manifest as incompatibilties
 handleNewManifest :  Manifest
                   -> StateT GrubState IO (Either IpmError (List Incomp))
 handleNewManifest m =
@@ -248,12 +242,13 @@ handleNewManifest m =
 
 ||| Part of the decision making step of the algorithm.
 |||
-||| If there is a version of the chosen package which fits the criteria of the
-||| partial solution, then add its dependancies as incompatibilties. Provided
-||| none of these incomps would be instantly satisfied, add the chosen version
-||| of the package to the partial solution as a decision.
-chooseVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
-chooseVersion n v =
+||| Fetch the manifest for the given package and version. If it has alrady been
+||| parsed, fetch it from the dictionary in GrubState. If it has not been
+||| parsed yet, parse it and perform the requried actions in handleNewManifest.
+|||
+||| Return the dependancies in the manifest as incompatibilties
+fetchVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
+fetchVersion n v =
   do  state <- get
       -- The manifest for this version may have already been parsed and loaded.
       -- If it hasn't, then it can be easily located in the temp install folder
@@ -272,14 +267,17 @@ decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
       let package = minVsInPS state
+      pr $ "[decMake] Decision making started, choosing package=" ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
                         -- ranges, then add these ranges as incompatibilities
                         -- and move onto unit propagation (note that this is
                         -- now guarenteed to result in a conflict down the line).
-        Nothing      => do  addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
+        Nothing      => do  pr $ "[decMake] No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
+                            addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
                             pure $ Right package
-        Just version => do  Right is <- chooseVersion package version
+        Just version => do  pr $ "[decMake] Fetching latest compatibile version: " (show version)
+                            Right is <- fetchVersion package version
                                       | Left err => pure (Left err)
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
                             state <- get
