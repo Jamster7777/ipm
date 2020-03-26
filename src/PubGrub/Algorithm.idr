@@ -313,7 +313,6 @@ decMake =
                                   setDecisionLevel ((getDecisionLevel state) + 1)
                                   pure $ Right package
 
-
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
@@ -333,3 +332,8 @@ mainLoop next =
           pure $ Right $ extractDecs state
         else
           mainLoop newNext
+
+public export
+pubGrub : Manifest -> IO (Either IpmError (List (PkgName, Version)))
+pubGrub (MkManifest n _ deps _) =
+  

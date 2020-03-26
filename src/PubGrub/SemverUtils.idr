@@ -1,9 +1,5 @@
 module PubGrub.SemverUtils
 
-import PubGrub.Types.Term
-import PubGrub.Types.Assignment
-import PubGrub.Types.Incomp
-import PubGrub.Types.PartialSolution
 import Semver.Range
 import Semver.Version
 import Semver.Interval
@@ -45,49 +41,6 @@ negateRange : Range -> List Range
 negateRange (MkRange i1 i2) =
   (negateInterval False i1) ++ (negateInterval True i2)
 
-||| Convert a term to a list of ranges (trivial for a positive term, requires
-||| some inversion for a negative one).
-termToRanges : Term -> List Range
-termToRanges (Pos r) = [ r ]
-termToRanges (Neg r) = negateRange r
-
-||| Adjust the ranges of the partial solution with respect to a new term.
-|||
-||| For a positve derivation, intersect it with all current working ranges to
-||| find the new set.
-|||
-||| For a negative dervivation, negate it and call again as 2 positives to find
-||| intersects. Then union the remaining ranges together.
-addTermToWorkingRanges : (t : Term) -> (workingRanges : List Range) -> List Range
-addTermToWorkingRanges (Pos x) [] = []
-addTermToWorkingRanges (Pos x) (r :: rs) =
-  case (intersect x r) of
-    Nothing => addTermToWorkingRanges (Pos x) rs
-    Just y  => y :: (addTermToWorkingRanges (Pos x) rs)
-addTermToWorkingRanges (Neg x) workingRanges =
-  unionNegation (negateRange x) workingRanges
-      where
-        unionNegation : List Range -> (workingRanges : List Range) -> List Range
-        unionNegation [] workingRanges = []
-        unionNegation (x :: xs) workingRanges =
-          (addTermToWorkingRanges (Pos x) workingRanges) ++ (unionNegation xs workingRanges)
-
-||| Convert the partial solution for a particular package to a list of ranges,
-||| which represent an intersection of the partial solution, i.e. all allowed
-||| versions within the partial solution.
-|||
-||| If the partial solution contains a decision, we return a singular range only
-||| allowing that value.
-psToRanges : List Assignment -> List Range
-psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
-  where
-    psToRanges' : List Assignment -> (workingRanges : List Range) -> List Range
-    psToRanges' [] workingRanges = workingRanges
-    psToRanges' ((Derivation t _ _) :: as) workingRanges =
-      do  let newWRs = (addTermToWorkingRanges t workingRanges)
-          psToRanges' as newWRs
-    psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
-
 ||| Check if a version lies in any of the given list of ranges
 versionInRanges : List Range -> Version -> Bool
 versionInRanges [] v = False
@@ -98,14 +51,3 @@ versionInRanges (r :: rs) v =
     True
   else
     versionInRanges rs v
-
-||| Convert the dependancies of a package to a list of incompatibilties
-depsToIncomps : Manifest -> List Incomp
-depsToIncomps (MkManifest n v [] ms) = []
-depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
-  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
-
-||| Find the list of versions which are allowed by the partial solution for a
-||| given package.
-vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
-vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPSForPkg' n ps))) vs

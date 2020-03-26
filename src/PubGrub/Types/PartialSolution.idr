@@ -2,10 +2,13 @@ module PubGrub.PartialSolution
 import PubGrub.Types.Term
 import PubGrub.Types.Incomp
 import PubGrub.Types.Assignment
+import PubGrub.SemverUtils
 import Core.ManifestTypes
 import Util.ListExtras
 import Util.Constants
 import Semver.Version
+import Semver.Range
+import Semver.Interval
 import Data.AVL.Dict
 import Data.AVL.Set
 
@@ -22,6 +25,14 @@ import Data.AVL.Set
 ||| - a list, so that the assignments can be retreived in order.
 PartialSolution : Type
 PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
+
+
+--------------------------------------------------------------------------------
+-- Constructor
+--------------------------------------------------------------------------------
+
+emptyPS : PartialSolution
+emptyPS = (empty, [])
 
 
 --------------------------------------------------------------------------------
@@ -119,3 +130,24 @@ backtrackOne (dict, (n, a) :: xs) =
     -- 'Nothing' should be impossible, so it is not pattern matched. (This way
     -- an error will be thrown exposing the bug).
     (Just (a :: as)) => Just ((insert n as dict), xs)
+
+||| Convert the partial solution for a particular package to a list of ranges,
+||| which represent an intersection of the partial solution, i.e. all allowed
+||| versions within the partial solution.
+|||
+||| If the partial solution contains a decision, we return a singular range only
+||| allowing that value.
+psToRanges : List Assignment -> List Range
+psToRanges as = psToRanges' as [ MkRange Unbounded Unbounded ]
+  where
+    psToRanges' : List Assignment -> (workingRanges : List Range) -> List Range
+    psToRanges' [] workingRanges = workingRanges
+    psToRanges' ((Derivation t _ _) :: as) workingRanges =
+      do  let newWRs = (addTermToWorkingRanges t workingRanges)
+          psToRanges' as newWRs
+    psToRanges' ((Decision v _) :: _) workingRanges = [ versionAsRange v ]
+
+||| Find the list of versions which are allowed by the partial solution for a
+||| given package.
+vsInPS' : PkgName -> List Version -> PartialSolution -> List Version
+vsInPS' n vs ps = filter (versionInRanges (psToRanges (getPSForPkg' n ps))) vs

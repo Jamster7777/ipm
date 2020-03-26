@@ -1,6 +1,7 @@
 module PubGrub.Types.Incomp
 
 import PubGrub.Types.Term
+import PubGrub.SemverUtils
 import Core.ManifestTypes
 import Util.Constants
 import Util.ListExtras
@@ -23,6 +24,18 @@ IncompMap : Type
 IncompMap = (Dict PkgName (List Incomp), List Incomp)
 
 %name IncompMap m
+
+
+--------------------------------------------------------------------------------
+-- Constructors
+--------------------------------------------------------------------------------
+
+emptyIncompMap : IncompMap
+emptyIncompMap = (empty, [])
+
+||| Used to create the inital incompatibility featuring the root package.
+initIncompMap : PkgName -> Version -> IncompMap
+initIncompMap n v = ?initIncompMap_rh
 
 
 --------------------------------------------------------------------------------
@@ -71,3 +84,14 @@ getTermForPkg : PkgName -> Incomp -> Maybe Term
 getTermForPkg search [] = Nothing
 getTermForPkg search ((n, t) :: xs) =
   if (n == search) then Just t else getTermForPkg search xs
+
+
+--------------------------------------------------------------------------------
+-- Util
+--------------------------------------------------------------------------------
+
+||| Convert the dependancies of a package to a list of incompatibilties
+depsToIncomps : Manifest -> List Incomp
+depsToIncomps (MkManifest n v [] ms) = []
+depsToIncomps (MkManifest n v ((MkManiDep dName _ dRange) :: ds) ms) =
+  [ (n, (Pos (versionAsRange v))), (dName, (Neg dRange)) ] :: (depsToIncomps (MkManifest n v ds ms))
