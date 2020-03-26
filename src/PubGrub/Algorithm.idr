@@ -330,10 +330,25 @@ mainLoop next =
         if
           (psNoDec state) == []
         then
-          pure $ Right $ extractDecs state
+          do  pr "mainLoop" $ "Version solving has succeeded!"
+              prS
+              pure $ Right $ extractDecs state
         else
           mainLoop newNext
 
-public export
-pubGrub : Manifest -> IO (Either IpmError (List (PkgName, Version)))
-pubGrub m = ?a
+||| The entrypoint for the PubGrub algorithm. Returns an IpmError if version
+||| solving fails for some reason, or the list of compatibile package versions.
+|||
+||| @rootManifest the parsed manifest file of the root package which version
+|||               solving will be performed for.
+||| @rootVersion  the version of the root package which version
+|||               solving will be performed for.
+||| @verbose      whether version solving should print details of its progress
+|||               along the way. Primarily used for debugging and learning
+|||               purposes.
+export
+pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (List (PkgName, Version)))
+pubGrub m v verbose =
+  do  let initialState = initGrubState m v verbose
+      (result, resultState) <- runStateT (mainLoop (getRootPkg initialState)) initialState
+      pure result
