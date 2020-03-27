@@ -35,7 +35,7 @@ showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
   where
     showIncompMiddle : List (PkgName, Term) -> String
     showIncompMiddle [] = ""
-    showIncompMiddle ((n, (Pos r)) :: []) = (show n) ++ " " ++ (show r)
+    showIncompMiddle ((n, (Pos r)) :: xs) = (show n) ++ " " ++ (show r) ++ ", " ++ (showIncompMiddle xs)
     showIncompMiddle ((n, (Neg r)) :: xs) = "not " ++ (show n) ++ " " ++ (show r) ++ ", " ++ (showIncompMiddle xs)
 
 -- TODO be able to retrieve incompatibilties in a list properly

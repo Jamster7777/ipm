@@ -297,6 +297,8 @@ decMake =
         Just version => do  pr "decMake" $ "Fetching latest compatibile version: " ++ (show version)
                             Right is <- fetchVersion package version
                                       | Left err => pure (Left err)
+                            pr "decMake" $ "Incompatibilties representing dependencies being added: " ++ (show is)
+                            addIs is
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
                             state <- get
                             let possibleNewPS = (addToPS' package possibleDec (getPartialSolution state))
