@@ -45,9 +45,6 @@ negateRange (MkRange i1 i2) =
 versionInRanges : List Range -> Version -> Bool
 versionInRanges [] v = False
 versionInRanges (r :: rs) v =
-  if
-    (satisfied r v)
-  then
-    True
-  else
-    versionInRanges rs v
+  case (intersect r (versionAsRange v)) of
+    Nothing => versionInRanges rs v
+    Just _  => True
