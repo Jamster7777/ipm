@@ -16,7 +16,7 @@ import Data.SortedSet
 
 ||| Convert a version to a range which only allows the version
 versionAsRange : Version -> Range
-versionAsRange v = MkRange (Closed v False) (Closed v True)
+versionAsRange v = MkRange (Closed v False) (Closed v False)
 
 ||| Negate an interval.
 |||
