@@ -44,7 +44,7 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 
 initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
 initGrubState (MkManifest n xs m) v verbose =
-  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) (initManifests n v (MkManifest n xs m)) n verbose
+  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) empty n verbose
 
 
 --------------------------------------------------------------------------------

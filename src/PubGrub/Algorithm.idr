@@ -352,7 +352,9 @@ mainLoop next =
 |||               purposes.
 export
 pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (List (PkgName, Version)))
-pubGrub m v verbose =
-  do  let initialState = initGrubState m v verbose
+pubGrub (MkManifest n ds ms) v verbose =
+  do  Nothing <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
+               | Just err => pure (Left err)
+      let initialState = initGrubState (MkManifest n ds ms) v verbose
       (result, resultState) <- runStateT (mainLoop (getRootPkg initialState)) initialState
       pure result
