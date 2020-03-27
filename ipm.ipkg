@@ -1,7 +1,34 @@
 package ipm
 
 sourcedir = src
-modules = Test.PubGrub.SemverUtilsTest
-tests = Test.PubGrub.SemverUtilsTest.test1
+modules = Main
 
-opts = "-p contrib -p semver -p lightyear -p containers"
+        , Commands.Plan
+
+        , Core.IpmError
+        , Core.ManifestTypes
+
+        , PubGrub.Types.Assignment
+        , PubGrub.Types.GrubState
+        , PubGrub.Types.Incomp
+        , PubGrub.Types.PackageTracking
+        , PubGrub.Types.PartialSolution
+        , PubGrub.Types.Term
+
+        , PubGrub.Algorithm
+        , PubGrub.IncompTermCheck
+        , PubGrub.SemverUtils
+
+        , Util.Bash
+        , Util.Constants
+        , Util.FetchDep
+        , Util.ListExtras
+        , Util.ParseManifest
+        , Util.Paths
+
+pkgs  = contrib
+      , semver
+      , lightyear
+      , containers
+
+opts = "-o out/ipm"
