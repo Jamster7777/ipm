@@ -331,12 +331,12 @@ mainLoop next =
         pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
         prS
         state <- get
+        let decs = extractDecs state
         if
-          (psNoDec state) == []
+          (length decs) == (length (getAllPkgNames state))
         then
           do  pr "mainLoop" $ "Version solving has succeeded!"
-              prS
-              pure $ Right $ extractDecs state
+              pure $ Right decs
         else
           mainLoop newNext
 

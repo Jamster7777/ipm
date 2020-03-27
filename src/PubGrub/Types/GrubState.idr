@@ -142,6 +142,9 @@ vsInPS state n =
 psNoDec : GrubState -> List PkgName
 psNoDec state = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst (getPartialSolution state)
 
+getAllPkgNames : GrubState -> List PkgName
+getAllPkgNames state = keys (getPkgVersions state)
+
 
 --------------------------------------------------------------------------------
 -- Special setters for GrubState
