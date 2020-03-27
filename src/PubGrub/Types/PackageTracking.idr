@@ -2,7 +2,7 @@ module PubGrub.Types.PackageTracking
 
 import Core.ManifestTypes
 import Semver.Version
-import Data.AVL.Dict
+import Data.SortedMap
 
 %access public export
 
@@ -11,10 +11,10 @@ import Data.AVL.Dict
 --------------------------------------------------------------------------------
 
 PkgVersions : Type
-PkgVersions = Dict PkgName (List Version)
+PkgVersions = SortedMap PkgName (List Version)
 
 Manifests : Type
-Manifests = Dict (PkgName, Version) Manifest
+Manifests = SortedMap (PkgName, Version) Manifest
 
 
 --------------------------------------------------------------------------------

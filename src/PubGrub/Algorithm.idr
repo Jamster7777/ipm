@@ -13,7 +13,7 @@ import Semver.Range
 import Semver.Version
 import Core.ManifestTypes
 import Core.IpmError
-import Data.AVL.Dict
+import Data.SortedMap
 import Control.Monad.State
 import Util.ListExtras
 import Util.FetchDep

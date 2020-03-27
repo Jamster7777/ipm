@@ -5,8 +5,8 @@ import Semver.Version
 import Semver.Interval
 import Core.ManifestTypes
 import Core.IpmError
-import Data.AVL.Dict
-import Data.AVL.Set
+import Data.SortedMap
+import Data.SortedSet
 
 %access public export
 

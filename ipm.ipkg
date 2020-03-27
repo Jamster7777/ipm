@@ -29,6 +29,7 @@ modules = Main
 pkgs  = contrib
       , semver
       , lightyear
-      , containers
 
-opts = "-o out/ipm"
+main = Main
+
+executable = ipm

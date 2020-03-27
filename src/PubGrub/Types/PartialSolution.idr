@@ -9,8 +9,8 @@ import Util.Constants
 import Semver.Version
 import Semver.Range
 import Semver.Interval
-import Data.AVL.Dict
-import Data.AVL.Set
+import Data.SortedMap
+import Data.SortedSet
 
 %access public export
 
@@ -24,7 +24,7 @@ import Data.AVL.Set
 |||   retrieved quickly.
 ||| - a list, so that the assignments can be retreived in order.
 PartialSolution : Type
-PartialSolution = (Dict PkgName (List Assignment), List (PkgName, Assignment))
+PartialSolution = (SortedMap PkgName (List Assignment), List (PkgName, Assignment))
 
 
 --------------------------------------------------------------------------------
@@ -71,10 +71,10 @@ getRelevantPS (dict, list) i =
       let filteredList = filter (\x => contains (fst x) relPkgsSet) list
       (filteredDict, filteredList)
   where
-    filterDict :  Dict PkgName (List Assignment)
+    filterDict :  SortedMap PkgName (List Assignment)
                -> Incomp
-               -> (soFar : Dict PkgName (List Assignment))
-               -> Dict PkgName (List Assignment)
+               -> (soFar : SortedMap PkgName (List Assignment))
+               -> SortedMap PkgName (List Assignment)
     filterDict old [] soFar = soFar
     filterDict old ((n, t) :: ts) soFar =
       case (lookup n old) of

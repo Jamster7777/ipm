@@ -7,7 +7,7 @@ import Util.Constants
 import Util.ListExtras
 import Semver.Version
 import Semver.Range
-import Data.AVL.Dict
+import Data.SortedMap
 
 %access public export
 
@@ -21,7 +21,7 @@ Incomp = List (PkgName, Term)
 %name Incomp i
 
 IncompMap : Type
-IncompMap = (Dict PkgName (List Incomp), List Incomp)
+IncompMap = (SortedMap PkgName (List Incomp), List Incomp)
 
 %name IncompMap m
 
@@ -54,7 +54,7 @@ showIncomps iMap =
 addI' : Incomp -> IncompMap -> IncompMap
 addI' i (dict, list) = (addI'' i i dict, i :: list)
   where
-    addI'' : List (PkgName, Term) -> Incomp -> Dict PkgName (List Incomp) -> Dict PkgName (List Incomp)
+    addI'' : List (PkgName, Term) -> Incomp -> SortedMap PkgName (List Incomp) -> SortedMap PkgName (List Incomp)
     addI'' [] i m = m
     addI'' ((n, t) :: xs) i m =
       case (lookup n m) of

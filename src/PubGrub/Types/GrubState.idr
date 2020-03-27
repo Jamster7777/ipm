@@ -11,7 +11,7 @@ import Util.Constants
 import Semver.Range
 import Semver.Version
 import Control.Monad.State
-import Data.AVL.Dict
+import Data.SortedMap
 
 %access public export
 
