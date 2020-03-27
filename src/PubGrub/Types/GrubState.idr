@@ -224,7 +224,7 @@ pr fName msg =
         (isVerbose state)
       then
         do  let spaces = VERBOSE_FNAME_WIDTH `minus` (length fName)
-            lift $ printLn $ "[" ++ fName ++ "]" ++ (pack (replicate spaces ' ')) ++ msg
+            lift $ putStrLn $ "[" ++ fName ++ "]" ++ (pack (replicate spaces ' ')) ++ msg
       else
         pure ()
 
@@ -236,9 +236,9 @@ prS =
       if
         (isVerbose state)
       then
-        do  lift $ printLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
-            lift $ printLn $ (showPS (getPartialSolution state)) ++ PR_SEP
-            lift $ printLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
-            lift $ printLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
+        do  lift $ putStrLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
+            lift $ putStrLn $ (showPS (getPartialSolution state)) ++ PR_SEP
+            lift $ putStrLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
+            lift $ putStrLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
       else
         pure ()
