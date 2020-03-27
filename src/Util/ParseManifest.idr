@@ -50,12 +50,12 @@ checkDependancies (key :: keys) =
                                   case (checkDependancies keys) of
                                     (Left err)   => Left err
                                     (Right deps) => Right (dep :: deps)
-    (id, _) => Left (ManifestFormatError ("The dependancy'" ++ id ++ "' is not defined correctly."))
+    (id, _) => Left (ManifestFormatError ("The dependency'" ++ id ++ "' is not defined correctly."))
   where
     checkDependancy : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError ManiDep
     checkDependancy name [] (Just version) (Just path) = Right (MkManiDep name (PkgLocal path) version)
-    checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependancy '" ++ (show name) ++ "' does not specify a version."))
-    checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependancy '" ++ (show name) ++ "' does not specify a local path."))
+    checkDependancy name [] Nothing _ = Left (ManifestFormatError ("The dependency '" ++ (show name) ++ "' does not specify a version."))
+    checkDependancy name [] _ Nothing = Left (ManifestFormatError ("The dependency '" ++ (show name) ++ "' does not specify a local path."))
 
     checkDependancy name (("version", (JString str)) :: fields) maybeVersion maybePath =
       do  let (Right parsedVersion) = checkRange str | Left err => Left err
@@ -65,7 +65,7 @@ checkDependancies (key :: keys) =
       checkDependancy name fields maybeVersion (Just (cleanFilePath str))
 
     -- checkDependancy (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
-    checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependancy field."))
+    checkDependancy _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependency field."))
 
 
 jsonListToStringList : List JSON -> Maybe (List String)
@@ -80,16 +80,16 @@ jsonListToStringList _ = Nothing
 checkKeys : (keys : List (String, JSON)) -> Either IpmError Manifest
 checkKeys keys = checkKeysHelper keys Nothing Nothing (MkPkgModules "." [])
   where
-    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (dependancies : Maybe (List ManiDep)) -> (modules : PkgModules) -> Either IpmError Manifest
+    checkKeysHelper : (keys : List (String, JSON)) -> (name : Maybe PkgName) -> (dependencies : Maybe (List ManiDep)) -> (modules : PkgModules) -> Either IpmError Manifest
     checkKeysHelper [] Nothing _ _ = Left (ManifestFormatError "No package name specified")
-    checkKeysHelper [] _ Nothing _ = Left (ManifestFormatError "No dependancies specified") -- TODO allow this
-    checkKeysHelper [] (Just name) (Just dependancies) modules = Right (MkManifest name dependancies modules)
+    checkKeysHelper [] _ Nothing _ = Left (ManifestFormatError "No dependencies specified") -- TODO allow this
+    checkKeysHelper [] (Just name) (Just dependencies) modules = Right (MkManifest name dependencies modules)
 
     checkKeysHelper (("name", (JString str)) :: keys) maybeName maybeDependancies modules =
       do  let (Right parsedName) = checkName str | (Left err) => Left err
           checkKeysHelper keys (Just parsedName) maybeDependancies modules
 
-    checkKeysHelper (("dependancies", (JObject dKeys)) :: keys) maybeName maybeDependancies modules =
+    checkKeysHelper (("dependencies", (JObject dKeys)) :: keys) maybeName maybeDependancies modules =
       do  let (Right parsedDependancies)  = checkDependancies dKeys | (Left err) => Left err
           checkKeysHelper keys maybeName (Just parsedDependancies) modules
 

@@ -3,7 +3,7 @@ module Util.Constants
 %access public export
 
 PACKAGE_FILE_NAME : String
-PACKAGE_FILE_NAME = "ipkg.json"
+PACKAGE_FILE_NAME = "ipm.json"
 
 TEMP_DIR : String
 TEMP_DIR = "~/ipm-temp/"
