@@ -6,7 +6,7 @@ PACKAGE_FILE_NAME : String
 PACKAGE_FILE_NAME = "ipm.json"
 
 TEMP_DIR : String
-TEMP_DIR = "~/ipm-temp/"
+TEMP_DIR = "/home/jamie/ipm-temp/"
 
 PACKAGE_INSTALL_LOCATION : String
 PACKAGE_INSTALL_LOCATION = "~/ipkg/"
