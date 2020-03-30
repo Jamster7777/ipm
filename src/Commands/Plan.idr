@@ -10,7 +10,7 @@ import Semver.Version
 export
 plan : { default "." dir : String } -> IO ()
 plan {dir} =
-  do  Right manifest <- parseManifest {dir=dir}
+  do  Right manifest <- parseManifest dir
                       | Left err => putStrLn (show err)
       Right version  <- getMostRecentVersion {dir=dir}
                       | Left err => putStrLn (show err)

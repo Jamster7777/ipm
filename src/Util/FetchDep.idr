@@ -86,4 +86,4 @@ checkoutManifest n v =
     do  Right vs  <- listVersions' {dir=(pDir n)} | Left err => pure (Left err)
         let Just _ = elemIndex v vs               | Nothing  => pure (Left (InvalidVersionError n v))
         bashCommand {inDir=(pDir n)} ("git checkout v" ++ (show v))
-        parseManifest {dir=(pDir n)}
+        parseManifest (pDir n)

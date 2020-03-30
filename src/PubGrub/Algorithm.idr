@@ -269,9 +269,10 @@ fetchVersion n v =
       -- ipm creates for the package, using git tags to change to different
       -- versions.
       case (lookup (n, v) (getManifests state)) of
-        Nothing  => do  pr "fetchVersion" $ "The manifest for this version has not been parsed before, handling new manifest file."
+        Nothing  => do  pr "fetchVersion" $ "The manifest for this version has not been parsed before, handling new manifest file with name=" ++ (show n) ++ " and version=" ++ (show v)
                         Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
+                        pr "fetchVersion" $ "Have just fetched the following manifest: " ++ (show m)
                         handleNewManifest m v
         (Just m) => do  pr "fetchVersion" $ "The manifest for this version has been parsed before, returning it."
                         pure $ Right $ depsToIncomps m v
