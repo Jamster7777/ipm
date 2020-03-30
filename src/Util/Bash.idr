@@ -68,7 +68,7 @@ bashCommand command {inDir} =
 bashCommandSeq : (commands : List String) -> { default "." inDir : String } -> IO Bool
 bashCommandSeq [] {inDir} = pure True
 bashCommandSeq (x :: xs) {inDir} =
-  do  success <- bashCommand x
+  do  success <- bashCommand {inDir=inDir} x
       if
         success
       then
