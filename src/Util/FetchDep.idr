@@ -52,9 +52,9 @@ fetchDep (MkManiDep n (PkgUrl u) r) =
         ])
       pure $ boolToErr success (DepFetchError n u)
 fetchDep (MkManiDep n (PkgLocal p) r) =
-  do  success <- (bashCommandSeq [
+  do  success <- (bashCommandSeq {inDir=p} [
         ("mkdir -p " ++ (pDir n)),
-        ("cp -r " ++ p ++ " " ++ (pDir n))
+        ("cp -r * " ++ (pDir n))
         ])
       pure $ boolToErr success (DepFetchError n p)
 
