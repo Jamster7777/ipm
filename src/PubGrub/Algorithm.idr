@@ -42,7 +42,7 @@ findSatisfier ps i =
   case (checkIncomp i ps) of
     ISat  => do let Just backtracked = backtrackOne ps
                                      | Nothing => Nothing
-                case (findSatisfier ps i) of
+                case (findSatisfier backtracked i) of
                     Nothing        => Just ps
                     Just earlier   => Just earlier
     _     => Nothing
@@ -60,7 +60,7 @@ findPreviousSatisfier ps i (n, a) =
   case (checkIncomp i (addToPS' n a ps)) of
     ISat => do let Just backtracked = backtrackOne ps
                                     | Nothing => Nothing
-               case (findPreviousSatisfier ps i (n, a)) of
+               case (findPreviousSatisfier backtracked i (n, a)) of
                   Nothing        => Just ps
                   Just earlier   => Just earlier
     _    => Nothing
@@ -99,11 +99,13 @@ conflictResolution i isFirst =
       else
         do  let relPS
                 = getRelevantPS (getPartialSolution state) i
+            pr "conflictResolution" $ "Got here"
             -- 'Nothing' should be impossible (for both of maybes) so it is not
             -- pattern matched. (This way an error will be thrown exposing the
             -- bug).
             let Just psAtSatisfier
                 = findSatisfier relPS i
+            pr "conflictResolution" $ "And here"
             let satisfier
                 = getMostRecentAssignment psAtSatisfier
             pr "conflictResolution" $ "Satisfier is: " ++ (showAssignPair satisfier)

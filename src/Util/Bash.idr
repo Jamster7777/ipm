@@ -60,7 +60,7 @@ errorAndExit failMessage =
 
 bashCommand : (command : String) -> { default "." inDir : String } -> IO Bool
 bashCommand command {inDir} =
-  do  exitCode <- system ("cd " ++ inDir ++ " && " ++ command)
+  do  exitCode <- system ("(cd " ++ inDir ++ " && " ++ command ++ ") > /dev/null")
       pure (exitCode == 0)
 
 ||| Execute a sequence of bash commands, return true if they all succeed and
