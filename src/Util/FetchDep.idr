@@ -54,7 +54,7 @@ fetchDep (MkManiDep n (PkgUrl u) r) =
 fetchDep (MkManiDep n (PkgLocal p) r) =
   do  success <- (bashCommandSeq {inDir=p} [
         ("mkdir -p " ++ (pDir n)),
-        ("cp -r * " ++ (pDir n))
+        ("rsync -av . " ++ (pDir n))
         ])
       pure $ boolToErr success (DepFetchError n p)
 
@@ -85,5 +85,5 @@ checkoutManifest : PkgName -> Version -> IO (Either IpmError Manifest)
 checkoutManifest n v =
     do  Right vs  <- listVersions' {dir=(pDir n)} | Left err => pure (Left err)
         let Just _ = elemIndex v vs               | Nothing  => pure (Left (InvalidVersionError n v))
-        bashCommand {inDir=(pDir n)} ("git checkout " ++ (show v))
+        bashCommand {inDir=(pDir n)} ("git checkout v" ++ (show v))
         parseManifest {dir=(pDir n)}
