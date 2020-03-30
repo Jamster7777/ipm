@@ -252,9 +252,7 @@ handleNewManifest m v =
   do  Nothing <- fetchDepsAndVersionLists m
                | Just err => pure (Left err)
       addManifest m v
-      let is = depsToIncomps m v
-      addIs is
-      pure $ Right is
+      pure $ Right $ depsToIncomps m v
 
 ||| Part of the decision making step of the algorithm.
 |||
