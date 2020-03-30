@@ -18,6 +18,9 @@ import Control.Monad.State
 import Util.ListExtras
 import Util.FetchDep
 
+-- TODO remove
+import Debug.Trace
+
 --------------------------------------------------------------------------------
 -- The following algorithm is based off of the algorithm described at:
 -- https://github.com/dart-lang/pub/blob/master/doc/solver.md
@@ -40,12 +43,12 @@ failCondition state _ = False
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
 findSatisfier ps i =
   case (checkIncomp i ps) of
-    ISat  => do let Just backtracked = backtrackOne ps
+    ISat  => do let Just backtracked = trace ("sat, trying to backtrack one") (backtrackOne ps)
                                      | Nothing => Nothing
                 case (findSatisfier backtracked i) of
                     Nothing        => Just ps
                     Just earlier   => Just earlier
-    _     => Nothing
+    _     => trace ("not sat, returning nothing") Nothing
 
 ||| Backtrack the partial solution to 'previous satisfier', the earliest
 ||| assignment before satisfier such that incompatibility is satisfied by the
@@ -156,7 +159,7 @@ conflictResolution i isFirst =
                     -- prior cause
                     _    => do  let newPriorCause
                                     = priorCause ++ [ (satisfierName, (not satisfierTerm)), (satisfierName, term) ]
-                                pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause=" ++ (show priorCause)
+                                pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause=" ++ (show newPriorCause)
                                 conflictResolution newPriorCause False
 
 ||| Check each incompatibility involving the package taken from changed.

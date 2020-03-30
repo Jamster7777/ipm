@@ -87,6 +87,29 @@ checkTerm term ps = checkTerm' term ps True TInc
           )
           checkTerm' xs ys False newSoFar
 
+||| Some parts of the algorithm can lead to the same package being referenced
+||| by more than one term in an incompatibility. When it comes to the evaluation
+||| stage, it is important to evaluate all terms for the package together.
+|||
+||| For example, if the partial solution has a decision of foo = 1.0.0, this
+||| would satisfy the term foo <2.0.0 but not the term foo >3.0.0. But overall,
+||| it is within one of the ranges so should be merged into one count of
+||| satisfaction within the incompatibility.
+checkForTermsToMerge :  List (PkgName, Term)
+                     -> PkgName
+                     -> (List Range, List (PkgName, Term))
+checkForTermsToMerge [] n = ([], [])
+checkForTermsToMerge ((n, t) :: ts) search =
+  do  let (hits, termsToKeep) = checkForTermsToMerge ts search
+      if
+        (n == search)
+      then
+        -- Return the term as ranges, and remove it from the incomp
+        ((termToRanges t) ++ hits, termsToKeep)
+      else
+        -- Leave the incomp untouched and don't add anything to the 'hits'
+        (hits, (n, t) :: termsToKeep)
+
 ||| Evaluate an incompatibility against the partial solution. Based on the
 ||| definition of an incompatibility at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#incompatibility
@@ -109,23 +132,24 @@ checkIncomp i ps = checkIncomp' i ps ISat
     -- have been evaluated soFar can just be returned.
     checkIncomp' [] ps soFar = soFar
     checkIncomp' ((n, t) :: ts) ps soFar =
-      do  let termRanges = termToRanges t
+      do  let (moreRanges, newTs) = checkForTermsToMerge ts n
+          let termRanges = (termToRanges t) ++ moreRanges
           let psRanges = psToRanges $ (getPSForPkg' n ps)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => checkIncomp' ts ps soFar
+            TSat => checkIncomp' newTs ps soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
             TCon => ICon
             TInc => case soFar of
                       -- This is first instance of an inconclusive term, so the
                       -- term so far is almost satisfied.
-                      ISat => checkIncomp' ts ps (IAlm (n, t))
+                      ISat => checkIncomp' newTs ps (IAlm (n, t))
                       -- Should be impossible, but defined for totality.
                       ICon => ICon
                       -- The incompatibility remains inconclusive.
-                      IInc => checkIncomp' ts ps IInc
+                      IInc => checkIncomp' newTs ps IInc
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
-                      (IAlm _) => checkIncomp' ts ps IInc
+                      (IAlm _) => checkIncomp' newTs ps IInc
