@@ -14,7 +14,7 @@ data IpmError = BashError String
               | VersionSolvingFail
 
 Show IpmError where
-  show (BashError x)      = ?asdf_1
+  show (BashError x)      = "Error executing bash command: " ++ (show x)
   show (PublishError x)   = x
   show (TagError x)   = x
   show (ManifestFormatError x)   = "Error parsing manifest file: " ++ x
