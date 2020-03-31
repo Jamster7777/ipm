@@ -15,10 +15,6 @@ data Assignment = Derivation Term Incomp Integer
 -- The version of the decision and the decision level
                 | Decision Version Integer
 
-Show Assignment where
-  show (Derivation x xs y) = "~ " ++ (show x)
-  show (Decision v x) = "? " ++ (show v)
-
 
 --------------------------------------------------------------------------------
 -- Utils

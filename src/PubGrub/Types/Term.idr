@@ -19,8 +19,8 @@ Eq Term where
   (/=) x       y       = not (x == y)
 
 Show Term where
-  show (Pos r) = show r
-  show (Neg r) = "not " ++ (show r)
+  show (Pos r) = showRange r
+  show (Neg r) = "not " ++ (showRange r)
 
 
 --------------------------------------------------------------------------------
