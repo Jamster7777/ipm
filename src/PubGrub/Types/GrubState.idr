@@ -159,6 +159,12 @@ addToPS n a =
   do  state <- get
       setPartialSolution (addToPS' n a (getPartialSolution state))
 
+addToPSMulti : PkgName -> List Assignment -> StateT GrubState IO ()
+addToPSMulti n [] = pure ()
+addToPSMulti n (x :: xs) =
+  do  addToPS n x
+      addToPSMulti n xs
+
 ||| Add a manifest to the dictionary of manifests, indexed by package name and
 ||| value.
 addManifest : Manifest -> Version -> StateT GrubState IO ()

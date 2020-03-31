@@ -175,26 +175,26 @@ unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
       case (checkIncomp i (getPartialSolution gs)) of
-          ISat          => do pr "unitPropLoop" $ "Following incompatibility satisfied: " ++ (show i)
-                              Right conI <- (conflictResolution i True)
-                                          | Left err => pure (Left err)
-                              pr "unitPropLoop" $ "Conflict resolution returned with incompatibility: " ++ (show conI)
-                              prS
-                              -- Note the slight deviation from the docs here.
-                              -- This puts the new incompatibility to the front
-                              -- of the list and clears changed. As the incomp
-                              -- is guarenteed to be almost satisfied, the next
-                              -- iteration of unitPropLoop will perform the same
-                              -- actions that were required here in the docs
-                              -- version.
-                              unitPropLoop [] (conI :: is)
-          (IAlm (n, t)) => do pr "unitPropLoop" $ "Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
-                              addToPS n (Derivation (not t) i (getDecisionLevel gs))
-                              unitPropLoop (changed ++ [n]) is
-          IInc          => do pr "unitPropLoop" $ "Following incompatibility inconclusive:" ++ (show i)
-                              unitPropLoop changed is
-          ICon          => do pr "unitPropLoop" $ "Following incompatibility contradicted:" ++ (show i)
-                              unitPropLoop changed is
+          ISat           => do  pr "unitPropLoop" $ "Following incompatibility satisfied: " ++ (show i)
+                                Right conI <- (conflictResolution i True)
+                                            | Left err => pure (Left err)
+                                pr "unitPropLoop" $ "Conflict resolution returned with incompatibility: " ++ (show conI)
+                                prS
+                                -- Note the slight deviation from the docs here.
+                                -- This puts the new incompatibility to the front
+                                -- of the list and clears changed. As the incomp
+                                -- is guarenteed to be almost satisfied, the next
+                                -- iteration of unitPropLoop will perform the same
+                                -- actions that were required here in the docs
+                                -- version.
+                                unitPropLoop [] (conI :: is)
+          (IAlm (n, ts)) =>  do pr "unitPropLoop" $ "Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
+                                addToPSMulti n $ map (\x => (Derivation (not x) i (getDecisionLevel gs))) ts
+                                unitPropLoop (changed ++ [n]) is
+          IInc           =>  do pr "unitPropLoop" $ "Following incompatibility inconclusive:" ++ (show i)
+                                unitPropLoop changed is
+          ICon           =>  do pr "unitPropLoop" $ "Following incompatibility contradicted:" ++ (show i)
+                                unitPropLoop changed is
 
 
 ||| The unit propagation part of the algorithm, as described at:

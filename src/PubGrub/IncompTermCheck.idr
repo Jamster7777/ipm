@@ -10,13 +10,16 @@ import Core.ManifestTypes
 import Semver.Range
 import Semver.Version
 
+-- TODO remove
+import Debug.Trace
+
 %access public export
 
 --------------------------------------------------------------------------------
 -- Types for results of checks
 --------------------------------------------------------------------------------
 
-data IncompResult = ISat | ICon | IInc | IAlm (PkgName, Term)
+data IncompResult = ISat | ICon | IInc | IAlm (PkgName, List Term)
 data TermResult = TSat | TCon | TInc
 
 Eq IncompResult where
@@ -95,20 +98,20 @@ checkTerm term ps = checkTerm' term ps True TInc
 ||| would satisfy the term foo <2.0.0 but not the term foo >3.0.0. But overall,
 ||| it is within one of the ranges so should be merged into one count of
 ||| satisfaction within the incompatibility.
-checkForTermsToMerge :  List (PkgName, Term)
-                     -> PkgName
-                     -> (List Range, List (PkgName, Term))
-checkForTermsToMerge [] n = ([], [])
-checkForTermsToMerge ((n, t) :: ts) search =
-  do  let (hits, termsToKeep) = checkForTermsToMerge ts search
-      if
-        (n == search)
-      then
-        -- Return the term as ranges, and remove it from the incomp
-        ((termToRanges t) ++ hits, termsToKeep)
-      else
-        -- Leave the incomp untouched and don't add anything to the 'hits'
-        (hits, (n, t) :: termsToKeep)
+-- checkForTermsToMerge :  List (PkgName, Term)
+--                      -> PkgName
+--                      -> (List Term, List (PkgName, Term))
+-- checkForTermsToMerge [] n = ([], [])
+-- checkForTermsToMerge ((n, t) :: ts) search =
+--   do  let (hits, termsToKeep) = checkForTermsToMerge ts search
+--       if
+--         (n == search)
+--       then
+--         -- Add the term to the 'hits', and remove it from the incomp
+--         (t :: hits, termsToKeep)
+--       else
+--         -- Leave the incomp untouched and don't add anything to the 'hits'
+--         (hits, (n, t) :: termsToKeep)
 
 ||| Evaluate an incompatibility against the partial solution. Based on the
 ||| definition of an incompatibility at:
@@ -132,24 +135,25 @@ checkIncomp i ps = checkIncomp' i ps ISat
     -- have been evaluated soFar can just be returned.
     checkIncomp' [] ps soFar = soFar
     checkIncomp' ((n, t) :: ts) ps soFar =
-      do  let (moreRanges, newTs) = checkForTermsToMerge ts n
-          let termRanges = (termToRanges t) ++ moreRanges
-          let psRanges = psToRanges $ (getPSForPkg' n ps)
+      do  let (moreTermsForPkg, otherTerms) = partition (\x => (fst x) == n) ts
+          let termsForPkg = t :: (map snd moreTermsForPkg)
+          let termRanges = foldr (++) [] $ map termToRanges termsForPkg
+          let psRanges = trace ("Checking termRanges: " ++ (show termRanges)) $ psToRanges $ (getPSForPkg' n ps)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => checkIncomp' newTs ps soFar
+            TSat => trace ("TSat") $ checkIncomp' otherTerms ps soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
-            TCon => ICon
+            TCon => trace ("TCon") $ ICon
             TInc => case soFar of
                       -- This is first instance of an inconclusive term, so the
                       -- term so far is almost satisfied.
-                      ISat => checkIncomp' newTs ps (IAlm (n, t))
+                      ISat => trace ("TInc ISat") $ checkIncomp' otherTerms ps (IAlm (n, termsForPkg))
                       -- Should be impossible, but defined for totality.
-                      ICon => ICon
+                      ICon => trace ("TInc ICon") $ ICon
                       -- The incompatibility remains inconclusive.
-                      IInc => checkIncomp' newTs ps IInc
+                      IInc => trace ("TInc IInc") $ checkIncomp' otherTerms ps IInc
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
-                      (IAlm _) => checkIncomp' newTs ps IInc
+                      (IAlm _) => trace ("TInc IAlm") $ checkIncomp' otherTerms ps IInc
