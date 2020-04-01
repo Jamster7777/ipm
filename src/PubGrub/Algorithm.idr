@@ -130,10 +130,12 @@ conflictResolution i isFirst =
                     addI i
                     pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    setDecisionLevel previousSatisfierLevel
                     pure $ Right i
               else
                 do  pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    setDecisionLevel previousSatisfierLevel
                     pure $ Right i
             else
                   -- The pattern match on the derivation should always succeed
