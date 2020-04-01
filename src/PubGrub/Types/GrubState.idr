@@ -196,13 +196,18 @@ addIs (x :: xs) = do  addI x
 --------------------------------------------------------------------------------
 
 ||| Find the package which has the smallest number of versions allowed by the
-||| partial solution. This is a decent heuristic for improving solve time, as
-||| conflicts are more likely to be found quickly for packages with fewer
-||| versions to choose from.
-minVsInPS : GrubState -> PkgName
+||| partial solution, and does not yet have a decision in the partial solution
+||| This is a decent heuristic for improving solve time, as conflicts are more
+||| likely to be found quickly for packages with fewer versions to choose from.
+|||
+||| If all packages in the partial solution have a decision, then return Nothing
+||| (this indicates version solving has succeeded).
+minVsInPS : GrubState -> Maybe PkgName
 minVsInPS state =
-  do  let (k :: ks) = psNoDec state
-      minVsInPS' state ks k (length (vsInPS state k))
+  do  let (k :: ks)
+          = psNoDec state
+          | [] => Nothing
+      Just $ minVsInPS' state ks k (length (vsInPS state k))
   where
     minVsInPS' :  GrubState
                -> List PkgName

@@ -281,13 +281,17 @@ fetchVersion n v =
         (Just m) => do  pr "fetchVersion" $ "The manifest for this version has been parsed before, returning it."
                         pure $ Right $ depsToIncomps m v
 
+data DecResult = DecError IpmError
+               | DecAction PkgName
+               | DecComplete
+
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : StateT GrubState IO (Either IpmError PkgName)
+decMake : StateT GrubState IO DecResult
 decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
-      let package = minVsInPS state
+      let Just package = minVsInPS state | Nothing => pure DecComplete
       pr "decMake" $ "Decision making started, choosing package=" ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
@@ -296,10 +300,10 @@ decMake =
                         -- now guarenteed to result in a conflict down the line).
         Nothing      => do  pr "decMake" $ "No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
                             addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
-                            pure $ Right package
+                            pure $ DecAction package
         Just version => do  pr "decMake" $ "Fetching latest compatibile version: " ++ (show version)
                             Right is <- fetchVersion package version
-                                      | Left err => pure (Left err)
+                                      | Left err => pure (DecError err)
                             pr "decMake" $ "Incompatibilties representing dependencies being added: " ++ (show is)
                             addIs is
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
@@ -314,12 +318,12 @@ decMake =
                               do  pr "decMake" $ "Not adding decision to the partial solution, as it would instantly satisfy one of the new incompatibilties."
                                   -- Don't add a decision to the partial solution if
                                   -- it would instantly satisfy an incompatibility.
-                                  pure $ Right package
+                                  pure $ DecAction package
                             else
                               do  pr "decMake" $ "Adding decision to the partial solution."
                                   setPartialSolution possibleNewPS
                                   setDecisionLevel ((getDecisionLevel state) + 1)
-                                  pure $ Right package
+                                  pure $ DecAction package
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
@@ -329,19 +333,14 @@ mainLoop next =
         Right ()      <- unitProp [ next ]
                        | Left err => pure (Left err)
         pr "mainLoop" $ "UnitProp complete" ++ (show next)
-        Right newNext <- decMake
-                       | Left err => pure (Left err)
-        pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
-        prS
-        state <- get
-        let decs = extractDecs state
-        if
-          (length decs) == (length (getAllPkgNames state))
-        then
-          do  pr "mainLoop" $ "Version solving has succeeded!"
-              pure $ Right decs
-        else
-          mainLoop newNext
+        decRes <- decMake
+        case (decRes) of
+          DecError err      => pure $ Left err
+          DecAction newNext => do  pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
+                                   mainLoop newNext
+          DecComplete       => do  pr "mainLoop" $ "Version solving has succeeded!"
+                                   state <- get
+                                   pure $ Right (extractDecs state)
 
 ||| The entrypoint for the PubGrub algorithm. Returns an IpmError if version
 ||| solving fails for some reason, or the list of compatibile package versions.
