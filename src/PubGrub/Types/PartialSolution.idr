@@ -28,14 +28,6 @@ PartialSolution = (SortedMap PkgName (List Assignment), List (PkgName, Assignmen
 
 
 --------------------------------------------------------------------------------
--- Constructor
---------------------------------------------------------------------------------
-
-emptyPS : PartialSolution
-emptyPS = (empty, [])
-
-
---------------------------------------------------------------------------------
 -- 'Show' implementation
 --------------------------------------------------------------------------------
 
@@ -97,6 +89,17 @@ addToPS' n a (dict, list) =
       case (lookup n dict) of
         Nothing   => (insert n [a] dict, newList)
         (Just as) => (insert n (a :: as) dict, newList)
+
+
+--------------------------------------------------------------------------------
+-- Constructor
+--------------------------------------------------------------------------------
+
+emptyPS : PartialSolution
+emptyPS = (empty, [])
+
+psWithOneTerm : PkgName -> Assignment -> PartialSolution
+psWithOneTerm n a = addToPS' n a emptyPS
 
 
 --------------------------------------------------------------------------------

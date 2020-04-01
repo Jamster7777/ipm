@@ -149,16 +149,16 @@ conflictResolution i isFirst =
                   let priorCause
                       = filter (\x => (fst x) /= satisfierName) (i ++ satisfierCause)
                   pr "conflictResolution" $ "priorCause=" ++ (show priorCause)
-                  let Just term
-                      = getTermForPkg satisfierName i
-                  pr "conflictResolution" $ "term=" ++ (show term)
-                  case (checkTerm (termToRanges term) (termToRanges satisfierTerm)) of
-                    TSat => conflictResolution priorCause False
+                  let terms
+                      = filter (\x => (fst x) == satisfierName) i
+                  pr "conflictResolution" $ "terms=" ++ (show terms)
+                  case (checkIncomp terms (psWithOneTerm satisfierName satisfierAssignment)) of
+                    ISat => conflictResolution priorCause False
                     -- If satisfier does not fully satisfy term, then add
                     -- the resultant terms of (not satisfier) U term to the
                     -- prior cause
                     _    => do  let newPriorCause
-                                    = priorCause ++ [ (satisfierName, (not satisfierTerm)), (satisfierName, term) ]
+                                    = priorCause ++ [ (satisfierName, (not satisfierTerm)) ] ++ terms
                                 pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause=" ++ (show newPriorCause)
                                 conflictResolution newPriorCause False
 
