@@ -42,7 +42,7 @@ failCondition state _ = False
 ||| for which the incompatibility is satisfied.
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
 findSatisfier ps i =
-  case (checkIncomp i ps) of
+  case (trace (showPS ps) checkIncomp i ps) of
     ISat  => do let Just backtracked = trace ("sat, trying to backtrack one") (backtrackOne ps)
                                      | Nothing => Nothing
                 case (findSatisfier backtracked i) of

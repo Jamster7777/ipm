@@ -138,22 +138,22 @@ checkIncomp i ps = checkIncomp' i ps ISat
       do  let (moreTermsForPkg, otherTerms) = partition (\x => (fst x) == n) ts
           let termsForPkg = t :: (map snd moreTermsForPkg)
           let termRanges = foldr (++) [] $ map termToRanges termsForPkg
-          let psRanges = trace ("Checking termRanges: " ++ (show termRanges)) $ psToRanges $ (getPSForPkg' n ps)
+          let psRanges = psToRanges $ (getPSForPkg' n ps)
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => trace ("TSat") $ checkIncomp' otherTerms ps soFar
+            TSat => checkIncomp' otherTerms ps soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
-            TCon => trace ("TCon") $ ICon
+            TCon => ICon
             TInc => case soFar of
                       -- This is first instance of an inconclusive term, so the
                       -- term so far is almost satisfied.
-                      ISat => trace ("TInc ISat") $ checkIncomp' otherTerms ps (IAlm (n, termsForPkg))
+                      ISat => checkIncomp' otherTerms ps (IAlm (n, termsForPkg))
                       -- Should be impossible, but defined for totality.
-                      ICon => trace ("TInc ICon") $ ICon
+                      ICon => ICon
                       -- The incompatibility remains inconclusive.
-                      IInc => trace ("TInc IInc") $ checkIncomp' otherTerms ps IInc
+                      IInc => checkIncomp' otherTerms ps IInc
                       -- This is the second instance of an inconclusive term, so
                       -- the incompatibility can no longer be almost satsified.
-                      (IAlm _) => trace ("TInc IAlm") $ checkIncomp' otherTerms ps IInc
+                      (IAlm _) => checkIncomp' otherTerms ps IInc
