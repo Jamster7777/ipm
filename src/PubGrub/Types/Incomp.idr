@@ -41,9 +41,7 @@ showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
 -- TODO be able to retrieve incompatibilties in a list properly
 showIncomps : IncompMap -> String
 showIncomps iMap =
-  "Incompatibilties"
-  ++
-  PR_SEP
+  "Incompatibilties\n"
   ++
   (showList (snd iMap) showIncomp)
 

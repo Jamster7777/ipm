@@ -91,7 +91,7 @@ conflictResolution :  Incomp
                    -> (isFirst : Bool)
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i isFirst =
-  do  pr "conflictResolution" $ "Loop started with i=" ++ (showIncomp i)
+  do  pr "conflictResolution" $ "Loop started with i= " ++ (showIncomp i)
       state <- get
       if
         (failCondition state i)
@@ -102,13 +102,11 @@ conflictResolution i isFirst =
       else
         do  let relPS
                 = getRelevantPS (getPartialSolution state) i
-            pr "conflictResolution" $ "Got here"
             -- 'Nothing' should be impossible (for both of maybes) so it is not
             -- pattern matched. (This way an error will be thrown exposing the
             -- bug).
             let Just psAtSatisfier
                 = findSatisfier relPS i
-            pr "conflictResolution" $ "And here"
             let satisfier
                 = getMostRecentAssignment psAtSatisfier
             pr "conflictResolution" $ "Satisfier is: " ++ (showAssignPair satisfier)
@@ -150,10 +148,10 @@ conflictResolution i isFirst =
                   -- the next iteration of conflict resolution.
                   let priorCause
                       = filter (\x => (fst x) /= satisfierName) (i ++ satisfierCause)
-                  pr "conflictResolution" $ "priorCause=" ++ (show priorCause)
+                  pr "conflictResolution" $ "priorCause= " ++ (show priorCause)
                   let terms
                       = filter (\x => (fst x) == satisfierName) i
-                  pr "conflictResolution" $ "terms=" ++ (show terms)
+                  pr "conflictResolution" $ "terms= " ++ (show terms)
                   case (checkIncomp terms (psWithOneTerm satisfierName satisfierAssignment)) of
                     ISat => conflictResolution priorCause False
                     -- If satisfier does not fully satisfy term, then add
@@ -161,7 +159,7 @@ conflictResolution i isFirst =
                     -- prior cause
                     _    => do  let newPriorCause
                                     = priorCause ++ [ (satisfierName, (not satisfierTerm)) ] ++ terms
-                                pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause=" ++ (show newPriorCause)
+                                pr "conflictResolution" $ "Satisfier does not fully satisfy term, so now priorCause= " ++ (show newPriorCause)
                                 conflictResolution newPriorCause False
 
 ||| Check each incompatibility involving the package taken from changed.
@@ -205,11 +203,10 @@ unitProp : List PkgName -> StateT GrubState IO (Either IpmError ())
 unitProp [] = pure $ Right ()
 unitProp (package :: changed) =
     do  state <- get
-        pr "unitProp" $ "Started with changed=" ++ (show (package :: changed))
+        pr "unitProp" $ "Started with changed= " ++ (show (package :: changed))
         (Right newChanged) <- unitPropLoop changed (getI package state)
                             | (Left err) => pure (Left err)
         pr "unitProp" $ "Loop finished"
-        prS
         unitProp newChanged
 
 ||| Check if any of a list of incompatibilities are satisfied by the state
@@ -294,7 +291,7 @@ decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
       let Just package = minVsInPS state | Nothing => pure DecComplete
-      pr "decMake" $ "Decision making started, choosing package=" ++ (show package)
+      pr "decMake" $ "Decision making started, choosing package= " ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
                         -- ranges, then add these ranges as incompatibilities
@@ -331,10 +328,12 @@ decMake =
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
 mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
 mainLoop next =
-    do  pr "mainLoop" $ "Started with next=" ++ (show next)
+    do  prS
+        pr "mainLoop" $ "Started with next= " ++ (show next)
         Right ()      <- unitProp [ next ]
                        | Left err => pure (Left err)
-        pr "mainLoop" $ "UnitProp complete" ++ (show next)
+        pr "mainLoop" $ "UnitProp complete"
+        prS
         decRes <- decMake
         case (decRes) of
           DecError err      => pure $ Left err

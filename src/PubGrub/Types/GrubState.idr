@@ -250,9 +250,11 @@ prS =
       if
         (isVerbose state)
       then
-        do  lift $ putStrLn $ PR_SEP ++ "Update on GrubState" ++ PR_SEP
-            lift $ putStrLn $ (showPS (getPartialSolution state)) ++ PR_SEP
-            lift $ putStrLn $ (showIncomps (getIncompMap state)) ++ PR_SEP
-            lift $ putStrLn $ "Current decision level: " ++ (show (getDecisionLevel state)) ++ PR_SEP
+        do  lift $ putStrLn $ PR_SEP
+            lift $ putStrLn $ "Update on GrubState\n"
+            lift $ putStrLn $ (showPS (getPartialSolution state))
+            lift $ putStrLn $ (showIncomps (getIncompMap state))
+            lift $ putStrLn $ "Current decision level: " ++ (show (getDecisionLevel state))
+            lift $ putStrLn $ PR_SEP
       else
         pure ()

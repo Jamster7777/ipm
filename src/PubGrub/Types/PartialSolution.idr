@@ -37,9 +37,7 @@ showAssignPair (n, (Derivation r i l)) = (show l) ++ "~ " ++ (show n) ++ " " ++ 
 
 showPS : PartialSolution -> String
 showPS (_, list) =
-  "Partial Solution"
-  ++
-  PR_SEP
+  "Partial Solution\n"
   ++
   (showList list showAssignPair)
 
