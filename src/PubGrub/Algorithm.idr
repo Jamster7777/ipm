@@ -42,13 +42,13 @@ failCondition state _ = False
 ||| for which the incompatibility is satisfied.
 findSatisfier : PartialSolution -> Incomp -> Maybe PartialSolution
 findSatisfier ps i =
-  case (trace (showPS ps) checkIncomp i ps) of
-    ISat  => do let Just backtracked = trace ("sat, trying to backtrack one") (backtrackOne ps)
+  case (checkIncomp i ps) of
+    ISat  => do let Just backtracked = backtrackOne ps
                                      | Nothing => Nothing
                 case (findSatisfier backtracked i) of
                     Nothing        => Just ps
                     Just earlier   => Just earlier
-    _     => trace ("not sat, returning nothing") Nothing
+    _     => Nothing
 
 ||| Backtrack the partial solution to 'previous satisfier', the earliest
 ||| assignment before satisfier such that incompatibility is satisfied by the

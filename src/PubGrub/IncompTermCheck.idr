@@ -9,6 +9,7 @@ import PubGrub.SemverUtils
 import Core.ManifestTypes
 import Semver.Range
 import Semver.Version
+import Semver.Interval
 
 -- TODO remove
 import Debug.Trace
@@ -20,7 +21,7 @@ import Debug.Trace
 --------------------------------------------------------------------------------
 
 data IncompResult = ISat | ICon | IInc | IAlm (PkgName, List Term)
-data TermResult = TSat | TCon | TInc
+data TermResult   = TSat | TCon | TInc
 
 Eq IncompResult where
   (==) ISat ISat = True
@@ -42,20 +43,51 @@ Eq TermResult where
 -- Check implementations
 --------------------------------------------------------------------------------
 
+||| If an incompatibility has several terms referring to the same package, then
+||| it is possible the partial solution may fall entirely within the set of
+||| ranges, without falling in a singular one (in the case of adjacent ranges).
+|||
+||| This function is used to return the remaining range(s) of the partial
+||| solution that need to be satisfied in order for the partial solution range
+||| to be fully satisfied for that term.
+subtractRange : Range -> Range -> List Range
+subtractRange psRange intersect =
+  do  let uEq = (upper psRange) == (upper intersect)
+      let lEq = (lower psRange) == (lower intersect)
+      if
+        uEq && lEq
+      then
+        -- the intersect covers the whole ps range, so subtracting gives no ranges
+        -- left
+        []
+      else if
+        uEq
+      then
+        [ (MkRange (lower psRange) (flip (lower intersect))) ]
+      else if
+        lEq
+      then
+        [ (MkRange (flip (upper intersect)) (upper psRange)) ]
+      else
+        [
+          (MkRange (lower psRange) (flip (lower intersect))),
+          (MkRange (flip (upper intersect)) (upper psRange))
+        ]
+
 ||| Check one range of the partial solution against the ranges of the term.
 |||
 ||| If the PS range fits completely within one of the term ranges, then this
 ||| part of the PS is satisfied. If it partially intersects one, then it is
 ||| inconclusive. If it doesn't fit within any of the sections,
 ||| it is condraticted.
-checkRange :  List Range
-           -> Range
-           -> TermResult
-checkRange [] y = TCon
-checkRange (x :: xs) y =
-  do  case (intersect x y) of
-        Nothing =>  checkRange xs y
-        Just i  =>  if (i == y) then TSat else TInc
+checkRange :  (termRanges : List Range)
+           -> (psRange : Range)
+           -> (TermResult, List Range)
+checkRange [] y = (TCon, [])
+checkRange (x :: xs) psRange =
+  do  case (intersect x psRange) of
+        Nothing =>  checkRange xs psRange
+        Just i  =>  (TSat, (subtractRange psRange i))
 
 ||| Check each range of the partial solution against the ranges of the term.
 |||
@@ -75,20 +107,16 @@ checkTerm term ps = checkTerm' term ps True TInc
                -> TermResult
     checkTerm' xs [] isFirst soFar = soFar
     checkTerm' xs (y :: ys) isFirst soFar =
-      do  let curRes = checkRange xs y
+      do  let (curRes, extraPSRanges) = checkRange xs y
           let newSoFar = (
             if
-              isFirst
-            then
-              curRes
-            else if
-              curRes == soFar
+              isFirst || (curRes == soFar)
             then
               curRes
             else
               TInc
           )
-          checkTerm' xs ys False newSoFar
+          checkTerm' xs (ys ++ extraPSRanges) False newSoFar
 
 ||| Some parts of the algorithm can lead to the same package being referenced
 ||| by more than one term in an incompatibility. When it comes to the evaluation
