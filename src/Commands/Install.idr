@@ -1,4 +1,4 @@
-module Commands.Plan
+module Commands.Install
 
 import PubGrub.Algorithm
 import Util.ParseManifest

@@ -8,7 +8,7 @@ import Data.SortedMap
 
 formatVersion : Version -> String
 formatVersion v =
-  pack $ replaceOn '.' '-' $ unpack $ show v
+  "v" ++ (pack $ replaceOn '.' '-' $ unpack $ show v)
 
 formatName : PkgName -> String
 formatName (MkPkgName x y) =
@@ -47,6 +47,7 @@ refsForDeps ((MkManiDep n _ _) :: ds) vMap =
 pkgs :  List ManiDep
      -> SortedMap PkgName Version
      -> Either IpmError String
+pkgs [] vMap = Right ""
 pkgs ds vMap =
   do  let Right refs
           = refsForDeps ds vMap
@@ -54,9 +55,11 @@ pkgs ds vMap =
       Right $ "pkgs = " ++ (foldr (++) "" (intersperse ", " refs)) ++ "\n"
 
 sourcedir : String -> String
-sourcedir s = "sourcedir = " ++ s ++ "\n"
+sourcedir "" = ""
+sourcedir s  = "sourcedir = " ++ s ++ "\n"
 
 modules : List String -> String
+modules [] = ""
 modules ms = "modules = " ++ (foldr (++) "" (intersperse ", " ms)) ++ "\n"
 
 export

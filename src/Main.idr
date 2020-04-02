@@ -1,6 +1,6 @@
 module Main
 
-import Commands.Plan
+import Commands.Install
 
 outputUsageMessage : IO ()
 outputUsageMessage = putStrLn "TODO: temp usage message"
@@ -9,5 +9,5 @@ main : IO ()
 main = do args <- getArgs
           let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
           case cmd of
-            "plan"    => plan
-            invalid   => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
+            "install"    => install True
+            invalid      => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
