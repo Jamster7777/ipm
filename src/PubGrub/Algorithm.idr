@@ -1,3 +1,4 @@
+
 module PubGrub.Algorithm
 
 -- TODO remove redundant ones
@@ -326,7 +327,7 @@ decMake =
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
-mainLoop : PkgName -> StateT GrubState IO (Either IpmError (List (PkgName, Version)))
+mainLoop : PkgName -> StateT GrubState IO (Either IpmError (SortedMap PkgName Version))
 mainLoop next =
     do  prS
         pr "mainLoop" $ "Started with next= " ++ (show next)
@@ -341,7 +342,7 @@ mainLoop next =
                                    mainLoop newNext
           DecComplete       => do  pr "mainLoop" $ "Version solving has succeeded!"
                                    state <- get
-                                   pure $ Right (extractDecs state)
+                                   pure $ Right $ fromList $ extractDecs state
 
 ||| The entrypoint for the PubGrub algorithm. Returns an IpmError if version
 ||| solving fails for some reason, or the list of compatibile package versions.
@@ -354,7 +355,7 @@ mainLoop next =
 |||               along the way. Primarily used for debugging and learning
 |||               purposes.
 export
-pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (List (PkgName, Version)))
+pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (SortedMap PkgName Version))
 pubGrub (MkManifest n ds ms) v verbose =
   do  Nothing <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
                | Just err => pure (Left err)

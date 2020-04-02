@@ -21,7 +21,8 @@ package n v =
   "package " ++ (makePkgReference n v) ++ "\n"
 
 pkgs : List ManiDep -> String
+pkgs ds = "pkgs = " ++
 
 export
-manifestToIpkg : Manifest -> Version -> String
+manifestToIpkg : Lock -> Version -> String
 manifestToIpkg (MkManifest n ds m) = ?manifestToIpkg_rhs_1
