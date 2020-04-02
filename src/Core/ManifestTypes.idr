@@ -39,3 +39,6 @@ Ord PkgName where
 
 getDependancies : Manifest -> List ManiDep
 getDependancies (MkManifest x xs z) = xs
+
+getName : ManiDep -> PkgName
+getName (MkManiDep n x y) = n

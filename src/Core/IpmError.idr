@@ -12,6 +12,7 @@ data IpmError = BashError String
               | DepFetchError PkgName String
               -- TODO make this more useful.
               | VersionSolvingFail
+              | IpkgGenError
 
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)

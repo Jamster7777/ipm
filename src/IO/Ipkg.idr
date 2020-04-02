@@ -1,7 +1,10 @@
 module IO.Ipkg
 
 import Core.ManifestTypes
+import Core.IpmError
 import Semver.Version
+import Semver.Range
+import Data.SortedMap
 
 formatVersion : Version -> String
 formatVersion v =
@@ -12,17 +15,45 @@ formatName (MkPkgName x y) =
   -- TODO verify names can't contain bad symbols
   x ++ "-" ++ y
 
-makePkgReference : PkgName -> Version -> String
-makePkgReference n v =
-  (formatName n) ++ "-" ++ (formatVersion v)
+makePkgReference :  PkgName
+                 -> SortedMap PkgName Version
+                 -> Either IpmError String
+makePkgReference n vMap =
+  do  let Just v
+          = lookup n vMap
+          | Nothing => Left IpkgGenError
+      Right $ (formatName n) ++ "-" ++ (formatVersion v)
 
-package : PkgName -> Version -> String
-package n v =
-  "package " ++ (makePkgReference n v) ++ "\n"
+package : PkgName -> SortedMap PkgName Version -> Either IpmError String
+package n vMap =
+  do  let Right ref
+          = makePkgReference n vMap
+          | Left err => Left err
+      Right $ "package " ++ ref ++ "\n"
 
-pkgs : List ManiDep -> String
-pkgs ds = "pkgs = " ++
+refsForDeps :  List ManiDep
+              -> SortedMap PkgName Version
+              -> Either IpmError (List String)
+refsForDeps [] vMap = Right []
+refsForDeps ((MkManiDep n _ _) :: ds) vMap =
+  do  let Right str
+          = makePkgReference n vMap
+          | Left err => Left err
+      let Right rest
+          = refsForDeps ds vMap
+          | Left err => Left err
+      Right $ str :: rest
+
+pkgs :  List ManiDep
+     -> SortedMap PkgName Version
+     -> Either IpmError String
+pkgs ds vMap =
+  do  let Right refs
+          = refsForDeps ds vMap
+          | Left err => Left err
+      Right $ "pkgs = " ++ (foldr (++) "" (intersperse ", " refs))
 
 export
-manifestToIpkg : Lock -> Version -> String
-manifestToIpkg (MkManifest n ds m) = ?manifestToIpkg_rhs_1
+manifestToIpkg : Manifest -> SortedMap PkgName Version -> Either IpmError String
+manifestToIpkg (MkManifest n ds m) vMap =
+  do  ?a
