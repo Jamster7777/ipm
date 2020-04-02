@@ -28,13 +28,14 @@ mutual
   ||| Install all given packages, short circuiting if an installation fails.
   installDeps :  List PkgName
               -> (vMap : SortedMap PkgName Version)
+              -> (dryRun : Bool)
               -> IO (Either IpmError ())
-  installDeps [] vMap = pure $ Right ()
-  installDeps (n :: ns) vMap =
+  installDeps [] vMap dryRun = pure $ Right ()
+  installDeps (n :: ns) vMap dryRun =
     do  Right ()
-            <- installPkg n vMap
+            <- installPkg n vMap dryRun
             |  Left err => pure (Left err)
-        installDeps ns vMap
+        installDeps ns vMap dryRun
 
   ||| Install the given package and its dependancies, using versions from the
   ||| given SortedMap. All packages required should have an entry in the map.
@@ -47,11 +48,13 @@ mutual
   ||| - For each dependency specified in the manifest, install (dependencies
   |||   must be installed first for Idris to typecheck properly).
   ||| - Convert the manifest to an ipkg lockfile, and write it to file.
-  ||| - Invoke the Idris installer on the lockfile.
+  ||| - Invoke the Idris installer on the lockfile (if it is a dry run, then
+  |||   just print what would be installed).
   installPkg :  (n : PkgName)
              -> (vMap : SortedMap PkgName Version)
+             -> (dryRun : Bool)
              -> IO (Either IpmError ())
-  installPkg n vMap =
+  installPkg n vMap dryRun =
     do  lockExists
             <- checkFileExists $ lockFilePath n
         if
@@ -66,7 +69,7 @@ mutual
                   <- checkoutManifest n v
                   |  Left err => pure (Left err)
               Right ()
-                  <- installDeps (getDepNames manifest) vMap
+                  <- installDeps (getDepNames manifest) vMap dryRun
                   |  Left err => pure (Left err)
               let Right ipkg
                   =  manifestToIpkg manifest vMap
@@ -74,4 +77,10 @@ mutual
               Right ()
                   <- writeFile (lockFilePath n) ipkg
                   |  Left err => pure (Left (WriteLockError (show err)))
-              invokeIdrisInstall n
+              if
+                dryRun
+              then
+                do  putStrLn $ (show n) ++ " v" ++ (show v)
+                    pure $ Right ()
+              else
+                invokeIdrisInstall n
