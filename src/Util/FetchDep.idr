@@ -24,7 +24,7 @@ cd dir = do  success <- bashCommand ("cd " ++ dir)
              pure ()
 
 pDir : PkgName -> String
-pDir n = TEMP_DIR ++ (show n)
+pDir n = TEMP_DIR ++ (show n) ++ "/"
 
 rmTempDir : IO ()
 rmTempDir = do  success <- bashCommand ("rm -rf " ++ TEMP_DIR)
@@ -33,6 +33,10 @@ rmTempDir = do  success <- bashCommand ("rm -rf " ++ TEMP_DIR)
 ||| check if a directory exists
 checkDirExists : String -> IO Bool
 checkDirExists path = bashCommand $ "[ -d " ++ path ++ " ]"
+
+||| check if a file exists
+checkFileExists : String -> IO Bool
+checkFileExists path = bashCommand $ "[ -f " ++ path ++ " ]"
 
 ||| Convert a false value to the given error, a true value to nothing. Used to
 ||| avoid repeated code.

@@ -2,8 +2,11 @@ module Util.Constants
 
 %access public export
 
-PACKAGE_FILE_NAME : String
-PACKAGE_FILE_NAME = "ipm.json"
+MANIFEST_FILE_NAME : String
+MANIFEST_FILE_NAME = "ipm.json"
+
+LOCK_FILE_NAME : String
+LOCK_FILE_NAME = "ipm-lock.ipkg"
 
 TEMP_DIR : String
 TEMP_DIR = "/home/jamie/ipm-temp/"
