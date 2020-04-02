@@ -84,3 +84,15 @@ mutual
                     pure $ Right ()
               else
                 invokeIdrisInstall n
+
+||| Entrypoint for installation code
+export
+installRoot :  Manifest
+            -> (vMap : SortedMap PkgName Version)
+            -> (dryRun : Bool)
+            -> IO (Either IpmError ())
+installRoot (MkManifest n _ _) vMap False =
+  installPkg n vMap False
+installRoot (MkManifest n _ _) vMap True =
+  do  putStrLn $ "ipm would install the following package/version combinations in this order: "
+      installPkg n vMap True

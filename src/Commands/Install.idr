@@ -1,27 +1,27 @@
-module Commands.Install
-import Util.Bash
-import Util.Paths
+module Commands.Plan
+
+import PubGrub.Algorithm
+import Util.ParseManifest
+import Util.FetchDep
 import Core.IpmError
 import Core.ManifestTypes
+import IO.InstallPkg
+import Data.SortedMap
 import Semver.Version
-import Semver.Range
 
---TODO remove
-%access public export
-
-defaultPath : String
-defaultPath = "~/ipm/packages/"
-
--- TODO move to relevant location
-handleArgs : List String -> String
-handleArgs args =
-  case (index' 2 args) of
-        (Just dir) => dir
-        Nothing   => "."
-
-getDependancyPath : LockDep -> Either IpmError String
-getDependancyPath (MkLockDep _ (PkgUrl url) _) = ?getDependancyPath_rhs_2 -- TODO, download package and return local path
-getDependancyPath (MkLockDep _ (PkgLocal path) _) = Right path
-
-install : Lock -> IO ()
-install args = ?todo
+export
+install : (dryRun : Bool) -> { default "." dir : String } -> IO ()
+install dryRun {dir} =
+  do  Right manifest
+            <- parseManifest dir
+            |  Left err => putStrLn (show err)
+      Right version
+            <- getMostRecentVersion {dir=dir}
+            |  Left err => putStrLn (show err)
+      Right solution
+            <- pubGrub manifest version True
+            |  Left err => putStrLn (show err)
+      Right ()
+            <- installRoot manifest solution dryRun
+            |  Left err => putStrLn (show err)
+      pure ()
