@@ -10,10 +10,12 @@ import Semver.Version
 import Semver.Range
 import Data.SortedMap
 
+||| Generate the lockfile path for a package.
 lockFilePath :  PkgName
              -> String
 lockFilePath n = (pDir n) ++ LOCK_FILE_NAME
 
+||| Invoke the Idris installer on the lockfile for the given package name.
 invokeIdrisInstall :  PkgName
                    -> IO (Either IpmError ())
 invokeIdrisInstall n =
@@ -23,6 +25,7 @@ invokeIdrisInstall n =
       pure $ Right ()
 
 mutual
+  ||| Install all given packages, short circuiting if an installation fails.
   installDeps :  List PkgName
               -> (vMap : SortedMap PkgName Version)
               -> IO (Either IpmError ())
@@ -33,7 +36,18 @@ mutual
             |  Left err => pure (Left err)
         installDeps ns vMap
 
-
+  ||| Install the given package and its dependancies, using versions from the
+  ||| given SortedMap. All packages required should have an entry in the map.
+  |||
+  ||| The function follows the following steps:
+  ||| - If the package has already been installed earlier in the process (loops
+  |||   like this are valid and can occur), then skip the install to avoid
+  |||   repeating installation(s).
+  ||| - Fetch the manifest for the version specified.
+  ||| - For each dependency specified in the manifest, install (dependencies
+  |||   must be installed first for Idris to typecheck properly).
+  ||| - Convert the manifest to an ipkg lockfile, and write it to file.
+  ||| - Invoke the Idris installer on the lockfile.
   installPkg :  (n : PkgName)
              -> (vMap : SortedMap PkgName Version)
              -> IO (Either IpmError ())
