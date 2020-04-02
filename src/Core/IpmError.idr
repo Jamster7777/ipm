@@ -13,6 +13,8 @@ data IpmError = BashError String
               -- TODO make this more useful.
               | VersionSolvingFail
               | VersionLookupError
+              | WriteLockError String
+              | InstallPkgError PkgName
 
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)

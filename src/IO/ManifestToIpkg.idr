@@ -21,7 +21,7 @@ makePkgReference :  PkgName
 makePkgReference n vMap =
   do  let Just v
           = lookup n vMap
-          | Nothing => Left IpkgGenError
+          | Nothing => Left VersionLookupError
       Right $ (formatName n) ++ "-" ++ (formatVersion v)
 
 package : PkgName -> SortedMap PkgName Version -> Either IpmError String
