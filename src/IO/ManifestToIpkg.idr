@@ -1,4 +1,4 @@
-module IO.Ipkg
+module IO.ManifestToIpkg
 
 import Core.ManifestTypes
 import Core.IpmError
@@ -51,9 +51,29 @@ pkgs ds vMap =
   do  let Right refs
           = refsForDeps ds vMap
           | Left err => Left err
-      Right $ "pkgs = " ++ (foldr (++) "" (intersperse ", " refs))
+      Right $ "pkgs = " ++ (foldr (++) "" (intersperse ", " refs)) ++ "\n"
+
+sourcedir : String -> String
+sourcedir s = "sourcedir = " ++ s ++ "\n"
+
+modules : List String -> String
+modules ms = "modules = " ++ (foldr (++) "" (intersperse ", " ms)) ++ "\n"
 
 export
 manifestToIpkg : Manifest -> SortedMap PkgName Version -> Either IpmError String
-manifestToIpkg (MkManifest n ds m) vMap =
-  do  ?a
+manifestToIpkg (MkManifest n ds (MkPkgModules s ms)) vMap =
+  do  let Right packageRes
+          = package n vMap
+          | Left err => Left err
+      let Right pkgsRes
+          = pkgs ds vMap
+          | Left err => Left err
+      Right (
+        packageRes
+        ++
+        pkgsRes
+        ++
+        (sourcedir s)
+        ++
+        (modules ms)
+      )
