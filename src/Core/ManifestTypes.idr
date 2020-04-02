@@ -42,3 +42,6 @@ getDependancies (MkManifest x xs z) = xs
 
 getName : ManiDep -> PkgName
 getName (MkManiDep n x y) = n
+
+getDepNames : Manifest -> List PkgName
+getDepNames (MkManifest _ ds _) = map getName ds
