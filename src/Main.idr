@@ -9,5 +9,5 @@ main : IO ()
 main = do args <- getArgs
           let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
           case cmd of
-            "install"    => install True
+            "install"    => install False
             invalid      => putStrLn ("'" ++ invalid ++ "' is not a valid command.")

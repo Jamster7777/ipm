@@ -24,3 +24,6 @@ Show IpmError where
   show (InvalidVersionError n v)   = "Version " ++ (show v) ++ " not found in repository for package " ++ (show n)
   show (DepFetchError n s) = "Error: Could not fetch dependancy '" ++ (show n) ++ "' from " ++ s
   show (VersionSolvingFail) = "Dependancies cannot be resolved."
+  show (VersionLookupError) = "VersionLookupError."
+  show (WriteLockError s) = "Error writing lockfile: " ++ s
+  show (InstallPkgError n) = "Error installing this package: " ++ (show n)
