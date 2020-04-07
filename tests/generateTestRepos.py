@@ -41,30 +41,81 @@ os.mkdir(output)
 # Make it an absolute path
 output = os.path.abspath(output)
 
+def pkgNameToModuleName(pkgName):
+    return pkgName.split("/", 1)[1].capitalize()
+
+def pkgNameToFunctionName(pkgName):
+    return pkgName.split("/", 1)[1] + "Print"
+
 for pkgName in config:
     
     os.chdir(output)
-    os.system('mkdir -p {0}'.format(pkgName))
+    os.system('mkdir -p {0}/src'.format(pkgName))
     os.chdir(pkgName)
     os.system('git init')
 
     for pkgVersion in config[pkgName]:
         
+        # Build manifest JSON file (and collect some string data for the
+        # sourcefile later)
+
         dependencies = {}
-        
+        imports = []
+        printStmts = []
+
         for dep in config[pkgName][pkgVersion]:
-             dependencies[dep] = {
-                "path": os.path.join(output, dep),
-                "version": config[pkgName][pkgVersion][dep]
-             }
+            dependencies[dep] = {
+            "path": os.path.join(output, dep),
+            "version": config[pkgName][pkgVersion][dep]
+            }
+            imports.append("import {0}\n".format(pkgNameToModuleName(dep)))
+            printStmts.append("        {0}\n".format(pkgNameToFunctionName(dep)))
 
         manifest = {
             "name": pkgName,
-            "dependencies" : dependencies
+            "dependencies" : dependencies,
+            "sourcedir" : "src",
+            "modules" : pkgNameToModuleName(pkgName)
         }
 
         with open('ipm.json', 'w+') as f:
             json.dump(manifest, f, sort_keys=True, indent=4)
+            
 
+        # Define idris file to place in the src directory, importing a function from each dependency.
+
+        moduleDef = 'module {0}\n'.format(pkgNameToModuleName(pkgName))
+
+        funcDef = '''
+        
+        export
+        {0} : IO ()
+        {0} = putStrLn \"{1} version {2}\"
+        '''.format(
+            pkgNameToFunctionName(pkgName),
+            pkgName,
+            pkgVersion
+        )
+
+        mainStart = '''
+        
+        main : IO ()
+        main =
+            do putStrLn "Test module for {0} version {1}"
+        '''.format(
+            pkgName,
+            pkgVersion
+        )
+
+        allImports = ''.join(imports)
+        allPrintStmts = ''.join(printStmts)
+
+        fullFile = moduleDef + allImports + funcDef + mainStart + allPrintStmts
+
+        with open('src/{0}.idr'.format(pkgNameToModuleName(pkgName)), 'w+') as f:
+            f.write(fullFile)
+
+
+        # Commit and tag this version 
         os.system('git add . && git commit -m "versionUpgrade"')
         os.system('git tag v{0}'.format(pkgVersion))
