@@ -75,7 +75,7 @@ for pkgName in config:
             "name": pkgName,
             "dependencies" : dependencies,
             "sourcedir" : "src",
-            "modules" : pkgNameToModuleName(pkgName)
+            "modules" : [ pkgNameToModuleName(pkgName) ]
         }
 
         with open('ipm.json', 'w+') as f:
