@@ -4,6 +4,7 @@ import Language.JSON
 
 ||| Lookup a field name in a JSON object. Return nothing if it is not a JSON
 ||| object, the key can not be found, or the key is not unique.
+export
 lookup : String -> JSON -> Maybe JSON
 lookup search (JObject fields) =
   do  let matches

@@ -15,13 +15,13 @@ checkName str =
   case
     find (\x => not ((isAlphaNum x) || (x == '/') || (x == '-'))) (unpack str)
   of
-    Just c  => Left (ManifestFormatError ("'" ++ (show c) ++ "' is not allowed in a package name"))
+    Just c  => Left (PkgNameError ("'" ++ (show c) ++ "' is not allowed in a package name"))
     Nothing =>
       do  let splitStr = filter (/= "") $ split (== '/') $ str
           if
             (length splitStr) /= 2
           then
-            Left (ManifestFormatError ("All package names must contain exactly one '/'"))
+            Left (PkgNameError ("All package names must contain exactly one '/'"))
           else
             do  let Just group
                     = index' 0 splitStr
@@ -31,13 +31,23 @@ checkName str =
                     | Nothing => Left ImpossibleError
                 Right (MkPkgName group package)
 
+||| Lookup field in JSON object, if it cannot be found or is not a string return
+||| a lookup error, otherwise return the value (a string).
+lookupRequiredString :  String
+                     -> JSON
+                     -> Either IpmError String
+lookupRequiredString search parent =
+  do  let Just (JString found)
+          = lookup search parent
+          | _ => Left (ManifestLookupError search)
+      Right found
+
 constructManifest :  JSON
                   -> Either IpmError Manifest
 constructManifest parent = ?a
   -- do  let Just (JString name)
   --         = lookup "name" parent
-  --         | _ => Left
-
+  --         | _ => Left ManifestLookupError
 
 export
 parseManifest :  (dir : String)
