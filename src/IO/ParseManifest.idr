@@ -34,7 +34,7 @@ checkName str =
 ||| Lookup field in JSON object, if it cannot be found or is not a string return
 ||| a lookup error, otherwise return the value (a string).
 lookupRequiredString :  String
-                     -> JSON
+                     -> (List (String, JSON))
                      -> Either IpmError String
 lookupRequiredString search parent =
   do  let Just (JString found)
@@ -42,12 +42,28 @@ lookupRequiredString search parent =
           | _ => Left (ManifestLookupError search)
       Right found
 
+||| Lookup field in JSON object, if it cannot be found or is not a object return
+||| a lookup error, otherwise return the value (a JSON object).
+lookupRequiredObject :  String
+                     -> (List (String, JSON))
+                     -> Either IpmError (List (String, JSON))
+lookupRequiredObject search parent =
+  do  let Just (JObject found)
+          = lookup search parent
+          | _ => Left (ManifestLookupError search)
+      Right found
+
 constructManifest :  JSON
                   -> Either IpmError Manifest
-constructManifest parent = ?a
-  -- do  let Just (JString name)
-  --         = lookup "name" parent
-  --         | _ => Left ManifestLookupError
+constructManifest (JObject parent) =
+  do  let Right name
+          = lookupRequiredString "name" parent
+          | Left e => Left e
+      let Right dependencies
+          = lookupRequiredObject "dependencies" parent
+          | Left e => Left e
+      ?a
+
 
 export
 parseManifest :  (dir : String)
