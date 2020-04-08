@@ -5,7 +5,7 @@ import Core.IpmError
 import Util.Bash
 import Util.Constants
 import Semver.Range
-import Util.ParseManifest
+import IO.ParseManifest
 
 %access public export
 

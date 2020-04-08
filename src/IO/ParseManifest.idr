@@ -37,6 +37,12 @@ checkRange str = case (parse range str) of
                     (Right Nothing)     => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
                     (Right (Just v))    => Right v
 
+-- TODO
+export
+checkVersion : String -> Either IpmError Version
+checkVersion str = case (parse bareVersion str) of
+                    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
+                    (Right (v, b1, b2)) => Right v
 
 checkDependencies : (keys : List (String, JSON)) -> Either IpmError (List ManiDep)
 checkDependencies [] = Right []

@@ -2,7 +2,7 @@ module Commands.Publish
 import Core.ManifestTypes
 import Core.IpmError
 import Util.Bash
-import Util.ParseManifest
+import IO.ParseManifest
 import Util.Constants
 import Data.String
 import Data.Vect

@@ -1,7 +1,7 @@
 module Commands.Install
 
 import PubGrub.Algorithm
-import Util.ParseManifest
+import IO.ParseManifest
 import Util.FetchDep
 import Core.IpmError
 import Core.ManifestTypes
