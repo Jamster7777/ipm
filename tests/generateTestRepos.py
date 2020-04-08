@@ -12,7 +12,7 @@ arg_parser.add_argument(
     required=True
     )
 arg_parser.add_argument(
-    '-o', '--output', 
+    '-o', '--output',
     help='Path to the directory that the output folder should be placed in.'
     )
 
@@ -48,14 +48,14 @@ def pkgNameToFunctionName(pkgName):
     return pkgName.split("/", 1)[1] + "Print"
 
 for pkgName in config:
-    
+
     os.chdir(output)
     os.system('mkdir -p {0}/src'.format(pkgName))
     os.chdir(pkgName)
     os.system('git init')
 
     for pkgVersion in config[pkgName]:
-        
+
         # Build manifest JSON file (and collect some string data for the
         # sourcefile later)
 
@@ -75,12 +75,14 @@ for pkgName in config:
             "name": pkgName,
             "dependencies" : dependencies,
             "sourcedir" : "src",
-            "modules" : [ pkgNameToModuleName(pkgName) ]
+            "modules" : [ pkgNameToModuleName(pkgName) ],
+            "main" : pkgNameToModuleName(pkgName),
+            "executable" : "out"
         }
 
         with open('ipm.json', 'w+') as f:
             json.dump(manifest, f, sort_keys=True, indent=4)
-            
+
 
         # Define idris file to place in the src directory, importing a function from each dependency.
 
@@ -116,6 +118,6 @@ main =
             f.write(fullFile)
 
 
-        # Commit and tag this version 
+        # Commit and tag this version
         os.system('git add . && git commit -m "versionUpgrade"')
         os.system('git tag v{0}'.format(pkgVersion))
