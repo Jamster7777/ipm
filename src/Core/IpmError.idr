@@ -15,6 +15,7 @@ data IpmError = BashError String
               | VersionLookupError
               | WriteLockError String
               | InstallPkgError PkgName
+              | ImpossibleError
 
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)
@@ -27,3 +28,4 @@ Show IpmError where
   show (VersionLookupError) = "VersionLookupError."
   show (WriteLockError s) = "Error writing lockfile: " ++ s
   show (InstallPkgError n) = "Error installing this package: " ++ (show n)
+  show (ImpossibleError) = "This error should never occur. Please file a bug report."
