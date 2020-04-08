@@ -125,10 +125,18 @@ constructManifest (JObject parent) =
       let Right dependenciesObj
           = lookupRequiredObject "dependencies" parent
           | Left e => Left e
-      let Right dependancies
+      let Right dependencies
           = checkDependencies dependenciesObj
           | Left e => Left e
-      ?a
+      Right (
+        MkManifest name dependencies (MkPkgConfig
+          (lookupOptionalString "sourcedir" parent)
+          (lookupOptionalStringArray "modules" parent)
+          (lookupOptionalString "main" parent)
+          (lookupOptionalString "executable" parent)
+          (lookupOptionalString "opts" parent)
+        )
+      )
 
 
 export
