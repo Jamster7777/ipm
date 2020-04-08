@@ -54,29 +54,44 @@ pkgs ds vMap =
           | Left err => Left err
       Right $ "pkgs = " ++ (foldr (++) "" (intersperse ", " refs)) ++ "\n"
 
-sourcedir : String -> String
-sourcedir "" = ""
-sourcedir s  = "sourcedir = " ++ s ++ "\n"
+modules : Maybe (List String) -> String
+modules Nothing   = ""
+modules (Just []) = ""
+modules (Just ms) = "modules = " ++ (foldr (++) "" (intersperse ", " ms)) ++ "\n"
 
-modules : List String -> String
-modules [] = ""
-modules ms = "modules = " ++ (foldr (++) "" (intersperse ", " ms)) ++ "\n"
+opt : (field : String) -> (value : Maybe String) -> String
+opt field Nothing    = ""
+opt field (Just val) = field ++ " = " ++ val ++ "\n"
+
+config : PkgConfig -> String
+config (MkPkgConfig sourcedir mods main executable opts) =
+  (
+    (opt "sourcedir" sourcedir)
+    ++
+    (modules mods)
+    ++
+    (opt "main" main)
+    ++
+    (opt "executable" executable)
+    ++
+    (opt "opts" opts)
+  )
 
 export
 manifestToIpkg : Manifest -> SortedMap PkgName Version -> Either IpmError String
-manifestToIpkg (MkManifest n ds (MkPkgModules s ms)) vMap =
+manifestToIpkg (MkManifest n ds c) vMap =
   do  let Right packageRes
           = package n vMap
           | Left err => Left err
       let Right pkgsRes
           = pkgs ds vMap
           | Left err => Left err
+      let configRes
+          = config c
       Right (
         packageRes
         ++
         pkgsRes
         ++
-        (sourcedir s)
-        ++
-        (modules ms)
+        configRes
       )
