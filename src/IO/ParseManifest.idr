@@ -38,11 +38,13 @@ lookupRequiredString :  String
                      -> Either IpmError String
 lookupRequiredString search parent =
   do  let Just (JString found)
-          = lookup search parent
+          = jLookup search parent
           | _ => Left (ManifestLookupError search)
       Right found
 
-lookupOptionalString
+lookupOptionalString :  String
+                     -> (List (String, JSON))
+                     -> Maybe String
 
 
 ||| Lookup field in JSON object, if it cannot be found or is not a object return
@@ -52,7 +54,7 @@ lookupRequiredObject :  String
                      -> Either IpmError (List (String, JSON))
 lookupRequiredObject search parent =
   do  let Just (JObject found)
-          = lookup search parent
+          = jLookup search parent
           | _ => Left (ManifestLookupError search)
       Right found
 

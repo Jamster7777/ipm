@@ -1,16 +1,16 @@
 module Util.JsonExtras
 
 import Language.JSON
-
-export
-JObjectMatched : Type
-JObjectMatched = List (String, JSON)
+--
+-- export
+-- JObjectMatched : Type
+-- JObjectMatched = List (String, JSON)
 
 ||| Lookup a field name in a JSON object. Return nothing if it is not a JSON
 ||| object, the key can not be found, or the key is not unique.
 export
-lookup : String -> (List (String, JSON)) -> Maybe JSON
-lookup search fields =
+jLookup : String -> List (String, JSON) -> Maybe JSON
+jLookup search fields =
   do  let matches
           = filter (\x => (fst x) == search) fields
       let Just (_, val)
@@ -22,4 +22,4 @@ lookup search fields =
         Just val
       else
         Nothing
-lookup search _ = Nothing
+jLookup search _ = Nothing
