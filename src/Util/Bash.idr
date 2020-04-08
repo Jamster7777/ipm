@@ -58,9 +58,17 @@ errorAndExit failMessage =
   do  putStrLn failMessage
       exit 1
 
-bashCommand : (command : String) -> { default "." inDir : String } -> IO Bool
-bashCommand command {inDir} =
-  do  exitCode <- system ("(cd " ++ inDir ++ " && " ++ command ++ ") > /dev/null")
+bashCommand :  (command : String)
+            -> { default "." inDir : String }
+            -> { default True verbose : Bool }
+            -> IO Bool
+bashCommand command {inDir} {verbose=True} =
+  do  putStrLn $ "In directory " ++ inDir ++ ":"
+      putStrLn command
+      exitCode <- system ("cd " ++ inDir ++ " && " ++ command)
+      pure (exitCode == 0)
+bashCommand command {inDir} {verbose=False} =
+  do  exitCode <- system ("(cd " ++ inDir ++ " && " ++ command ++ ") >/dev/null 2>&1")
       pure (exitCode == 0)
 
 ||| Execute a sequence of bash commands, return true if they all succeed and

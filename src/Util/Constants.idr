@@ -6,7 +6,7 @@ MANIFEST_FILE_NAME : String
 MANIFEST_FILE_NAME = "ipm.json"
 
 LOCK_FILE_NAME : String
-LOCK_FILE_NAME = "ipm-lock.ipkg"
+LOCK_FILE_NAME = "lock.ipkg"
 
 TEMP_DIR : String
 TEMP_DIR = "/home/jamie/ipm-temp/"
