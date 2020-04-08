@@ -22,6 +22,6 @@ install dryRun {dir} =
             <- pubGrub manifest version True
             |  Left err => putStrLn (show err)
       Right ()
-            <- installRoot manifest solution dryRun
+            <- installRoot manifest solution
             |  Left err => putStrLn (show err)
       pure ()

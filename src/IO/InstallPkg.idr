@@ -38,14 +38,15 @@ mutual
   ||| Install all given packages, short circuiting if an installation fails.
   installDeps :  List PkgName
               -> (vMap : SortedMap PkgName Version)
-              -> (dryRun : Bool)
+              -> { default False dryRun : Bool }
+              -> { default False verbose : Bool }
               -> IO (Either IpmError ())
-  installDeps [] vMap dryRun = pure $ Right ()
-  installDeps (n :: ns) vMap dryRun =
+  installDeps [] vMap {dryRun} {verbose} = pure $ Right ()
+  installDeps (n :: ns) vMap {dryRun} {verbose} =
     do  Right ()
-            <- installPkg n False vMap dryRun
+            <- installPkg n False vMap {dryRun=dryRun} {verbose=verbose}
             |  Left err => pure (Left err)
-        installDeps ns vMap dryRun
+        installDeps ns vMap {dryRun=dryRun} {verbose=verbose}
 
   ||| Install the given package and its dependancies, using versions from the
   ||| given SortedMap. All packages required should have an entry in the map.
@@ -63,9 +64,10 @@ mutual
   installPkg :  (n : PkgName)
              -> (isRoot : Bool)
              -> (vMap : SortedMap PkgName Version)
-             -> (dryRun : Bool)
+             -> { default False dryRun : Bool }
+             -> { default False verbose : Bool }
              -> IO (Either IpmError ())
-  installPkg n isRoot vMap dryRun =
+  installPkg n isRoot vMap {dryRun} {verbose} =
     do  lockExists
             <- checkFileExists $ lockFilePath n
         if
@@ -80,7 +82,7 @@ mutual
                   <- checkoutManifest n v
                   |  Left err => pure (Left err)
               Right ()
-                  <- installDeps (getDepNames manifest) vMap dryRun
+                  <- installDeps (getDepNames manifest) vMap {dryRun=dryRun} {verbose=verbose}
                   |  Left err => pure (Left err)
               let Right ipkg
                   =  manifestToIpkg manifest vMap
@@ -97,16 +99,15 @@ mutual
                 do  putStrLn $ (show n) ++ " v" ++ (show v)
                     pure $ Right ()
               else
-                invokeIdrisInstall n
+                do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
+                    invokeIdrisInstall n
 
 ||| Entrypoint for installation code
 export
 installRoot :  Manifest
             -> (vMap : SortedMap PkgName Version)
-            -> (dryRun : Bool)
+            -> { default False dryRun : Bool }
+            -> { default False verbose : Bool }
             -> IO (Either IpmError ())
-installRoot (MkManifest n _ _) vMap False =
-  installPkg n True vMap False
-installRoot (MkManifest n _ _) vMap True =
-  do  putStrLn $ "ipm would install the following package/version combinations in this order: "
-      installPkg n False vMap True
+installRoot (MkManifest n _ _) vMap {dryRun} {verbose} =
+  installPkg n True vMap {dryRun=dryRun} {verbose=verbose}
