@@ -92,21 +92,23 @@ for pkgName in config:
 
 export
 {0} : IO ()
-{0} = putStrLn \"{1} version {2}\"
+{0} = putStrLn \"{1} version {2} ({3})\"
         '''.format(
             pkgNameToFunctionName(pkgName),
             pkgName,
-            pkgVersion
+            pkgVersion,
+            os.path.basename(args.configFile)
         )
 
         mainStart = '''
 
 main : IO ()
 main =
-    do  putStrLn "Test module for {0} version {1}"
+    do  putStrLn "Installed for {0} version {1} ({2}):"
         '''.format(
             pkgName,
-            pkgVersion
+            pkgVersion,
+            os.path.basename(args.configFile)
         )
 
         allImports = ''.join(imports)
