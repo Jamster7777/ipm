@@ -45,7 +45,28 @@ lookupRequiredString search parent =
 lookupOptionalString :  String
                      -> (List (String, JSON))
                      -> Maybe String
+lookupOptionalString search parent =
+  case (lookupRequiredString search parent) of
+    Left e      => Nothing
+    Right found => Just found
 
+objectsToStrings :  List JSON
+                 -> Maybe (List String)
+objectsToStrings [] = Just []
+objectsToStrings ((JString s) :: xs) =
+  case (objectsToStrings xs) of
+    Nothing => Nothing
+    Just ys => Just (s :: ys)
+objectsToStrings _ = Nothing
+
+lookupOptionalStringArray : String
+                          -> (List (String, JSON))
+                          -> Maybe (List String)
+lookupOptionalStringArray search parent =
+  do  let Just (JArray found)
+          = jLookup search parent
+          | _ => Nothing
+      objectsToStrings found
 
 ||| Lookup field in JSON object, if it cannot be found or is not a object return
 ||| a lookup error, otherwise return the value (a JSON object).
