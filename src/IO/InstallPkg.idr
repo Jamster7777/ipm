@@ -87,12 +87,13 @@ mutual
               let Right ipkg
                   =  manifestToIpkg manifest vMap
                   |  Left err => pure (Left err)
-              Right ()
-                  <- writeFile (lockFilePath n) ipkg
-                  |  Left err => pure (Left (WriteLockError (show err)))
-              Right ()
-                  <- writeToRootDir isRoot ipkg
-                  |  Left err => pure (Left (WriteLockError (show err)))
+              putStrLn $ "Writing lock to file for " ++ (show n)
+              True
+                  <- bashCommand {inDir=(pDir n)} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
+                  |  False => pure (Left (WriteLockError ("Can't write to file")))
+              -- Right ()
+              --     <- writeToRootDir isRoot ipkg
+              --     |  Left err => pure (Left (WriteLockError (show err)))
               if
                 dryRun
               then

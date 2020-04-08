@@ -75,7 +75,7 @@ for pkgName in config:
             "name": pkgName,
             "dependencies" : dependencies,
             "sourcedir" : "src",
-            "modules" : [ pkgNameToModuleName(pkgName) ],
+            "modules" : [ "Main", pkgNameToModuleName(pkgName) ],
             "main" : "Main",
             "executable" : "out"
         }
