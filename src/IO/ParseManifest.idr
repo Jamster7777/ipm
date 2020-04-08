@@ -42,6 +42,9 @@ lookupRequiredString search parent =
           | _ => Left (ManifestLookupError search)
       Right found
 
+lookupOptionalString
+
+
 ||| Lookup field in JSON object, if it cannot be found or is not a object return
 ||| a lookup error, otherwise return the value (a JSON object).
 lookupRequiredObject :  String

@@ -9,7 +9,7 @@ JObjectMatched = List (String, JSON)
 ||| Lookup a field name in a JSON object. Return nothing if it is not a JSON
 ||| object, the key can not be found, or the key is not unique.
 export
-lookup : String -> JObjectMatched -> Maybe JSON
+lookup : String -> (List (String, JSON)) -> Maybe JSON
 lookup search fields =
   do  let matches
           = filter (\x => (fst x) == search) fields
