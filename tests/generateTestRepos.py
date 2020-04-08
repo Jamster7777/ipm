@@ -76,7 +76,7 @@ for pkgName in config:
             "dependencies" : dependencies,
             "sourcedir" : "src",
             "modules" : [ pkgNameToModuleName(pkgName) ],
-            "main" : pkgNameToModuleName(pkgName),
+            "main" : "Main",
             "executable" : "out"
         }
 
@@ -112,10 +112,14 @@ main =
         allImports = ''.join(imports)
         allPrintStmts = ''.join(printStmts)
 
-        fullFile = moduleDef + allImports + funcDef + mainStart + allPrintStmts
+        pkgFile = moduleDef + funcDef
+        mainFile = "module Main\n" + allImports + mainStart + allPrintStmts
 
         with open('src/{0}.idr'.format(pkgNameToModuleName(pkgName)), 'w+') as f:
-            f.write(fullFile)
+            f.write(pkgFile)
+
+        with open('src/Main.idr', 'w+') as f:
+            f.write(mainFile)
 
 
         # Commit and tag this version
