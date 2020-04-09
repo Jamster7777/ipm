@@ -52,13 +52,15 @@ fetchDep : ManiDep -> IO (Maybe IpmError)
 fetchDep (MkManiDep n (PkgUrl u) r) =
   do  success <- (bashCommandSeq [
         ("mkdir -p " ++ (pDir n)),
-        ("git clone " ++ u ++ " " ++ (pDir n))
+        ("git clone " ++ u ++ " " ++ (pDir n)),
+        ("rm " ++ LOCK_FILE_NAME)
         ])
       pure $ boolToErr success (DepFetchError n u)
 fetchDep (MkManiDep n (PkgLocal p) r) =
   do  success <- (bashCommandSeq {inDir=p} [
         ("mkdir -p " ++ (pDir n)),
-        ("rsync -av . " ++ (pDir n))
+        ("rsync -av . " ++ (pDir n)),
+        ("rm " ++ LOCK_FILE_NAME)
         ])
       pure $ boolToErr success (DepFetchError n p)
 
