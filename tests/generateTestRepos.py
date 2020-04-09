@@ -69,7 +69,7 @@ for pkgName in config:
             "version": config[pkgName][pkgVersion][dep]
             }
             imports.append("import {0}\n".format(pkgNameToModuleName(dep)))
-            printStmts.append("{0}\n".format(pkgNameToFunctionName(dep)))
+            printStmts.append("        {0}\n".format(pkgNameToFunctionName(dep)))
 
         manifest = {
             "name": pkgName,
@@ -93,7 +93,7 @@ for pkgName in config:
 export
 {0} : IO ()
 {0} = putStrLn \"{1} version {2} ({3})\"
-        '''.format(
+'''.format(
             pkgNameToFunctionName(pkgName),
             pkgName,
             pkgVersion,
@@ -105,7 +105,7 @@ export
 main : IO ()
 main =
     do  putStrLn "Installed for {0} version {1} ({2}):"
-        '''.format(
+'''.format(
             pkgName,
             pkgVersion,
             os.path.basename(args.configFile)
