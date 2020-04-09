@@ -63,8 +63,8 @@ opt : (field : String) -> (value : Maybe String) -> String
 opt field Nothing    = ""
 opt field (Just val) = field ++ " = " ++ val ++ "\n"
 
-config : PkgConfig -> String
-config (MkPkgConfig sourcedir mods main executable opts) =
+config : PkgConfig -> (isRoot : Bool) -> String
+config (MkPkgConfig sourcedir mods main executable opts) isRoot =
   (
     (opt "sourcedir" sourcedir)
     ++
@@ -72,14 +72,14 @@ config (MkPkgConfig sourcedir mods main executable opts) =
     ++
     (opt "main" main)
     ++
-    (opt "executable" executable)
+    (if isRoot then (opt "executable" executable) else "")
     ++
     (opt "opts" opts)
   )
 
 export
-manifestToIpkg : Manifest -> SortedMap PkgName Version -> Either IpmError String
-manifestToIpkg (MkManifest n ds c) vMap =
+manifestToIpkg : Manifest -> SortedMap PkgName Version -> (isRoot : Bool) -> Either IpmError String
+manifestToIpkg (MkManifest n ds c) vMap isRoot =
   do  let Right packageRes
           = package n vMap
           | Left err => Left err
@@ -87,7 +87,7 @@ manifestToIpkg (MkManifest n ds c) vMap =
           = pkgs ds vMap
           | Left err => Left err
       let configRes
-          = config c
+          = config c isRoot
       Right (
         packageRes
         ++

@@ -29,9 +29,9 @@ invokeIdrisInstall n =
 writeToRootDir : Bool -> String -> IO (Either IpmError ())
 writeToRootDir False ipkg = pure $ Right ()
 writeToRootDir True  ipkg =
-  do  Right ()
-            <- writeFile ("./" ++ LOCK_FILE_NAME) ipkg
-            |  Left err => pure (Left (WriteLockError (show err)))
+  do  True
+            <- bashCommand {inDir="."} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
+            |  False => pure (Left (WriteLockError ("Can't write to file")))
       pure $ Right ()
 
 mutual
@@ -85,19 +85,18 @@ mutual
                   <- installDeps (getDepNames manifest) vMap {dryRun=dryRun} {verbose=verbose}
                   |  Left err => pure (Left err)
               let Right ipkg
-                  =  manifestToIpkg manifest vMap
+                  =  manifestToIpkg manifest vMap isRoot
                   |  Left err => pure (Left err)
-              putStrLn $ "Writing lock to file for " ++ (show n)
               True
                   <- bashCommand {inDir=(pDir n)} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
                   |  False => pure (Left (WriteLockError ("Can't write to file")))
-              -- Right ()
-              --     <- writeToRootDir isRoot ipkg
-              --     |  Left err => pure (Left (WriteLockError (show err)))
+              Right ()
+                  <- writeToRootDir isRoot ipkg
+                  |  Left err => pure (Left (WriteLockError (show err)))
               if
                 dryRun
               then
-                do  putStrLn $ (show n) ++ " v" ++ (show v)
+                do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
                     pure $ Right ()
               else
                 do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
