@@ -21,11 +21,11 @@ data Assignment = Derivation Term Incomp Integer
 --------------------------------------------------------------------------------
 
 ||| For a list of assignments regarding a package, if they contain a decision
-||| return false. Else return true.
-pkgHasNoDec : List Assignment -> Bool
-pkgHasNoDec [] = True
-pkgHasNoDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
-pkgHasNoDec ((Decision _ _) :: as) = False
+||| return true. Else return false.
+pkgHasDec : List Assignment -> Bool
+pkgHasDec [] = True
+pkgHasDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
+pkgHasDec ((Decision _ _) :: as) = False
 
 ||| Return true if the assignment is a decision
 isDec : Assignment -> Bool

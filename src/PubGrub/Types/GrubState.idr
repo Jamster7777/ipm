@@ -151,11 +151,16 @@ vsInPS state n =
           | Nothing  => []
       vsInPS' n vs (getPartialSolution state)
 
-||| Get a list of all packages which do not yet have a decision in the partial
-||| solution.
-psNoDec : GrubState -> List PkgName
-psNoDec state = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst (getPartialSolution state)
 
+
+||| Return true if decisions are still needed in the partial solution
+needDecisions : GrubState -> List PkgName
+needDecisions state =
+  do  let haveDecs
+          = map fst $ filter (pkgHasDec . snd) $ toList $ fst (getPartialSolution state)
+      let needDecs
+          = map fst $ toList $ getNeedDec state
+      (length haveDecs) /= (length needDecs) -- TODO I don't like this....
 
 
 --------------------------------------------------------------------------------
@@ -213,6 +218,15 @@ recordPkgDep n =
           Nothing => do setNeedDec (insert n (getDecisionLevel state) needDec)
                         pure ()
           Just _  => pure ()
+
+||| Remove the necessity for any packages which were added as dependencies after
+||| a certain decision level to have a decision in the partial solution.
+backtrackNeedDec : Integer -> StateT GrubState IO ()
+backtrackNeedDec limit =
+  do  state <- get
+      let filtered = filter (\x => (snd x) <= limit) (toList (getNeedDec state))
+      setNeedDec $ fromList filtered
+      pure ()
 
 --------------------------------------------------------------------------------
 -- Utils
