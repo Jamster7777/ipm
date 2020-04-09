@@ -24,14 +24,13 @@ invokeIdrisInstall n =
           |  False => pure (Left (InstallPkgError n))
       pure $ Right ()
 
-||| If true, write to the working directory of the root package so that the
-||| programmer can use this for building the package.
-writeToRootDir : Bool -> String -> IO (Either IpmError ())
-writeToRootDir False ipkg = pure $ Right ()
-writeToRootDir True  ipkg =
+||| If true, write the ipkg file to the given directory.
+writeToDir : (shouldWrite : Bool) -> (ipkg : String) -> (dir : String) -> IO (Either IpmError ())
+writeToDir False ipkg dir = pure $ Right ()
+writeToDir True  ipkg dir =
   do  True
-            <- bashCommand {inDir="."} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
-            |  False => pure (Left (WriteLockError ("Can't write to file")))
+            <- bashCommand {inDir=dir} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
+            |  False => pure (Left (WriteLockError ("Can't write lock to file in directory " ++ dir)))
       pure $ Right ()
 
 mutual
@@ -87,12 +86,14 @@ mutual
               let Right ipkg
                   =  manifestToIpkg manifest vMap isRoot
                   |  Left err => pure (Left err)
-              True
-                  <- bashCommand {inDir=(pDir n)} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
-                  |  False => pure (Left (WriteLockError ("Can't write to file")))
+              -- For all packages, write the lockfile to the temp directory.
               Right ()
-                  <- writeToRootDir isRoot ipkg
-                  |  Left err => pure (Left (WriteLockError (show err)))
+                  <- writeToDir True ipkg (pDir n)
+                  |  Left err => pure (Left err)
+              -- For the root package, write the lockfile to the working directory.
+              Right ()
+                  <- writeToDir isRoot ipkg "."
+                  |  Left err => pure (Left err)
               if
                 dryRun
               then
