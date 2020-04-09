@@ -24,7 +24,7 @@ data Assignment = Derivation Term Incomp Integer
 ||| return true. Else return false.
 pkgHasDec : List Assignment -> Bool
 pkgHasDec [] = True
-pkgHasDec ((Derivation _ _ _) :: as) = pkgHasNoDec as
+pkgHasDec ((Derivation _ _ _) :: as) = pkgHasDec as
 pkgHasDec ((Decision _ _) :: as) = False
 
 ||| Return true if the assignment is a decision

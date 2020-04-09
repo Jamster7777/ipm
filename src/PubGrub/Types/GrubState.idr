@@ -12,6 +12,7 @@ import Semver.Range
 import Semver.Version
 import Control.Monad.State
 import Data.SortedMap
+import Data.SortedSet
 
 %access public export
 
@@ -152,15 +153,13 @@ vsInPS state n =
       vsInPS' n vs (getPartialSolution state)
 
 
-
-||| Return true if decisions are still needed in the partial solution
-needDecisions : GrubState -> List PkgName
-needDecisions state =
+psNoDec : GrubState -> List PkgName
+psNoDec state =
   do  let haveDecs
           = map fst $ filter (pkgHasDec . snd) $ toList $ fst (getPartialSolution state)
       let needDecs
           = map fst $ toList $ getNeedDec state
-      (length haveDecs) /= (length needDecs) -- TODO I don't like this....
+      filter (\x => not (contains x (fromList haveDecs))) needDecs
 
 
 --------------------------------------------------------------------------------
