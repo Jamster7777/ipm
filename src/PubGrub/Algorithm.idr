@@ -191,6 +191,7 @@ unitPropLoop changed (i :: is) =
                                 unitPropLoop [] (conI :: is)
           (IAlm (n, ts)) =>  do pr "unitPropLoop" $ "Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
                                 addToPSMulti n $ map (\x => (Derivation (not x) i (getDecisionLevel gs))) ts
+                                prS
                                 unitPropLoop (changed ++ [n]) is
           IInc           =>  do pr "unitPropLoop" $ "Following incompatibility inconclusive:" ++ (show i)
                                 unitPropLoop changed is
