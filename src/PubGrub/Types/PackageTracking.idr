@@ -16,6 +16,8 @@ PkgVersions = SortedMap PkgName (List Version)
 Manifests : Type
 Manifests = SortedMap (PkgName, Version) Manifest
 
+NeedDec : Type
+NeedDec = SortedMap PkgName Integer
 
 --------------------------------------------------------------------------------
 -- Constructors
@@ -28,3 +30,6 @@ initPkgVersions n v =
 initManifests : PkgName -> Version -> Manifest -> Manifests
 initManifests n v m =
   insert (n, v) m empty
+
+initNeedDec : PkgName -> NeedDec
+initNeedDec n = insert n 0 empty

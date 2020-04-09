@@ -33,7 +33,14 @@ import Data.SortedMap
 |||   referenced.
 ||| - PkgName stores the name of the root package
 ||| - Bool stores whether the verbose stdout should be used for version solving.
-data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool
+||| - NeedDec stores the package names that must have a decision
+|||   for version solving to be complete. The number keeps track of the decision
+|||   level, so that when the algorithm backtracks it can clear irrelevant ones
+|||   and no longer check for decisions which aren't required anymore (e.g. it
+|||   may be that a different version of the dependant doesn't require that
+|||   package AT ALL).
+data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool NeedDec
+-- TODO make this a record ^^
 
 %name GrubState state
 
@@ -44,7 +51,7 @@ data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manif
 
 initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
 initGrubState (MkManifest n xs m) v verbose =
-  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) empty n verbose
+  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) empty n verbose (insert n 0 empty)
 
 
 --------------------------------------------------------------------------------
@@ -52,26 +59,28 @@ initGrubState (MkManifest n xs m) v verbose =
 --------------------------------------------------------------------------------
 
 getPartialSolution : GrubState -> PartialSolution
-getPartialSolution (MkGrubState ps _ _ _ _ _ _) = ps
+getPartialSolution (MkGrubState ps _ _ _ _ _ _ _) = ps
 
 getIncompMap : GrubState -> IncompMap
-getIncompMap (MkGrubState _ iMap _ _ _ _ _) = iMap
+getIncompMap (MkGrubState _ iMap _ _ _ _ _ _) = iMap
 
 getDecisionLevel : GrubState -> Integer
-getDecisionLevel (MkGrubState _ _ decLevel _ _ _ _) = decLevel
+getDecisionLevel (MkGrubState _ _ decLevel _ _ _ _ _) = decLevel
 
 getPkgVersions : GrubState -> PkgVersions
-getPkgVersions (MkGrubState _ _ _ pVersions _ _ _) = pVersions
+getPkgVersions (MkGrubState _ _ _ pVersions _ _ _ _) = pVersions
 
 getManifests : GrubState -> Manifests
-getManifests (MkGrubState _ _ _ _ mans _ _) = mans
+getManifests (MkGrubState _ _ _ _ mans _ _ _) = mans
 
 getRootPkg : GrubState -> PkgName
-getRootPkg (MkGrubState _ _ _ _ _ root _) = root
+getRootPkg (MkGrubState _ _ _ _ _ root _ _) = root
 
 isVerbose : GrubState -> Bool
-isVerbose (MkGrubState _ _ _ _ _ _ verbose) = verbose
+isVerbose (MkGrubState _ _ _ _ _ _ verbose _) = verbose
 
+getNeedDec : GrubState -> NeedDec
+getNeedDec (MkGrubState _ _ _ _ _ _ _ needDec) = needDec
 
 --------------------------------------------------------------------------------
 -- Stateful setters for GrubState
@@ -79,28 +88,33 @@ isVerbose (MkGrubState _ _ _ _ _ _ verbose) = verbose
 
 setPartialSolution : PartialSolution -> StateT GrubState IO ()
 setPartialSolution ps =
-  do  (MkGrubState _ iMap decLevel pVersions mans root verbose) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+  do  (MkGrubState _ iMap decLevel pVersions mans root verbose needDec) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
 
 setIncompMap : IncompMap -> StateT GrubState IO ()
 setIncompMap iMap =
-  do  (MkGrubState ps _ decLevel pVersions mans root verbose) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+  do  (MkGrubState ps _ decLevel pVersions mans root verbose needDec) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
 
 setDecisionLevel : Integer -> StateT GrubState IO ()
 setDecisionLevel decLevel =
-  do  (MkGrubState ps iMap _ pVersions mans root verbose) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+  do  (MkGrubState ps iMap _ pVersions mans root verbose needDec) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
 
 setPkgVersions : PkgVersions -> StateT GrubState IO ()
 setPkgVersions pVersions =
-  do  (MkGrubState ps iMap decLevel _ mans root verbose) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+  do  (MkGrubState ps iMap decLevel _ mans root verbose needDec) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
 
 setManifests : Manifests -> StateT GrubState IO ()
 setManifests mans =
-  do  (MkGrubState ps iMap decLevel pVersions _ root verbose) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose)
+  do  (MkGrubState ps iMap decLevel pVersions _ root verbose needDec) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+
+setNeedDec : NeedDec -> StateT GrubState IO ()
+setNeedDec needDec =
+  do  (MkGrubState ps iMap decLevel pVersions mans root verbose _) <- get
+      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
 
 -- No setters for root package or verbose as these shouldn't be changed during
 -- version solving.
@@ -142,8 +156,6 @@ vsInPS state n =
 psNoDec : GrubState -> List PkgName
 psNoDec state = map fst $ filter (pkgHasNoDec . snd) $ toList $ fst (getPartialSolution state)
 
-getAllPkgNames : GrubState -> List PkgName
-getAllPkgNames state = keys (getPkgVersions state)
 
 
 --------------------------------------------------------------------------------
@@ -190,6 +202,17 @@ addIs [] = pure ()
 addIs (x :: xs) = do  addI x
                       addIs xs
 
+||| Record a package dependency that needs to be fulifilled before version
+||| solving can complete. if it is already there, leave the record at the lower
+||| decision level
+recordPkgDep : PkgName -> StateT GrubState IO ()
+recordPkgDep n =
+  do  state <- get
+      let needDec = getNeedDec state
+      case (lookup n needDec) of
+          Nothing => do setNeedDec (insert n (getDecisionLevel state) needDec)
+                        pure ()
+          Just _  => pure ()
 
 --------------------------------------------------------------------------------
 -- Utils
