@@ -352,7 +352,9 @@ mainLoop next =
         then
           do  pr "mainLoop" $ "Version solving has succeeded!"
               state <- get
-              pure $ Right $ fromList $ extractDecs state
+              let decList = extractDecs state
+              pr "Final Solution" $ (show decList)
+              pure $ Right $ fromList $ decList
         else
           mainLoop newNext
         --
