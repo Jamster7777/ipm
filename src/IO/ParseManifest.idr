@@ -13,7 +13,8 @@ import Lightyear.Strings
 checkName : String -> Either IpmError PkgName
 checkName str =
   case
-    find (\x => not ((isAlphaNum x) || (x == '/') || (x == '-'))) (unpack str)
+    -- TODO put chars in list
+    find (\x => not ((isAlphaNum x) || (x == '/') || (x == '-') || (x == '_'))) (unpack str)
   of
     Just c  => Left (PkgNameError ("'" ++ (show c) ++ "' is not allowed in a package name"))
     Nothing =>
