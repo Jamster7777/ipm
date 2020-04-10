@@ -22,6 +22,12 @@ arg_parser.add_argument(
     required=True
     )
 
+arg_parser.add_argument(
+    '-v', '--verbose',
+    help='Show debug info',
+    action="store_true"
+    )
+
 args = arg_parser.parse_args(sys.argv[1:])
 
 packages_added = set()
@@ -35,6 +41,9 @@ def add_package(package, is_root=False):
         
         packages_added.add(package)
         response = requests.get('https://pub.dartlang.org/api/packages/{0}'.format(package)).json()
+        if args.verbose:
+            # print("Response from API for package '{0}':\n{1}".format(package, json.dumps(response, indent=4, sort_keys=True)))
+            print ("Fetched config for {0}".format(package))
         ipm_name = convert_to_ipm_name(package)
         output[ipm_name] = {}
         deps_to_fetch = set()
@@ -48,11 +57,17 @@ def add_package(package, is_root=False):
         
         for vObj in versions:
             version = vObj['version']
-            deps = vObj['pubspec']['dependencies']
+            try:
+                deps = vObj['pubspec']['dependencies']
+            except KeyError:
+                deps = {}
             depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in deps.items())
             output[ipm_name][version] = depsIpmNames
-            deps_to_fetch.union(deps.keys())
-
+            deps_to_fetch |= set(deps.keys())
+        
+        if args.verbose:
+            print("Deps to fetch:\n{0}".format(deps_to_fetch))
+        
         for dep in deps_to_fetch:
             add_package(dep)
 
