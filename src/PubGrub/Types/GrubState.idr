@@ -14,6 +14,9 @@ import Control.Monad.State
 import Data.SortedMap
 import Data.SortedSet
 
+-- TODO
+import Debug.Trace
+
 %access public export
 
 --------------------------------------------------------------------------------
@@ -159,8 +162,8 @@ psNoDec state =
           = map fst $ filter (pkgHasDec . snd) $ toList $ fst (getPartialSolution state)
       let needDecs
           = map fst $ toList $ getNeedDec state
-      filter (\x => not (contains x (fromList haveDecs))) needDecs
-
+      let res = filter (\x => not (contains x (fromList haveDecs))) needDecs
+      trace ("psNoDec: " ++ (show res) ++ "\nhaveDecs: " ++ (show haveDecs) ++ "\nneedDecs: " ++ (show needDecs)) res
 
 --------------------------------------------------------------------------------
 -- Special setters for GrubState
@@ -217,6 +220,13 @@ recordPkgDep n =
           Nothing => do setNeedDec (insert n (getDecisionLevel state) needDec)
                         pure ()
           Just _  => pure ()
+
+-- TODO check if there's a way to generalise this
+recordPkgDeps : List PkgName -> StateT GrubState IO ()
+recordPkgDeps [] = pure ()
+recordPkgDeps (x :: xs) =
+  do  recordPkgDep x
+      recordPkgDeps xs
 
 ||| Remove the necessity for any packages which were added as dependencies after
 ||| a certain decision level to have a decision in the partial solution.

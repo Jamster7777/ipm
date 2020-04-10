@@ -129,11 +129,15 @@ conflictResolution i isFirst =
                     addI i
                     pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    --TODO comment
+                    backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
                     pure $ Right i
               else
                 do  pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    --TODO comment
+                    backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
                     pure $ Right i
             else
@@ -250,15 +254,15 @@ fetchDepsAndVersionLists (MkManifest n ((MkManiDep pN s r) :: xs) m) =
 ||| and added to the dictionary in GrubState so version solving can use them to
 ||| select versions.
 |||
-||| Return the dependancies in the manifest as incompatibilties
+||| Return the dependancies in the manifest
 handleNewManifest :  Manifest
                   -> Version
-                  -> StateT GrubState IO (Either IpmError (List Incomp))
+                  -> StateT GrubState IO (Either IpmError Manifest)
 handleNewManifest m v =
   do  Nothing <- fetchDepsAndVersionLists m
                | Just err => pure (Left err)
       addManifest m v
-      pure $ Right $ depsToIncomps m v
+      pure $ Right $ m
 
 ||| Part of the decision making step of the algorithm.
 |||
@@ -266,8 +270,8 @@ handleNewManifest m v =
 ||| parsed, fetch it from the dictionary in GrubState. If it has not been
 ||| parsed yet, parse it and perform the requried actions in handleNewManifest.
 |||
-||| Return the dependancies in the manifest as incompatibilties
-fetchVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError (List Incomp))
+||| Return the dependancies in the manifest.
+fetchVersion : PkgName -> Version -> StateT GrubState IO (Either IpmError Manifest)
 fetchVersion n v =
   do  state <- get
       -- The manifest for this version may have already been parsed and loaded.
@@ -280,19 +284,17 @@ fetchVersion n v =
                                  | Left err => pure (Left err)
                         handleNewManifest m v
         (Just m) => do  pr "fetchVersion" $ "The manifest for this version has been parsed before, returning it."
-                        pure $ Right $ depsToIncomps m v
+                        pure $ Right $ m
 
-data DecResult = DecError IpmError
-               | DecAction PkgName
-               | DecComplete
+
 
 ||| The decision making part of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making
-decMake : StateT GrubState IO DecResult
+decMake : StateT GrubState IO (Either IpmError PkgName)
 decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
-      let Just package = minVsInPS state | Nothing => pure DecComplete
+      let Just package = minVsInPS state | Nothing => pure (Left ImpossibleError) --TODO
       pr "decMake" $ "Decision making started, choosing package= " ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed
@@ -301,12 +303,15 @@ decMake =
                         -- now guarenteed to result in a conflict down the line).
         Nothing      => do  pr "decMake" $ "No versions available in the ranges allowed by the partial solution, adding the partial solution ranges as incompatibilties"
                             addRangesAsIncomps package $ psToRanges (getPSForPkg package state)
-                            pure $ DecAction package
+                            pure $ Right package
         Just version => do  pr "decMake" $ "Fetching latest compatibile version: " ++ (show version)
-                            Right is <- fetchVersion package version
-                                      | Left err => pure (DecError err)
+                            Right m
+                                  <- fetchVersion package version
+                                  |  Left err => pure (Left err)
+                            let is = depsToIncomps m version
                             pr "decMake" $ "Incompatibilties representing dependencies being added: " ++ (show is)
                             addIs is
+                            recordPkgDeps (getDepNames m)
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
                             state <- get
                             let possibleNewPS = (addToPS' package possibleDec (getPartialSolution state))
@@ -319,12 +324,13 @@ decMake =
                               do  pr "decMake" $ "Not adding decision to the partial solution, as it would instantly satisfy one of the new incompatibilties."
                                   -- Don't add a decision to the partial solution if
                                   -- it would instantly satisfy an incompatibility.
-                                  pure $ DecAction package
+                                  pure $ Right package
                             else
                               do  pr "decMake" $ "Adding decision to the partial solution."
                                   setPartialSolution possibleNewPS
                                   setDecisionLevel ((getDecisionLevel state) + 1)
-                                  pure $ DecAction package
+
+                                  pure $ Right package
 
 ||| The main loop of the algorithm, as described at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#the-algorithm
@@ -336,14 +342,26 @@ mainLoop next =
                        | Left err => pure (Left err)
         pr "mainLoop" $ "UnitProp complete"
         prS
-        decRes <- decMake
-        case (decRes) of
-          DecError err      => pure $ Left err
-          DecAction newNext => do  pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
-                                   mainLoop newNext
-          DecComplete       => do  pr "mainLoop" $ "Version solving has succeeded!"
-                                   state <- get
-                                   pure $ Right $ fromList $ extractDecs state
+        Right newNext
+              <- decMake
+              |  Left err => pure (Left err)
+        pr "mainLoop" $ "Decision making complete, returning: " ++ (show newNext)
+        state <- get
+        if
+          (psNoDec state) == []
+        then
+          do  pr "mainLoop" $ "Version solving has succeeded!"
+              state <- get
+              pure $ Right $ fromList $ extractDecs state
+        else
+          mainLoop newNext
+        --
+        -- case (decRes) of
+        --   DecError err      => pure $ Left err
+        --   DecAction newNext => do
+        --   DecComplete       => do  pr "mainLoop" $ "Version solving has succeeded!"
+        --                            state <- get
+        --                            pure $ Right $ fromList $ extractDecs state
 
 ||| The entrypoint for the PubGrub algorithm. Returns an IpmError if version
 ||| solving fails for some reason, or the list of compatibile package versions.
