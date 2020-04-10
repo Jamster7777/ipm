@@ -1,5 +1,5 @@
 *.ibc
 out/
-python-venv/
+python-venv-ipm/
 .vscode/
 ipm
