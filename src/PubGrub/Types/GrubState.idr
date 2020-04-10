@@ -301,6 +301,7 @@ prS =
             lift $ putStrLn $ (showPS (getPartialSolution state))
             lift $ putStrLn $ (showIncomps (getIncompMap state))
             lift $ putStrLn $ "Current decision level: " ++ (show (getDecisionLevel state))
+            lift $ putStrLn $ "\nNeedDecs: " ++ (show (toList (getNeedDec state)))
             lift $ putStrLn $ PR_SEP
       else
         pure ()

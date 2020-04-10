@@ -311,7 +311,6 @@ decMake =
                             let is = depsToIncomps m version
                             pr "decMake" $ "Incompatibilties representing dependencies being added: " ++ (show is)
                             addIs is
-                            recordPkgDeps (getDepNames m)
                             let possibleDec = Decision version ((getDecisionLevel state) + 1)
                             state <- get
                             let possibleNewPS = (addToPS' package possibleDec (getPartialSolution state))
@@ -329,7 +328,7 @@ decMake =
                               do  pr "decMake" $ "Adding decision to the partial solution."
                                   setPartialSolution possibleNewPS
                                   setDecisionLevel ((getDecisionLevel state) + 1)
-
+                                  recordPkgDeps (getDepNames m)
                                   pure $ Right package
 
 ||| The main loop of the algorithm, as described at:
