@@ -40,28 +40,40 @@ def add_package(package, is_root=False):
     if not (package in packages_added):
         
         packages_added.add(package)
-        response = requests.get('https://pub.dartlang.org/api/packages/{0}'.format(package)).json()
+
+        response = requests.get('https://pub.dartlang.org/api/packages/{0}'.format(package))
+        
         if args.verbose:
-            # print("Response from API for package '{0}':\n{1}".format(package, json.dumps(response, indent=4, sort_keys=True)))
+            print("Response from API for package '{0}':\n{1}".format(package, response))
             print ("Fetched config for {0}".format(package))
+        
+
         ipm_name = convert_to_ipm_name(package)
         output[ipm_name] = {}
+
+        if response.status_code >= 400:
+            return
+        
+        response_json = response.json()
         deps_to_fetch = set()
         versions = []
         
         if is_root:
-            versions.append(response['latest'])
+            versions.append(response_json['latest'])
         else:
-            for v in response['versions']:
+            for v in response_json['versions']:
                 versions.append(v)
         
         for vObj in versions:
+            if args.verbose:
+                print(json.dumps(vObj, indent=4))
             version = vObj['version']
             try:
                 deps = vObj['pubspec']['dependencies']
-            except KeyError:
+                depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in deps.items())
+            except (KeyError, AttributeError):
                 deps = {}
-            depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in deps.items())
+                depsIpmNames = {}
             output[ipm_name][version] = depsIpmNames
             deps_to_fetch |= set(deps.keys())
         
