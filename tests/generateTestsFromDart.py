@@ -1,4 +1,6 @@
-import requests, argparse, sys
+#!/home/jamie/Documents/uni/diss/ipm/python-venv-ipm/bin/python3.7
+
+import requests, argparse, sys, json, os
 
 arg_parser = argparse.ArgumentParser(description="Convert a dart package dependency tree into a test config file for testing ipm with.")
 
@@ -11,6 +13,12 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     '-u', '--username',
     help='Username to use for test packages (dart does not include a group/user name in its package names.',
+    required=True
+    )
+
+arg_parser.add_argument(
+    '-o', '--output',
+    help='The output folder to place the config file in.',
     required=True
     )
 
@@ -45,6 +53,11 @@ def add_package(package, is_root=False):
             output[ipm_name][version] = depsIpmNames
             deps_to_fetch.union(deps.keys())
 
+        for dep in deps_to_fetch:
+            add_package(dep)
 
 output = {}
 add_package(args.pkg, is_root=True)
+
+with open(os.path.join(args.output, "7-" + args.pkg + ".json"), 'w+') as f:
+    json.dump(output, f, sort_keys=True, indent=4)
