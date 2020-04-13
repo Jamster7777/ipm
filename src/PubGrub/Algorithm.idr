@@ -36,7 +36,8 @@ import Debug.Trace
 ||| that version solving has failed. Return true if these conditions are met.
 failCondition : GrubState -> Incomp -> Bool
 failCondition state [] = True
-failCondition state ((n, (Pos _)) :: []) = (n == (getRootPkg state))
+failCondition state ((n, (Pos _)) :: xs) =
+  (n == (getRootPkg state)) && failCondition state xs
 failCondition state _ = False
 
 ||| Backtrack the partial solution to the 'satisfier', the earliest assignment
