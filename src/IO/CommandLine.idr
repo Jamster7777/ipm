@@ -27,6 +27,7 @@ data CLOpt
   | Help
 
 
+
 ActType : List String -> Type
 ActType [] = List CLOpt
 ActType (a :: as) = String -> ActType as
@@ -53,7 +54,7 @@ options = [
              (Just "Publish a new package version"),
 
             MkOpt ["--dry-run"] [] [DryRun]
-             (Just "Run command without actually installing any packages.")
+             (Just "Run command without actually installing any packages."),
 
             MkOpt ["--help", "-h", "-?"] [] [Help]
              (Just "Display help text")
@@ -76,12 +77,12 @@ optUsage d
 
 export
 versionMsg : String
-versionMsg = "Idris 2, version " ++ showVersion True version
+versionMsg = "Idris package manager (ipm) version 0.1.0"
 
 export
 usage : String
 usage = versionMsg ++ "\n" ++
-        "Usage: ipm [options]\n\n" ++
+        "Usage: ipm [command] [options]\n\n" ++
         "Available options:\n" ++
         concatMap optUsage options
 

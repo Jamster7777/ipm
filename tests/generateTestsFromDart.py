@@ -11,8 +11,8 @@ arg_parser.add_argument(
     )
 
 arg_parser.add_argument(
-    '-u', '--username',
-    help='Username to use for test packages (dart does not include a group/user name in its package names.',
+    '-n', '--testNo',
+    help='Test number to identify the generated test with.',
     required=True
     )
 
@@ -33,7 +33,7 @@ args = arg_parser.parse_args(sys.argv[1:])
 packages_added = set()
 
 def convert_to_ipm_name(name):
-    return '{0}/{1}'.format(args.username, name)
+    return 'u{0}/{1}'.format(args.testNo, name)
 
 def add_package(package, is_root=False):
     
@@ -86,5 +86,5 @@ def add_package(package, is_root=False):
 output = {}
 add_package(args.pkg, is_root=True)
 
-with open(os.path.join(args.output, "7-" + args.pkg + ".json"), 'w+') as f:
+with open(os.path.join(args.output, "{0}-{1}.json".format(args.testNo, args.pkg)), 'w+') as f:
     json.dump(output, f, sort_keys=True, indent=4)
