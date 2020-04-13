@@ -8,7 +8,7 @@ import Data.SortedMap
 
 formatVersion : Version -> String
 formatVersion v =
-  "v" ++ (pack $ replaceOn '.' '-' $ unpack $ show v)
+  "v" ++ (pack $ replaceOn '+' 'p' $ replaceOn '.' '-' $ unpack $ show v)
 
 formatName : PkgName -> String
 formatName (MkPkgName x y) =
