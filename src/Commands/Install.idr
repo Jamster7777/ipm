@@ -12,19 +12,18 @@ import Data.SortedMap
 import Semver.Version
 
 export
-install : { default "." dir : String } -> StateT Opts IO ()
-install {dir} =
+install : Opts -> IO ()
+install opts =
   do  Right manifest
-            <- lift $ parseManifest dir
+            <- parseManifest "."
             |  Left err => putStrLn (show err)
       Right version
-            <- lift $ getMostRecentVersion {dir=dir}
+            <- getMostRecentVersion {dir="."}
             |  Left err => putStrLn (show err)
-      vbs <- (get >>= verbose)
       Right solution
-            <- lift $ pubGrub manifest version vbs
+            <- pubGrub manifest version (verbose opts)
             |  Left err => putStrLn (show err)
       Right ()
-            <- installRoot manifest solution
+            <- installRoot manifest solution opts
             |  Left err => putStrLn (show err)
       pure ()
