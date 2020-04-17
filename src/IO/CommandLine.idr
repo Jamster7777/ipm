@@ -6,17 +6,17 @@ https://github.com/edwinb/Idris2/blob/59503712f39422d9cea52f051aa2eb8c01281eca/s
 -}
 
 public export
-data PkgCommand
+data IpmCommand
       = Build
       | Install
-      | PkgVersion
+      | ListVersions
       | Publish
 
 export
-Show PkgCommand where
+Show IpmCommand where
   show Build = "--build"
   show Install = "--install"
-  show PkgVersion = "--pkgVersion"
+  show ListVersions = "--list-versions"
   show Publish = "--publish"
 
 ||| CLOpt - possible command line options
@@ -26,8 +26,6 @@ data CLOpt
   | DryRun
   | Help
 
-
-
 ActType : List String -> Type
 ActType [] = List CLOpt
 ActType (a :: as) = String -> ActType as
@@ -36,28 +34,31 @@ record OptDesc where
   constructor MkOpt
   flags : List String
   argdescs : List String
-  action : ActType argdescs
+  action : CLOpt
   help : Maybe String
 
 options : List OptDesc
 options = [
-            MkOpt ["--build"] ["manifest file"] (?a)
+            MkOpt ["--build"] ["manifest file"]
              (Just "Install the packages dependencies as libraries and generate an executable"),
 
             MkOpt ["--install"] ["manifest file"] (?a)
              (Just "Install the package and its dependencies as a library"),
 
-            MkOpt ["--pkgVersion", "-pv"] [] (?a)
-             (Just "Show current version of the package"),
+            MkOpt ["--list-versions", "-lv"] [] (?a)
+             (Just "Show the list of package versions, highlighting the most recent one"),
 
-            MkOpt ["--publish", "-pv"] ["major/minor/patch"] (?a)
+            MkOpt ["--publish"] ["major/minor/patch"] (?a)
              (Just "Publish a new package version"),
 
             MkOpt ["--dry-run"] [] [DryRun]
-             (Just "Run command without actually installing any packages."),
+             (Just "Run command without actually installing any packages"),
 
             MkOpt ["--help", "-h", "-?"] [] [Help]
-             (Just "Display help text")
+             (Just "Display help text"),
+
+            MkOpt ["--verbose", "-v"] [] [Verbose]
+             (Just "Display verbose debug output")
            ]
 
 optUsage : OptDesc -> String
@@ -105,8 +106,7 @@ matchFlag d (x :: xs)
 
 findMatch : List OptDesc -> List String ->
             Either String (List CLOpt, List String)
-findMatch [] [] = Right ([], [])
-findMatch [] (f :: args) = Right ([InputFile f], args)
+findMatch [] args = Right ([], args)
 findMatch (d :: ds) args
     = case !(matchFlag d args) of
            Nothing => findMatch ds args

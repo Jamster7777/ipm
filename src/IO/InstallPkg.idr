@@ -3,6 +3,7 @@ module IO.InstallPkg
 import IO.ManifestToIpkg
 import Core.ManifestTypes
 import Core.IpmError
+import Core.Opts
 import Util.Bash
 import Util.FetchDep
 import Util.Constants
@@ -37,15 +38,14 @@ mutual
   ||| Install all given packages, short circuiting if an installation fails.
   installDeps :  List PkgName
               -> (vMap : SortedMap PkgName Version)
-              -> { default False dryRun : Bool }
-              -> { default False verbose : Bool }
+              -> Opts
               -> IO (Either IpmError ())
-  installDeps [] vMap {dryRun} {verbose} = pure $ Right ()
-  installDeps (n :: ns) vMap {dryRun} {verbose} =
+  installDeps [] vMap opts = pure $ Right ()
+  installDeps (n :: ns) vMap opts =
     do  Right ()
-            <- installPkg n False vMap {dryRun=dryRun} {verbose=verbose}
+            <- installPkg n False vMap opts
             |  Left err => pure (Left err)
-        installDeps ns vMap {dryRun=dryRun} {verbose=verbose}
+        installDeps ns vMap opts
 
   ||| Install the given package and its dependancies, using versions from the
   ||| given SortedMap. All packages required should have an entry in the map.
@@ -63,10 +63,9 @@ mutual
   installPkg :  (n : PkgName)
              -> (isRoot : Bool)
              -> (vMap : SortedMap PkgName Version)
-             -> { default False dryRun : Bool }
-             -> { default False verbose : Bool }
+             -> Opts
              -> IO (Either IpmError ())
-  installPkg n isRoot vMap {dryRun} {verbose} =
+  installPkg n isRoot vMap opts =
     do  lockExists
             <- checkFileExists $ lockFilePath n
         if
@@ -94,10 +93,10 @@ mutual
               -- Install any dependencies before invoking idris install for this
               -- package.
               Right ()
-                  <- installDeps (getDepNames manifest) vMap {dryRun=dryRun} {verbose=verbose}
+                  <- installDeps (getDepNames manifest) vMap opts
                   |  Left err => pure (Left err)
               if
-                dryRun
+                (dryRun opts)
               then
                 do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
                     pure $ Right ()
@@ -109,8 +108,7 @@ mutual
 export
 installRoot :  Manifest
             -> (vMap : SortedMap PkgName Version)
-            -> { default False dryRun : Bool }
-            -> { default False verbose : Bool }
+            -> Opts
             -> IO (Either IpmError ())
-installRoot (MkManifest n _ _) vMap {dryRun} {verbose} =
-  installPkg n True vMap {dryRun=dryRun} {verbose=verbose}
+installRoot (MkManifest n _ _) vMap opts =
+  installPkg n True vMap opts
