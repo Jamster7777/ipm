@@ -80,9 +80,6 @@ mutual
               Right manifest
                   <- checkoutManifest n v
                   |  Left err => pure (Left err)
-              Right ()
-                  <- installDeps (getDepNames manifest) vMap {dryRun=dryRun} {verbose=verbose}
-                  |  Left err => pure (Left err)
               let Right ipkg
                   =  manifestToIpkg manifest vMap isRoot
                   |  Left err => pure (Left err)
@@ -93,6 +90,11 @@ mutual
               -- For the root package, write the lockfile to the working directory.
               Right ()
                   <- writeToDir isRoot ipkg "."
+                  |  Left err => pure (Left err)
+              -- Install any dependencies before invoking idris install for this
+              -- package.
+              Right ()
+                  <- installDeps (getDepNames manifest) vMap {dryRun=dryRun} {verbose=verbose}
                   |  Left err => pure (Left err)
               if
                 dryRun
