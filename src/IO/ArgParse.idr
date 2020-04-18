@@ -1,4 +1,5 @@
 module IO.ArgParse
+import Core.IpmError
 
 public export
 data IpmCommand
@@ -7,11 +8,12 @@ data IpmCommand
       | Versions
       | Init
       | Publish
+      | MainHelp
 
 
 public export
 data BuildInstallOpt
-  = Help
+  = CmdHelp
   | Verbose
   | DryRun
 
@@ -34,5 +36,20 @@ commands = [
   MkOpt ["init"] [] Init
     (Just "Initalise an ipm project in this directory."),
   MkOpt ["publish"] [] Publish
-    (Just "Publish a new version of this package.")
+    (Just "Publish a new version of this package."),
+  MkOpt ["--help", "-h"] [] MainHelp
+    Nothing
 ]
+
+matchFlags : String -> List (OptDesc a) -> Maybe a
+matchFlags arg [] = Nothing
+matchFlags arg (x :: xs) =
+  case find (== arg) (flags x) of
+    Nothing => matchFlags arg xs
+    Just _  => Just $ action x
+
+findCommand : String -> Either IpmError IpmCommand
+findCommand arg =
+  case matchFlags arg commands of
+    Nothing  => Left $ ArgumentError $ (show arg) ++ " is not a valid ipm command. Use ipm --help to see a list of commands."
+    Just cmd => Right cmd
