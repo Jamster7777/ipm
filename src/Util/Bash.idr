@@ -60,7 +60,7 @@ errorAndExit failMessage =
 
 bashCommand :  (command : String)
             -> { default "." inDir : String }
-            -> { default True verbose : Bool }
+            -> { default False verbose : Bool }
             -> IO Bool
 bashCommand command {inDir} {verbose=True} =
   do  putStrLn $ "In directory " ++ inDir ++ ":"
@@ -70,6 +70,20 @@ bashCommand command {inDir} {verbose=True} =
 bashCommand command {inDir} {verbose=False} =
   do  exitCode <- system ("(cd " ++ inDir ++ " && " ++ command ++ ") >/dev/null 2>&1")
       pure (exitCode == 0)
+
+bashCommandErr :  (command : String)
+               -> { default "." inDir : String }
+               -> { default False verbose : Bool }
+               -> (errStr : String)
+               -> IO (Either IpmError ())
+bashCommandErr command {inDir} {verbose} errStr =
+  do  success <- bashCommand command {inDir=inDir} {verbose=verbose}
+      if
+        success
+      then
+        pure $ Right ()
+      else
+        pure $ Left $ BashError errStr
 
 ||| Execute a sequence of bash commands, return true if they all succeed and
 ||| false as soon as one fails.
@@ -84,20 +98,23 @@ bashCommandSeq (x :: xs) {inDir} =
       else
         pure False
 
-promptYesNo : (prompt : String) -> (action : IO ()) -> IO ()
-promptYesNo prompt action =
-  do  putStrLn (prompt ++ " [Y/N]")
+bashPrompt : (prompt : String) -> (defaultVal : String) -> IO String
+bashPrompt prompt defaultVal =
+  do  putStr $ prompt ++ " [" ++ defaultVal ++ "] "
       res <- getLine
-      if (evalYesNo (toLower res))
-      then action
-      else pure ()
-  where
-    evalYesNo : String -> Bool
-    evalYesNo "y"   = True
-    evalYesNo "n"   = False
-    evalYesNo "yes" = False
-    evalYesNo "no"  = False
-    evalYesNo _     = True
+      if
+        res == ""
+      then
+        pure defaultVal
+      else
+        pure res
+
+evalYesNo : String -> Bool
+evalYesNo "y"   = True
+evalYesNo "n"   = False
+evalYesNo "yes" = False
+evalYesNo "no"  = False
+evalYesNo _     = True
 
 promptNumberedSelection : (prompt : String) -> (options : Vect n String) -> IO (Fin n)
 promptNumberedSelection {n} prompt options =
