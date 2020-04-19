@@ -1,6 +1,7 @@
 module Commands.Init
 import Util.Bash
 import Util.FetchDep
+import Core.IpmError
 
 -- TODO remove
 %access public export
@@ -11,11 +12,15 @@ setupGitRepo =
       if
         exists
       then
-        pure ()
+        pure $ Right ()
       else
-        bashCommand "git init"
+        bashCommandErr
+          "git init"
+          "Could not initalise git repository"
 
-init : IO ()
+init : IO (Either IpmError ())
 init =
-  do  setupGitRepo
+  do  Right ()
+            <- setupGitRepo
+            |  Left err => pure (Left err)
       ?a
