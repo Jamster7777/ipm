@@ -8,8 +8,6 @@ import IO.ParseManifest
 import Semver.Version
 import Core.ManifestTypes
 
--- TODO remove
-%access public export
 
 setupGitRepo : IO (Either IpmError ())
 setupGitRepo =
@@ -55,7 +53,7 @@ writeManifest man =
                 |  False => pure (Left (InitError "Error writing manifest file"))
             pure $ Right ()
 
-
+export
 init : IO (Either IpmError ())
 init =
   do  group <- bashPrompt "Enter a group name for the package"
