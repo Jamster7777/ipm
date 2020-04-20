@@ -48,9 +48,9 @@ writeManifest man =
       then
         pure $ Left $ InitError $ MANIFEST_FILE_NAME ++ "already exists. Please remove it before running ipm init."
       else
-        do  True
-                <- bashCommand $ "echo \"" ++ man ++ "\" > " ++ MANIFEST_FILE_NAME
-                |  False => pure (Left (InitError "Error writing manifest file"))
+        do  Right ()
+                <- writeFile MANIFEST_FILE_NAME man
+                |  Left err => pure (Left (InitError ("Error writing manifest file: " ++ (show err))))
             pure $ Right ()
 
 export
@@ -68,7 +68,7 @@ init =
       bashCommandSeqErr
         [
           ("git add " ++ MANIFEST_FILE_NAME),
-          ("git commit -m \"ipm init (auto-generated)"),
+          ("git commit -m \"ipm init (auto-generated)\""),
           ("git tag -m \"ipm initial version\" v"  ++ (show version))
         ]
         "Error adding manifest file to git and tagging version"
