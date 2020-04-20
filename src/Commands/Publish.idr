@@ -31,6 +31,6 @@ publish : IO ()
 publish = do  Right old <- getMostRecentTag | Left err => putStrLn (show err)
               putStrLn ("Most recent version: " ++ (show old))
               new <- modifyVersion old
-              putStrLn ("new version: " ++ (show new))
+              putStrLn ("New version is: " ++ (show new))
               addTag new
               pushTag

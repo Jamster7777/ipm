@@ -127,12 +127,19 @@ bashPrompt prompt {defaultVal} =
       else
         pure res
 
-evalYesNo : String -> Bool
-evalYesNo "y"   = True
-evalYesNo "n"   = False
-evalYesNo "yes" = False
-evalYesNo "no"  = False
-evalYesNo _     = True
+evalYesNo : String -> Maybe Bool
+evalYesNo "y"   = Just True
+evalYesNo "n"   = Just False
+evalYesNo "yes" = Just False
+evalYesNo "no"  = Just False
+evalYesNo _     = Nothing
+
+bashYesNo : (prompt : String) -> IO Bool
+bashYesNo prompt =
+  do  res <- bashPrompt (prompt ++ "(y/n)")
+      case evalYesNo (toLower res) of
+        Nothing => bashYesNo prompt
+        Just b  => pure b
 
 promptNumberedSelection : (prompt : String) -> (options : Vect n String) -> IO (Fin n)
 promptNumberedSelection {n} prompt options =
