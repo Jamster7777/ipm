@@ -1,9 +1,12 @@
 module Commands.Init
+
 import Util.Bash
+import Util.Constants
 import Util.FetchDep
 import Core.IpmError
 import IO.ParseManifest
 import Semver.Version
+import Core.ManifestTypes
 
 -- TODO remove
 %access public export
@@ -31,6 +34,28 @@ getVersion =
         Left err  =>  do  putStrLn "Invalid version number."
                           getVersion
 
+createManifest : PkgName -> String
+createManifest n =
+  """{
+    \"name\" : \"""" ++ (show n) ++ """\",
+    \"dependencies\" : []
+}
+  """
+
+writeManifest : String -> IO (Either IpmError ())
+writeManifest man =
+  do  exists <- checkFileExists MANIFEST_FILE_NAME
+      if
+        exists
+      then
+        pure $ Left $ InitError $ MANIFEST_FILE_NAME ++ "already exists. Please remove it before running ipm init."
+      else
+        do  True
+                <- bashCommand $ "echo \"" ++ man ++ "\" > " ++ MANIFEST_FILE_NAME
+                |  False => pure (Left (InitError "Error writing manifest file"))
+            pure $ Right ()
+
+
 init : IO (Either IpmError ())
 init =
   do  group <- bashPrompt "Enter a group name for the package"
@@ -39,4 +64,7 @@ init =
       Right ()
             <- setupGitRepo
             |  Left err => pure (Left err)
-      ?a
+      Right ()
+            <- writeManifest $ createManifest (MkPkgName group name)
+            |  Left err => pure (Left err)
+      ?publishVersion
