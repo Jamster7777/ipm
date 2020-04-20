@@ -71,6 +71,19 @@ bashCommand command {inDir} {verbose=False} =
   do  exitCode <- system ("(cd " ++ inDir ++ " && " ++ command ++ ") >/dev/null 2>&1")
       pure (exitCode == 0)
 
+||| Execute a sequence of bash commands, return true if they all succeed and
+||| false as soon as one fails.
+bashCommandSeq : (commands : List String) -> { default "." inDir : String } -> IO Bool
+bashCommandSeq [] {inDir} = pure True
+bashCommandSeq (x :: xs) {inDir} =
+  do  success <- bashCommand {inDir=inDir} x
+      if
+        success
+      then
+        bashCommandSeq xs {inDir=inDir}
+      else
+        pure False
+
 bashCommandErr :  (command : String)
                -> { default "." inDir : String }
                -> { default False verbose : Bool }
@@ -85,18 +98,18 @@ bashCommandErr command {inDir} {verbose} errStr =
       else
         pure $ Left $ BashError errStr
 
-||| Execute a sequence of bash commands, return true if they all succeed and
-||| false as soon as one fails.
-bashCommandSeq : (commands : List String) -> { default "." inDir : String } -> IO Bool
-bashCommandSeq [] {inDir} = pure True
-bashCommandSeq (x :: xs) {inDir} =
-  do  success <- bashCommand {inDir=inDir} x
+bashCommandSeqErr :  (commands : List String)
+                  -> { default "." inDir : String }
+                  -> (errStr : String)
+                  -> IO (Either IpmError ())
+bashCommandSeqErr commands {inDir} errStr =
+  do  success <- bashCommandSeq commands {inDir=inDir}
       if
         success
       then
-        bashCommandSeq xs {inDir=inDir}
+        pure $ Right ()
       else
-        pure False
+        pure $ Left $ BashError errStr
 
 bashPrompt : (prompt : String) -> {default "" defaultVal : String} -> IO String
 bashPrompt prompt {defaultVal} =

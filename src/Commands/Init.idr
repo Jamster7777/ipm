@@ -67,4 +67,11 @@ init =
       Right ()
             <- writeManifest $ createManifest (MkPkgName group name)
             |  Left err => pure (Left err)
-      ?publishVersion
+      bashCommandSeqErr
+        [
+          ("git add " ++ MANIFEST_FILE_NAME),
+          ("git commit -m \"ipm init (auto-generated)"),
+          ("git tag -m \"ipm initial version\" v"  ++ (show version))
+        ]
+        "Error adding manifest file to git and tagging version"
+      pure $ Right ()
