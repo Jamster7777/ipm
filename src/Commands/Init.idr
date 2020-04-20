@@ -20,7 +20,9 @@ setupGitRepo =
 
 init : IO (Either IpmError ())
 init =
-  do  Right ()
+  do  group <- bashPrompt "Enter a group name for the package"
+      name  <- bashPrompt "Enter a package name for the package"
+      Right ()
             <- setupGitRepo
             |  Left err => pure (Left err)
       ?a

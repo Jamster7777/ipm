@@ -98,14 +98,19 @@ bashCommandSeq (x :: xs) {inDir} =
       else
         pure False
 
-bashPrompt : (prompt : String) -> (defaultVal : String) -> IO String
-bashPrompt prompt defaultVal =
+bashPrompt : (prompt : String) -> {default "" defaultVal : String} -> IO String
+bashPrompt prompt {defaultVal} =
   do  putStr $ prompt ++ " [" ++ defaultVal ++ "] "
       res <- getLine
       if
         res == ""
       then
-        pure defaultVal
+        if
+          defaultVal == ""
+        then
+          bashPrompt prompt
+        else
+          pure defaultVal
       else
         pure res
 
