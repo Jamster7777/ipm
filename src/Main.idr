@@ -1,6 +1,7 @@
 module Main
 
 import Commands.Init
+import Commands.Versions
 import Core.IpmError
 
 outputUsageMessage : IO ()
@@ -14,4 +15,5 @@ main = do args <- getArgs
                                   <- init
                                   |  Left err => putStrLn (show err)
                             pure ()
+            "versions" => versions
             invalid  => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
