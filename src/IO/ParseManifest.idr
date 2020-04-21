@@ -10,6 +10,7 @@ import Semver.Version
 import Semver.Range
 import Lightyear.Strings
 
+export
 checkName : String -> Either IpmError PkgName
 checkName str =
   case
