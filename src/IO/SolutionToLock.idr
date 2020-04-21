@@ -8,12 +8,12 @@ import Core.IpmError
 
 toJsonKeyValuePair : (PkgName, Version) -> String
 toJsonKeyValuePair (n, v) =
-  "    \"" ++ (show n) ++ "\" : \"" ++ (show v) ++ "\",\n"
+  "    \"" ++ (show n) ++ "\" : \"" ++ (show v) ++ "\""
 
 toJson : List (PkgName, Version) -> String
 toJson [] = ""
-toJson (x :: xs) = (toJsonKeyValuePair x) ++ (toJson xs)
-
+toJson (x :: []) = (toJsonKeyValuePair x)
+toJson (x :: xs) = (toJsonKeyValuePair x) ++ ",\n" ++ (toJson xs)
 
 export
 solutionToLock : (vMap : SortedMap PkgName Version) -> IO (Either IpmError ())
