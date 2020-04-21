@@ -19,6 +19,7 @@ data IpmError = BashError String
               | PkgNameError String
               | ManifestLookupError String
               | InitError String
+              | BuildError String
 
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)

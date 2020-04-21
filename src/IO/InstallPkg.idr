@@ -26,9 +26,8 @@ invokeIdrisInstall n =
       pure $ Right ()
 
 ||| If true, write the ipkg file to the given directory.
-writeToDir : (shouldWrite : Bool) -> (ipkg : String) -> (dir : String) -> IO (Either IpmError ())
-writeToDir False ipkg dir = pure $ Right ()
-writeToDir True  ipkg dir =
+writeToDir : (ipkg : String) -> (dir : String) -> IO (Either IpmError ())
+writeToDir ipkg dir =
   do  True
             <- bashCommand {inDir=dir} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
             |  False => pure (Left (WriteLockError ("Can't write lock to file in directory " ++ dir)))
@@ -84,11 +83,7 @@ mutual
                   |  Left err => pure (Left err)
               -- For all packages, write the lockfile to the temp directory.
               Right ()
-                  <- writeToDir True ipkg (pDir n)
-                  |  Left err => pure (Left err)
-              -- For the root package, write the lockfile to the working directory.
-              Right ()
-                  <- writeToDir isRoot ipkg "."
+                  <- writeToDir ipkg (pDir n)
                   |  Left err => pure (Left err)
               -- Install any dependencies before invoking idris install for this
               -- package.
@@ -96,13 +91,18 @@ mutual
                   <- installDeps (getDepNames manifest) vMap opts
                   |  Left err => pure (Left err)
               if
-                (dryRun opts)
+                not isRoot
               then
-                do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
-                    pure $ Right ()
+                if
+                  (dryRun opts)
+                then
+                  do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
+                      pure $ Right ()
+                else
+                  do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
+                      invokeIdrisInstall n
               else
-                do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
-                    invokeIdrisInstall n
+                pure $ Right ()
 
 ||| Entrypoint for installation code
 export

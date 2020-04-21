@@ -5,14 +5,14 @@ module Util.Constants
 MANIFEST_FILE_NAME : String
 MANIFEST_FILE_NAME = "ipm.json"
 
+BUILD_FILE_NAME : String
+BUILD_FILE_NAME = "ipm-build.ipkg"
+
 LOCK_FILE_NAME : String
-LOCK_FILE_NAME = "lock.ipkg"
+LOCK_FILE_NAME = "ipm-lock.json"
 
 TEMP_DIR : String
 TEMP_DIR = "/home/jamie/ipm-temp/"
-
-PACKAGE_INSTALL_LOCATION : String
-PACKAGE_INSTALL_LOCATION = "~/ipkg/"
 
 PUBLISH_TEMPLATE_MESSAGE_LOCATION : String
 PUBLISH_TEMPLATE_MESSAGE_LOCATION = "/home/jamie/Documents/uni/diss/ipm/assets/default-publish-message.txt"

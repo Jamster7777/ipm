@@ -53,14 +53,14 @@ fetchDep (MkManiDep n (PkgUrl u) r) =
   do  success <- (bashCommandSeq [
         ("mkdir -p " ++ (pDir n)),
         ("git clone " ++ u ++ " " ++ (pDir n)),
-        ("rm -f " ++ (pDir n) ++ LOCK_FILE_NAME)
+        ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
         ])
       pure $ boolToErr success (DepFetchError n u)
 fetchDep (MkManiDep n (PkgLocal p) r) =
   do  success <- (bashCommandSeq {inDir=p} [
         ("mkdir -p " ++ (pDir n)),
         ("rsync -av . " ++ (pDir n)),
-        ("rm -f " ++ (pDir n) ++ LOCK_FILE_NAME)
+        ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
         ])
       pure $ boolToErr success (DepFetchError n p)
 

@@ -7,6 +7,7 @@ import Core.Opts
 import Core.IpmError
 import Core.ManifestTypes
 import IO.InstallPkg
+import IO.SolutionToLock
 import Control.Monad.State
 import Data.SortedMap
 import Semver.Version
@@ -25,5 +26,8 @@ install opts =
             |  Left err => putStrLn (show err)
       Right ()
             <- installRoot manifest solution opts
+            |  Left err => putStrLn (show err)
+      Right ()
+            <- solutionToLock solution
             |  Left err => putStrLn (show err)
       pure ()
