@@ -18,12 +18,6 @@ addTag new =
     ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e v"  ++ (show new))
     "Error adding version tag"
 
-pushTag : IO (Either IpmError ())
-pushTag =
-  bashCommandErr
-    ("git push --follow-tags")
-    "Error pushing new version to remote"
-
 modifyVersion : Version -> IO Version
 modifyVersion old =
   do  i <- promptNumberedSelection "What type of release is this?" ("Major" :: "Minor" :: "Patch" :: [])
@@ -61,7 +55,5 @@ publish = do  Right old
               Right ()
                       <- addTag new
                       | Left err => putStrLn (show err)
-              Right ()
-                      <- pushTag
-                      | Left err => putStrLn (show err)
+              putStrLn "New version published locally. Run 'ipm push' to add this to the remote repository."
               pure ()
