@@ -11,7 +11,7 @@ toJsonKeyValuePair (n, v) =
   "    \"" ++ (show n) ++ "\" : \"" ++ (show v) ++ "\",\n"
 
 toJson : List (PkgName, Version) -> String
-toJson [] = ?toJson_rhs_1
+toJson [] = ""
 toJson (x :: xs) = (toJsonKeyValuePair x) ++ (toJson xs)
 
 

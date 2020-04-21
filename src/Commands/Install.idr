@@ -13,9 +13,10 @@ import Data.SortedMap
 import Semver.Version
 
 export
-install : Opts -> IO ()
-install opts =
-  do  Right manifest
+install : IO ()
+install =
+  do  let opts = MkOpts True False -- TODO remove
+      Right manifest
             <- parseManifest "."
             |  Left err => putStrLn (show err)
       Right version
