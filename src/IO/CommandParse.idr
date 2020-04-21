@@ -15,8 +15,15 @@ record CmdDesc where
 commands : List CmdDesc
 commands = [
   MkCmd "install" install
-    (Just "Install the packages dependencies and generate a lockfile.")
-
+    (Just "Install the packages dependencies and generate a lockfile."),
+  MkCmd "init" init
+    (Just "Initalise an ipm project in this directory."),
+  MkCmd "publish" publish
+    (Just "Publish a new version of this package."),
+  MkCmd "push" push
+    (Just "Push any new package version(s) to the remote repository."),
+  MkCmd "versions" versions
+    (Just "List the versions of this package, from newest to oldest.")
 ]
 
 export
