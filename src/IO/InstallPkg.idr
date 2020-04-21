@@ -21,7 +21,7 @@ invokeIdrisInstall :  PkgName
                    -> IO (Either IpmError ())
 invokeIdrisInstall n =
   do  True
-          <- bashCommand {inDir=(pDir n)} ("idris --install " ++ LOCK_FILE_NAME)
+          <- bashCommand {inDir=(pDir n)} ("idris --install " ++ BUILD_FILE_NAME)
           |  False => pure (Left (InstallPkgError n))
       pure $ Right ()
 
@@ -29,7 +29,7 @@ invokeIdrisInstall n =
 writeToDir : (ipkg : String) -> (dir : String) -> IO (Either IpmError ())
 writeToDir ipkg dir =
   do  True
-            <- bashCommand {inDir=dir} $ "echo \"" ++ ipkg ++ "\" > " ++ LOCK_FILE_NAME
+            <- bashCommand {inDir=dir} $ "echo \"" ++ ipkg ++ "\" > " ++ BUILD_FILE_NAME
             |  False => pure (Left (WriteLockError ("Can't write lock to file in directory " ++ dir)))
       pure $ Right ()
 
