@@ -113,7 +113,7 @@ bashCommandSeqErr commands {inDir} errStr =
 
 bashPrompt : (prompt : String) -> {default "" defaultVal : String} -> IO String
 bashPrompt prompt {defaultVal} =
-  do  putStr $ prompt ++ " [" ++ defaultVal ++ "] "
+  do  putStr $ prompt ++ (if defaultVal == "" then " : " else "(" ++ defaultVal ++ ") : ")
       res <- getLine
       if
         res == ""
