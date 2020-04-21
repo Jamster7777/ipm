@@ -18,7 +18,7 @@ toJson (x :: xs) = (toJsonKeyValuePair x) ++ ",\n" ++ (toJson xs)
 export
 solutionToLock : (vMap : SortedMap PkgName Version) -> IO (Either IpmError ())
 solutionToLock vMap =
-  do  let str = "{\n" ++ (toJson (toList vMap)) ++ "}"
+  do  let str = "{\n" ++ (toJson (toList vMap)) ++ "\n}"
       Right ()
               <- writeFile LOCK_FILE_NAME str
               |  Left err => pure (Left (BuildError ("Error writing lock file: " ++ (show err))))

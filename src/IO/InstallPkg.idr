@@ -11,10 +11,9 @@ import Semver.Version
 import Semver.Range
 import Data.SortedMap
 
-||| Generate the lockfile path for a package.
-lockFilePath :  PkgName
+buildFilePath :  PkgName
              -> String
-lockFilePath n = (pDir n) ++ LOCK_FILE_NAME
+buildFilePath n = (pDir n) ++ BUILD_FILE_NAME
 
 ||| Invoke the Idris installer on the lockfile for the given package name.
 invokeIdrisInstall :  PkgName
@@ -65,10 +64,10 @@ mutual
              -> Opts
              -> IO (Either IpmError ())
   installPkg n isRoot vMap opts =
-    do  lockExists
-            <- checkFileExists $ lockFilePath n
+    do  buildExists
+            <- checkFileExists $ buildFilePath n
         if
-          lockExists
+          buildExists
         then
           pure $ Right ()
         else

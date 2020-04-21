@@ -17,6 +17,7 @@ record PkgConfig where
     executable : Maybe String
     opts : Maybe String
 
+-- TODO refactor code to use the fact this is a record now
 record Manifest where
     constructor MkManifest
     name : PkgName
