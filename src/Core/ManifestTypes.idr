@@ -17,7 +17,11 @@ record PkgConfig where
     executable : Maybe String
     opts : Maybe String
 
-data Manifest = MkManifest PkgName (List ManiDep) PkgConfig
+record Manifest where
+    constructor MkManifest
+    name : PkgName
+    deps : List ManiDep
+    config : PkgConfig
 
 %name Version v
 

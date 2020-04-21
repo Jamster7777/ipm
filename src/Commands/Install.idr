@@ -29,6 +29,6 @@ install =
             <- installRoot manifest solution opts
             |  Left err => putStrLn (show err)
       Right ()
-            <- solutionToLock solution
+            <- solutionToLock (delete (name manifest) solution)
             |  Left err => putStrLn (show err)
       pure ()
