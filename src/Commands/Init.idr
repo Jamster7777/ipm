@@ -53,23 +53,29 @@ writeManifest man =
                 |  Left err => pure (Left (InitError ("Error writing manifest file: " ++ (show err))))
             pure $ Right ()
 
+tagInitialVersion : Version -> IO (Either IpmError ())
+tagInitialVersion version =
+  bashCommandSeqErr
+    [
+      ("git add " ++ MANIFEST_FILE_NAME),
+      ("git commit -m \"ipm init (auto-generated)\""),
+      ("git tag -m \"ipm initial version\" v"  ++ (show version))
+    ]
+    "Error adding manifest file to git and tagging version"
+
 export
-init : IO (Either IpmError ())
+init : IO ()
 init =
   do  group <- bashPrompt "Enter a group name for the package"
       name  <- bashPrompt "Enter a package name for the package"
       version <- getVersion
       Right ()
             <- setupGitRepo
-            |  Left err => pure (Left err)
+            |  Left err => putStrLn (show err)
       Right ()
             <- writeManifest $ createManifest (MkPkgName group name)
-            |  Left err => pure (Left err)
-      bashCommandSeqErr
-        [
-          ("git add " ++ MANIFEST_FILE_NAME),
-          ("git commit -m \"ipm init (auto-generated)\""),
-          ("git tag -m \"ipm initial version\" v"  ++ (show version))
-        ]
-        "Error adding manifest file to git and tagging version"
-      pure $ Right ()
+            |  Left err => putStrLn (show err)
+      Right ()
+            <- tagInitialVersion version
+            |  Left err => putStrLn (show err)
+      pure $ ()

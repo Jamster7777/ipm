@@ -10,6 +10,7 @@ pushTag =
     ("git push --follow-tags")
     "Error pushing new version to remote - has a remote repository been configured?"
 
+export
 push : IO ()
 push =
   do  Right ()

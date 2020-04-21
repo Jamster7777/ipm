@@ -2,6 +2,8 @@ module Main
 
 import Commands.Init
 import Commands.Versions
+import Commands.Publish
+import Commands.Push
 import Core.IpmError
 
 outputUsageMessage : IO ()
@@ -11,9 +13,8 @@ main : IO ()
 main = do args <- getArgs
           let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
           case cmd of
-            "init"    => do Right ()
-                                  <- init
-                                  |  Left err => putStrLn (show err)
-                            pure ()
+            "init"    => init
             "versions" => versions
+            "publish" => publish
+            "push" => push
             invalid  => putStrLn ("'" ++ invalid ++ "' is not a valid command.")
