@@ -6,12 +6,9 @@ import Data.SortedSet
 import Core.Opts
 
 main : IO ()
-main = do (cmdStr :: rest)
+main = do (_ :: cmdStr :: rest)
                 <- getArgs
-                |  [] => putStrLn "No command supplied. Run 'ipm --help' for a list of commands."
-          -- let Just cmdStr
-          --     = index' 1 args
-          --     | Nothing => putStrLn "No command supplied. Run 'ipm --help' for a list of commands."
+                |  _ => putStrLn "No command supplied. Run 'ipm --help' for a list of commands."
           if
             cmdStr `elem` ["-h", "--help"]
           then
