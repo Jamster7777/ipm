@@ -155,15 +155,13 @@ vsInPS state n =
           | Nothing  => []
       vsInPS' n vs (getPartialSolution state)
 
-
 psNoDec : GrubState -> List PkgName
 psNoDec state =
   do  let haveDecs
           = map fst $ filter (pkgHasDec . snd) $ toList $ fst (getPartialSolution state)
       let needDecs
           = map fst $ toList $ getNeedDec state
-      let res = filter (\x => not (contains x (fromList haveDecs))) needDecs
-      trace ("psNoDec: " ++ (show res) ++ "\nhaveDecs: " ++ (show haveDecs) ++ "\nneedDecs: " ++ (show needDecs)) res
+      filter (\x => not (contains x (fromList haveDecs))) needDecs
 
 --------------------------------------------------------------------------------
 -- Special setters for GrubState

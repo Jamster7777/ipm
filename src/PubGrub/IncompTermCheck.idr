@@ -170,7 +170,7 @@ checkIncomp i ps = checkIncomp' i ps ISat
           case (checkTerm termRanges psRanges) of
             -- A satsisfied term will not result in a change to soFar, whether
             -- it's IInc, IAlm or ISat
-            TSat => trace ("these term ranges are satisfied: " ++ (show termRanges)) $ checkIncomp' otherTerms ps soFar
+            TSat => checkIncomp' otherTerms ps soFar
             -- Only one contradicted term is required for the whole
             -- incompatibility to be condraticted.
             TCon => ICon
