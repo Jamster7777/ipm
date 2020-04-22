@@ -5,6 +5,7 @@ import Core.ManifestTypes
 import IO.SolutionToLock
 import IO.ManifestToIpkg
 import IO.ParseManifest
+import Util.Bash
 import Util.FetchDep
 import Util.Constants
 import Data.SortedMap
@@ -28,4 +29,14 @@ build =
             let Right ipkg
                   =  manifestToIpkg manifest solution True
                   |  Left err => putStrLn (show err)
-            ?a
+            Right ()
+                  <- writeFile BUILD_FILE_NAME ipkg
+                  |  Left err => putStrLn ("Error writing build file: " ++ (show err))
+            Right ()
+                  <- bashCommandSeqErr [
+                        "idris --build " ++ BUILD_FILE_NAME,
+                        "rm " ++ BUILD_FILE_NAME
+                     ]
+                     "Error building package"
+                  |  Left err => putStrLn (show err)
+            pure ()
