@@ -1,5 +1,6 @@
 module IO.CommandParse
 
+import Commands.Build
 import Commands.Install
 import Commands.Init
 import Commands.Versions
@@ -14,6 +15,8 @@ record CmdDesc where
 
 commands : List CmdDesc
 commands = [
+  MkCmd "build" build
+    (Just "Build an executable for this package."),
   MkCmd "install" install
     (Just "Install the packages dependencies and generate a lockfile."),
   MkCmd "init" init
