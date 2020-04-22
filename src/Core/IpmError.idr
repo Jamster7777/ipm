@@ -20,6 +20,7 @@ data IpmError = BashError String
               | ManifestLookupError String
               | InitError String
               | BuildError String
+              | UsageError String
 
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)
@@ -36,3 +37,4 @@ Show IpmError where
   show (PkgNameError s) = s
   show (ManifestLookupError s) = "Could not find the required manifest key '" ++ s ++ "'"
   show (InitError s) = s
+  show (UsageError s) = s

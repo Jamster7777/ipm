@@ -6,6 +6,9 @@ import Commands.Init
 import Commands.Versions
 import Commands.Publish
 import Commands.Push
+import Core.Opts
+import Core.IpmError
+import Data.SortedSet
 
 record CmdDesc where
   constructor MkCmd
@@ -16,6 +19,7 @@ record CmdDesc where
 record OptDesc where
   constructor MkOpt
   opt : List String
+  action : Opt
   help : Maybe String
 
 commands : List CmdDesc
@@ -36,11 +40,9 @@ commands = [
 
 opts : List OptDesc
 opts = [
-  MkOpt ["-h", "--help"]
-    (Just "Display help message."),
-  MkOpt ["--dry-run"]
+  MkOpt ["--dry-run"] DryRun
     (Just "Run 'ipm install' without installing any packages or overwriting the lockfile."),
-  MkOpt ["-v", "--verbose"]
+  MkOpt ["-v", "--verbose"] Verbose
     (Just "Run commands with a highly verbose output (intended for ipm developer debugging).")
 ]
 
@@ -69,32 +71,16 @@ help =
       putStrLn $ concat $ intersperse "" $ map optToHelp opts
 
 export
+matchOpts : List String -> Opts -> Either IpmError Opts
+matchOpts [] optsSoFar = Right optsSoFar
+matchOpts (arg :: args) optsSoFar =
+  case find (\x => arg `elem` (opt x)) opts of
+    Nothing => Left $ UsageError $ "'" ++ arg ++ "' is not a valid option. Run ipm --help for a list of options."
+    Just match => matchOpts args $ insert (action match) optsSoFar
+
+export
 matchCmd : String -> Maybe $ IO ()
 matchCmd str =
   case find (\x => (cmd x) == str) commands of
     Nothing => Nothing
     Just match => Just (action match)
-
-
-
--- MkOpt [(show Build)] Build
---   (Just "Build a lockfile and an executable for the package."),
--- MkOpt [(show Install)] Install
--- MkOpt [(show Versions)] Versions
---   (Just "List versions of the package, highlighting the most recent one."),
--- MkOpt [(show Init)] [] Init
---   (Just "Initalise an ipm project in this directory."),
--- MkOpt [(show Publish)] [] Publish
---   (Just "Publish a new version of this package."),
--- MkOpt [(show MainHelp), "-h", "-?"] [] MainHelp
---
--- main : IO ()
--- main = do args <- getArgs
---           let (Just cmd) = index' 1 args | Nothing => outputUsageMessage
---           case cmd of
---             "init"    => init
---             "versions" => versions
---             "publish" => publish
---             "push" => push
---             "install" => push
---             invalid  => putStrLn ("'" ++ invalid ++ "' is not a valid command.")

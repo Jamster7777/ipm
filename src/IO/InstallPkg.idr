@@ -93,7 +93,7 @@ mutual
                 not isRoot
               then
                 if
-                  (dryRun opts)
+                  (hasFlag DryRun opts)
                 then
                   do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
                       pure $ Right ()

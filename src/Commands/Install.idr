@@ -10,12 +10,13 @@ import IO.InstallPkg
 import IO.SolutionToLock
 import Control.Monad.State
 import Data.SortedMap
+import Data.SortedSet
 import Semver.Version
 
 export
 install : IO ()
 install =
-  do  let opts = MkOpts True False -- TODO remove
+  do  let opts = fromList [ Verbose ]
       Right manifest
             <- parseManifest "."
             |  Left err => putStrLn (show err)
@@ -23,7 +24,7 @@ install =
             <- getMostRecentVersion {dir="."}
             |  Left err => putStrLn (show err)
       Right solution
-            <- pubGrub manifest version (verbose opts)
+            <- pubGrub manifest version (hasFlag Verbose opts)
             |  Left err => putStrLn (show err)
       Right ()
             <- installRoot manifest solution opts
