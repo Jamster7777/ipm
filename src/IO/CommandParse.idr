@@ -13,36 +13,60 @@ record CmdDesc where
   action : IO ()
   help : Maybe String
 
-mutual
+record OptDesc where
+  constructor MkOpt
+  opt : List String
+  help : Maybe String
 
-  toHelp : CmdDesc -> String
-  toHelp desc =
-    "\n    " ++ (cmd desc) ++ "\n        " ++ (case (help desc) of
-                                              Nothing => ""
-                                              Just h  => h)
+commands : List CmdDesc
+commands = [
+  MkCmd "build" build
+    (Just "Build an executable for this package."),
+  MkCmd "install" install
+    (Just "Install the packages dependencies and generate a lockfile."),
+  MkCmd "init" init
+    (Just "Initalise an ipm project in this directory."),
+  MkCmd "publish" publish
+    (Just "Publish a new version of this package."),
+  MkCmd "push" push
+    (Just "Push any new package version(s) to the remote repository."),
+  MkCmd "versions" versions
+    (Just "List the versions of this package, from newest to oldest.")
+]
 
-  help : IO ()
-  help =
-    do  putStr "Available commands:"
-        putStrLn $ concat $ intersperse "" $ map toHelp commands
+opts : List OptDesc
+opts = [
+  MkOpt ["-h", "--help"]
+    (Just "Display help message."),
+  MkOpt ["--dry-run"]
+    (Just "Run 'ipm install' without installing any packages or overwriting the lockfile."),
+  MkOpt ["-v", "--verbose"]
+    (Just "Run commands with a highly verbose output (intended for ipm developer debugging).")
+]
 
-  commands : List CmdDesc
-  commands = [
-    MkCmd "build" build
-      (Just "Build an executable for this package."),
-    MkCmd "install" install
-      (Just "Install the packages dependencies and generate a lockfile."),
-    MkCmd "init" init
-      (Just "Initalise an ipm project in this directory."),
-    MkCmd "publish" publish
-      (Just "Publish a new version of this package."),
-    MkCmd "push" push
-      (Just "Push any new package version(s) to the remote repository."),
-    MkCmd "versions" versions
-      (Just "List the versions of this package, from newest to oldest."),
-    MkCmd "--help" help
-      (Just "Display help message.")
-  ]
+cmdToHelp : CmdDesc -> String
+cmdToHelp desc =
+  case (help desc) of
+    Nothing => ""
+    Just h  => "\n    " ++ (cmd desc) ++ "\n        " ++ h
+
+optToHelp : OptDesc -> String
+optToHelp desc =
+  case (help desc) of
+    Nothing => ""
+    Just h  => ("\n    " ++ (showSep ", " (opt desc)) ++ "\n        " ++ h)
+  where
+    showSep : String -> List String -> String
+    showSep sep [] = ""
+    showSep sep [x] = x
+    showSep sep (x :: xs) = x ++ sep ++ showSep sep xs
+
+help : IO ()
+help =
+  do  putStr "Available commands:"
+      putStrLn $ concat $ intersperse "" $ map cmdToHelp commands
+      putStr "Available opts:"
+      putStrLn $ concat $ intersperse "" $ map optToHelp opts
 
 export
 matchCmd : String -> Maybe $ IO ()
