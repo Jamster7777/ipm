@@ -1,5 +1,6 @@
 module Commands.Push
 
+import Core.Opts
 import Core.IpmError
 import Util.Bash
 
@@ -11,8 +12,8 @@ pushTag =
     "Error pushing new version to remote - has a remote repository been configured?"
 
 export
-push : IO ()
-push =
+push : Opts -> IO ()
+push opts =
   do  Right ()
               <- pushTag
               | Left err => putStrLn (show err)

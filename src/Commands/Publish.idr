@@ -1,4 +1,6 @@
 module Commands.Publish
+
+import Core.Opts
 import Core.ManifestTypes
 import Core.IpmError
 import Util.Bash
@@ -42,18 +44,19 @@ commitChanges =
         pure $ Right ()
 
 -- TODO perhaps stash changes before publishing?
-publish : IO ()
-publish = do  Right old
-                       <- getMostRecentVersion
-                       |  Left err => putStrLn (show err)
-              putStrLn ("Most recent version: " ++ (show old))
-              Right ()
-                      <- commitChanges
-                      |  Left err => putStrLn (show err)
-              new <- modifyVersion old
-              putStrLn ("New version is: " ++ (show new))
-              Right ()
-                      <- addTag new
-                      | Left err => putStrLn (show err)
-              putStrLn "New version published locally. Run 'ipm push' to add this to the remote repository."
-              pure ()
+publish : Opts -> IO ()
+publish opts =
+  do  Right old
+             <- getMostRecentVersion
+             |  Left err => putStrLn (show err)
+      putStrLn ("Most recent version: " ++ (show old))
+      Right ()
+            <- commitChanges
+            |  Left err => putStrLn (show err)
+      new <- modifyVersion old
+      putStrLn ("New version is: " ++ (show new))
+      Right ()
+            <- addTag new
+            | Left err => putStrLn (show err)
+      putStrLn "New version published locally. Run 'ipm push' to add this to the remote repository."
+      pure ()

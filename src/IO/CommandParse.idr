@@ -13,7 +13,7 @@ import Data.SortedSet
 record CmdDesc where
   constructor MkCmd
   cmd : String
-  action : IO ()
+  action : Opts -> IO ()
   help : Maybe String
 
 record OptDesc where
@@ -80,7 +80,7 @@ matchOpts (arg :: args) optsSoFar =
     Just match => matchOpts args $ insert (action match) optsSoFar
 
 export
-matchCmd : String -> Maybe $ IO ()
+matchCmd : String -> Maybe (Opts -> IO ())
 matchCmd str =
   case find (\x => (cmd x) == str) commands of
     Nothing => Nothing

@@ -1,5 +1,6 @@
 module Commands.Init
 
+import Core.Opts
 import Util.Bash
 import Util.Constants
 import Util.FetchDep
@@ -64,8 +65,8 @@ tagInitialVersion version =
     "Error adding manifest file to git and tagging version"
 
 export
-init : IO ()
-init =
+init : Opts -> IO ()
+init opts =
   do  group <- bashPrompt "Enter a group name for the package"
       name  <- bashPrompt "Enter a package name for the package"
       version <- getVersion

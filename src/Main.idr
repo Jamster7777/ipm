@@ -23,4 +23,4 @@ main = do (cmdStr :: rest)
                 let Right opts
                     = matchOpts rest empty
                     | Left err => putStrLn (show err)
-                cmd
+                cmd opts

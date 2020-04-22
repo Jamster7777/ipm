@@ -1,5 +1,6 @@
 module Commands.Install
 
+import Core.Opts
 import PubGrub.Algorithm
 import IO.ParseManifest
 import Util.FetchDep
@@ -14,10 +15,9 @@ import Data.SortedSet
 import Semver.Version
 
 export
-install : IO ()
-install =
-  do  let opts = fromList [ Verbose ]
-      Right manifest
+install : Opts -> IO ()
+install opts =
+  do  Right manifest
             <- parseManifest "."
             |  Left err => putStrLn (show err)
       Right version

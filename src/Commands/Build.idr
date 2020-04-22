@@ -1,5 +1,6 @@
 module Commands.Build
 
+import Core.Opts
 import Core.IpmError
 import Core.ManifestTypes
 import IO.SolutionToLock
@@ -12,8 +13,8 @@ import Data.SortedMap
 import Semver.Version
 
 export
-build : IO ()
-build =
+build : Opts -> IO ()
+build opts =
   do  exists <- checkFileExists LOCK_FILE_NAME
       if
         not exists
