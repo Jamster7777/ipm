@@ -63,6 +63,7 @@ optToHelp desc =
     showSep sep [x] = x
     showSep sep (x :: xs) = x ++ sep ++ showSep sep xs
 
+export
 help : IO ()
 help =
   do  putStr "Available commands:"
