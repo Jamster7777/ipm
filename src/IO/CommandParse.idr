@@ -13,21 +13,36 @@ record CmdDesc where
   action : IO ()
   help : Maybe String
 
-commands : List CmdDesc
-commands = [
-  MkCmd "build" build
-    (Just "Build an executable for this package."),
-  MkCmd "install" install
-    (Just "Install the packages dependencies and generate a lockfile."),
-  MkCmd "init" init
-    (Just "Initalise an ipm project in this directory."),
-  MkCmd "publish" publish
-    (Just "Publish a new version of this package."),
-  MkCmd "push" push
-    (Just "Push any new package version(s) to the remote repository."),
-  MkCmd "versions" versions
-    (Just "List the versions of this package, from newest to oldest.")
-]
+mutual
+
+  toHelp : CmdDesc -> String
+  toHelp desc =
+    "\n    " ++ (cmd desc) ++ "\n        " ++ (case (help desc) of
+                                              Nothing => ""
+                                              Just h  => h)
+
+  help : IO ()
+  help =
+    do  putStr "Available commands:"
+        putStrLn $ concat $ intersperse "" $ map toHelp commands
+
+  commands : List CmdDesc
+  commands = [
+    MkCmd "build" build
+      (Just "Build an executable for this package."),
+    MkCmd "install" install
+      (Just "Install the packages dependencies and generate a lockfile."),
+    MkCmd "init" init
+      (Just "Initalise an ipm project in this directory."),
+    MkCmd "publish" publish
+      (Just "Publish a new version of this package."),
+    MkCmd "push" push
+      (Just "Push any new package version(s) to the remote repository."),
+    MkCmd "versions" versions
+      (Just "List the versions of this package, from newest to oldest."),
+    MkCmd "--help" help
+      (Just "Display help message.")
+  ]
 
 export
 matchCmd : String -> Maybe $ IO ()
@@ -35,6 +50,7 @@ matchCmd str =
   case find (\x => (cmd x) == str) commands of
     Nothing => Nothing
     Just match => Just (action match)
+
 
 
 -- MkOpt [(show Build)] Build
