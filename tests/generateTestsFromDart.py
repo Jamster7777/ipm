@@ -35,51 +35,70 @@ packages_added = set()
 def convert_to_ipm_name(name):
     return 'u{0}/{1}'.format(args.testNo, name)
 
+def merge_keys(o1, o2):
+    merged = o1
+    for k, v in o2.items():
+        if not k in o1:
+            merged[k] = v
+    return merged
+
 def add_package(package, is_root=False):
-    
+
     if not (package in packages_added):
-        
+
         packages_added.add(package)
 
         response = requests.get('https://pub.dartlang.org/api/packages/{0}'.format(package))
-        
+
         if args.verbose:
             print("Response from API for package '{0}':\n{1}".format(package, response))
             print ("Fetched config for {0}".format(package))
-        
+
 
         ipm_name = convert_to_ipm_name(package)
         output[ipm_name] = {}
 
         if response.status_code >= 400:
             return
-        
+
         response_json = response.json()
         deps_to_fetch = set()
         versions = []
-        
+
         if is_root:
             versions.append(response_json['latest'])
         else:
             for v in response_json['versions']:
                 versions.append(v)
-        
+
         for vObj in versions:
             if args.verbose:
                 print(json.dumps(vObj, indent=4))
             version = vObj['version']
+
             try:
                 deps = vObj['pubspec']['dependencies']
-                depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in deps.items())
+                if deps is None:
+                    deps = {}
             except (KeyError, AttributeError):
                 deps = {}
-                depsIpmNames = {}
+
+            try:
+                dev_deps = vObj['pubspec']['dev_dependencies']
+                if dev_deps is None:
+                    dev_deps = {}
+            except (KeyError, AttributeError):
+                dev_deps = {}
+
+            all_deps = merge_keys(deps, dev_deps)
+
+            depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in all_deps.items())
             output[ipm_name][version] = depsIpmNames
-            deps_to_fetch |= set(deps.keys())
-        
+            deps_to_fetch |= set(all_deps.keys())
+
         if args.verbose:
             print("Deps to fetch:\n{0}".format(deps_to_fetch))
-        
+
         for dep in deps_to_fetch:
             add_package(dep)
 
