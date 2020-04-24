@@ -43,7 +43,9 @@ import Debug.Trace
 |||   and no longer check for decisions which aren't required anymore (e.g. it
 |||   may be that a different version of the dependant doesn't require that
 |||   package AT ALL).
-data GrubState = MkGrubState PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool NeedDec
+record GrubState where
+  constructor MkGrubState
+  partialSolution : PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool NeedDec
 -- TODO make this a record ^^
 
 %name GrubState state
