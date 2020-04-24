@@ -43,10 +43,17 @@ import Debug.Trace
 |||   and no longer check for decisions which aren't required anymore (e.g. it
 |||   may be that a different version of the dependant doesn't require that
 |||   package AT ALL).
+|||   TODO change docs here
 record GrubState where
   constructor MkGrubState
-  partialSolution : PartialSolution IncompMap Integer PkgVersions Manifests PkgName Bool NeedDec
--- TODO make this a record ^^
+  partialSolution : PartialSolution
+  incompMap : IncompMap
+  decisionLevel : Integer
+  pkgVersions : PkgVersions
+  manifests : Manifests
+  rootPkg : PkgName
+  verbose : Bool
+  needDec : NeedDec
 
 %name GrubState state
 
@@ -61,66 +68,38 @@ initGrubState (MkManifest n xs m) v verbose =
 
 
 --------------------------------------------------------------------------------
--- Getters for GrubState
---------------------------------------------------------------------------------
-
-getPartialSolution : GrubState -> PartialSolution
-getPartialSolution (MkGrubState ps _ _ _ _ _ _ _) = ps
-
-getIncompMap : GrubState -> IncompMap
-getIncompMap (MkGrubState _ iMap _ _ _ _ _ _) = iMap
-
-getDecisionLevel : GrubState -> Integer
-getDecisionLevel (MkGrubState _ _ decLevel _ _ _ _ _) = decLevel
-
-getPkgVersions : GrubState -> PkgVersions
-getPkgVersions (MkGrubState _ _ _ pVersions _ _ _ _) = pVersions
-
-getManifests : GrubState -> Manifests
-getManifests (MkGrubState _ _ _ _ mans _ _ _) = mans
-
-getRootPkg : GrubState -> PkgName
-getRootPkg (MkGrubState _ _ _ _ _ root _ _) = root
-
-isVerbose : GrubState -> Bool
-isVerbose (MkGrubState _ _ _ _ _ _ verbose _) = verbose
-
-getNeedDec : GrubState -> NeedDec
-getNeedDec (MkGrubState _ _ _ _ _ _ _ needDec) = needDec
-
---------------------------------------------------------------------------------
 -- Stateful setters for GrubState
 --------------------------------------------------------------------------------
 
 setPartialSolution : PartialSolution -> StateT GrubState IO ()
 setPartialSolution ps =
-  do  (MkGrubState _ iMap decLevel pVersions mans root verbose needDec) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+  do  state <- get
+      put $ record { partialSolution = ps } state
 
 setIncompMap : IncompMap -> StateT GrubState IO ()
 setIncompMap iMap =
-  do  (MkGrubState ps _ decLevel pVersions mans root verbose needDec) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+  do  state <- get
+      put $ record { incompMap = iMap } state
 
 setDecisionLevel : Integer -> StateT GrubState IO ()
 setDecisionLevel decLevel =
-  do  (MkGrubState ps iMap _ pVersions mans root verbose needDec) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+  do  state <- get
+      put $ record { decisionLevel = decLevel } state
 
 setPkgVersions : PkgVersions -> StateT GrubState IO ()
 setPkgVersions pVersions =
-  do  (MkGrubState ps iMap decLevel _ mans root verbose needDec) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+  do  state <- get
+      put $ record { pkgVersions = pVersions } state
 
 setManifests : Manifests -> StateT GrubState IO ()
 setManifests mans =
-  do  (MkGrubState ps iMap decLevel pVersions _ root verbose needDec) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+  do  state <- get
+      put $ record { manifests = mans } state
 
 setNeedDec : NeedDec -> StateT GrubState IO ()
-setNeedDec needDec =
-  do  (MkGrubState ps iMap decLevel pVersions mans root verbose _) <- get
-      put (MkGrubState ps iMap decLevel pVersions mans root verbose needDec)
+setNeedDec nd =
+  do  state <- get
+      put $ record { needDec = nd } state
 
 -- No setters for root package or verbose as these shouldn't be changed during
 -- version solving.
@@ -131,15 +110,15 @@ setNeedDec needDec =
 --------------------------------------------------------------------------------
 
 getI : PkgName -> GrubState -> List Incomp
-getI n state = getI' n (getIncompMap state)
+getI n state = getI' n (incompMap state)
 
 getPSForPkg : PkgName -> GrubState -> List Assignment
-getPSForPkg n state = getPSForPkg' n (getPartialSolution state)
+getPSForPkg n state = getPSForPkg' n (partialSolution state)
 
 ||| Extract a list of all decisions from the partial solution
 extractDecs : GrubState -> List (PkgName, Version)
 extractDecs state =
-  extractDecs' (snd (getPartialSolution state))
+  extractDecs' (snd (partialSolution state))
   where
     extractDecs' : List (PkgName, Assignment) -> List (PkgName, Version)
     extractDecs' [] = []
@@ -153,17 +132,17 @@ extractDecs state =
 vsInPS : GrubState -> PkgName -> List Version
 vsInPS state n =
   do  let Just vs
-          = lookup n (getPkgVersions state)
+          = lookup n (pkgVersions state)
           | Nothing  => []
-      vsInPS' n vs (getPartialSolution state)
+      vsInPS' n vs (partialSolution state)
 
 
 psNoDec : GrubState -> List PkgName
 psNoDec state =
   do  let haveDecs
-          = map fst $ filter (pkgHasDec . snd) $ toList $ fst (getPartialSolution state)
+          = map fst $ filter (pkgHasDec . snd) $ toList $ fst (partialSolution state)
       let needDecs
-          = map fst $ toList $ getNeedDec state
+          = map fst $ toList $ needDec state
       let res = filter (\x => not (contains x (fromList haveDecs))) needDecs
       trace ("psNoDec: " ++ (show res) ++ "\nhaveDecs: " ++ (show haveDecs) ++ "\nneedDecs: " ++ (show needDecs)) res
 
@@ -173,12 +152,12 @@ psNoDec state =
 
 addI : Incomp -> StateT GrubState IO ()
 addI i = do  state <- get
-             setIncompMap (addI' i (getIncompMap state))
+             setIncompMap (addI' i (incompMap state))
 
 addToPS : PkgName -> Assignment -> StateT GrubState IO ()
 addToPS n a =
   do  state <- get
-      setPartialSolution (addToPS' n a (getPartialSolution state))
+      setPartialSolution (addToPS' n a (partialSolution state))
 
 addToPSMulti : PkgName -> List Assignment -> StateT GrubState IO ()
 addToPSMulti n [] = pure ()
@@ -191,14 +170,14 @@ addToPSMulti n (x :: xs) =
 addManifest : Manifest -> Version -> StateT GrubState IO ()
 addManifest (MkManifest n xs m) v =
   do  state <- get
-      setManifests (insert (n, v) (MkManifest n xs m) (getManifests state))
+      setManifests (insert (n, v) (MkManifest n xs m) (manifests state))
 
 ||| Add a list of available versions for a given package to the dictionary of
 ||| package versions.
 addVersionList : PkgName -> List Version -> StateT GrubState IO ()
 addVersionList n vs =
   do  state <- get
-      setPkgVersions (insert n vs (getPkgVersions state))
+      setPkgVersions (insert n vs (pkgVersions state))
 
 ||| Add a set of ranges as individual positive incompatibilities
 addRangesAsIncomps : PkgName -> List Range -> StateT GrubState IO ()
@@ -217,9 +196,9 @@ addIs (x :: xs) = do  addI x
 recordPkgDep : PkgName -> StateT GrubState IO ()
 recordPkgDep n =
   do  state <- get
-      let needDec = getNeedDec state
+      let needDec = needDec state
       case (lookup n needDec) of
-          Nothing => do setNeedDec (insert n (getDecisionLevel state) needDec)
+          Nothing => do setNeedDec (insert n (decisionLevel state) needDec)
                         pure ()
           Just _  => pure ()
 
@@ -235,7 +214,7 @@ recordPkgDeps (x :: xs) =
 backtrackNeedDec : Integer -> StateT GrubState IO ()
 backtrackNeedDec limit =
   do  state <- get
-      let filtered = filter (\x => (snd x) <= limit) (toList (getNeedDec state))
+      let filtered = filter (\x => (snd x) <= limit) (toList (needDec state))
       setNeedDec $ fromList filtered
       pure ()
 
@@ -283,7 +262,7 @@ pr : String -> String -> StateT GrubState IO ()
 pr fName msg =
   do  state <- get
       if
-        (isVerbose state)
+        (verbose state)
       then
         do  let spaces = VERBOSE_FNAME_WIDTH `minus` (length fName)
             lift $ putStrLn $ "[" ++ fName ++ "]" ++ (pack (replicate spaces ' ')) ++ msg
@@ -296,14 +275,14 @@ prS : StateT GrubState IO ()
 prS =
   do  state <- get
       if
-        (isVerbose state)
+        (verbose state)
       then
         do  lift $ putStrLn $ PR_SEP
             lift $ putStrLn $ "Update on GrubState\n"
-            lift $ putStrLn $ (showPS (getPartialSolution state))
-            lift $ putStrLn $ (showIncomps (getIncompMap state))
-            lift $ putStrLn $ "Current decision level: " ++ (show (getDecisionLevel state))
-            lift $ putStrLn $ "\nNeedDecs: " ++ (show (toList (getNeedDec state)))
+            lift $ putStrLn $ (showPS (partialSolution state))
+            lift $ putStrLn $ (showIncomps (incompMap state))
+            lift $ putStrLn $ "Current decision level: " ++ (show (decisionLevel state))
+            lift $ putStrLn $ "\nNeedDecs: " ++ (show (toList (needDec state)))
             lift $ putStrLn $ PR_SEP
       else
         pure ()
