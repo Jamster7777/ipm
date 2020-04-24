@@ -37,7 +37,7 @@ import Debug.Trace
 failCondition : GrubState -> Incomp -> Bool
 failCondition state [] = True
 failCondition state ((n, (Pos _)) :: xs) =
-  (n == (getRootPkg state)) && failCondition state xs
+  (n == (rootPkg state)) && failCondition state xs
 failCondition state _ = False
 
 ||| Backtrack the partial solution to the 'satisfier', the earliest assignment
@@ -103,7 +103,7 @@ conflictResolution i isFirst =
             pure $ Left VersionSolvingFail
       else
         do  let relPS
-                = getRelevantPS (getPartialSolution state) i
+                = getRelevantPS (partialSolution state) i
             -- 'Nothing' should be impossible (for both of maybes) so it is not
             -- pattern matched. (This way an error will be thrown exposing the
             -- bug).
@@ -129,14 +129,14 @@ conflictResolution i isFirst =
                 do  pr "conflictResolution" $ "Incompatibilty is different from original input, so adding it to the partial solution."
                     addI i
                     pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
-                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (partialSolution state)
                     --TODO comment
                     backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
                     pure $ Right i
               else
                 do  pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
-                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (getPartialSolution state)
+                    setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (partialSolution state)
                     --TODO comment
                     backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
@@ -180,7 +180,7 @@ unitPropLoop : (changed : List PkgName) -> (packageIs : List Incomp) -> StateT G
 unitPropLoop changed [] = pure $ Right changed
 unitPropLoop changed (i :: is) =
   do  gs <- get
-      case (checkIncomp i (getPartialSolution gs)) of
+      case (checkIncomp i (partialSolution gs)) of
           ISat           => do  pr "unitPropLoop" $ "Following incompatibility satisfied: " ++ (show i)
                                 Right conI <- (conflictResolution i True)
                                             | Left err => pure (Left err)
@@ -195,7 +195,7 @@ unitPropLoop changed (i :: is) =
                                 -- version.
                                 unitPropLoop [] (conI :: is)
           (IAlm (n, ts)) =>  do pr "unitPropLoop" $ "Following incompatibility almost satisfied, updating partial solution: " ++ (show i)
-                                addToPSMulti n $ map (\x => (Derivation (not x) i (getDecisionLevel gs))) ts
+                                addToPSMulti n $ map (\x => (Derivation (not x) i (decisionLevel gs))) ts
                                 prS
                                 unitPropLoop (changed ++ [n]) is
           IInc           =>  do pr "unitPropLoop" $ "Following incompatibility inconclusive:" ++ (show i)
@@ -279,7 +279,7 @@ fetchVersion n v =
       -- If it hasn't, then it can be easily located in the temp install folder
       -- ipm creates for the package, using git tags to change to different
       -- versions.
-      case (lookup (n, v) (getManifests state)) of
+      case (lookup (n, v) (manifests state)) of
         Nothing  => do  pr "fetchVersion" $ "The manifest for this version has not been parsed before, fetching new manifest file with name=" ++ (show n) ++ " and version=" ++ (show v)
                         Right m <- lift $ checkoutManifest n v
                                  | Left err => pure (Left err)
@@ -312,9 +312,9 @@ decMake =
                             let is = depsToIncomps m version
                             pr "decMake" $ "Incompatibilties representing dependencies being added: " ++ (show is)
                             addIs is
-                            let possibleDec = Decision version ((getDecisionLevel state) + 1)
+                            let possibleDec = Decision version ((decisionLevel state) + 1)
                             state <- get
-                            let possibleNewPS = (addToPS' package possibleDec (getPartialSolution state))
+                            let possibleNewPS = (addToPS' package possibleDec (partialSolution state))
                             if
                               (checkNewIncompsForSat
                                 is
@@ -328,7 +328,7 @@ decMake =
                             else
                               do  pr "decMake" $ "Adding decision to the partial solution."
                                   setPartialSolution possibleNewPS
-                                  setDecisionLevel ((getDecisionLevel state) + 1)
+                                  setDecisionLevel ((decisionLevel state) + 1)
                                   recordPkgDeps (getDepNames m)
                                   pure $ Right package
 
@@ -381,5 +381,5 @@ pubGrub (MkManifest n ds ms) v verbose =
   do  Nothing <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
                | Just err => pure (Left err)
       let initialState = initGrubState (MkManifest n ds ms) v verbose
-      (result, resultState) <- runStateT (mainLoop (getRootPkg initialState)) initialState
+      (result, resultState) <- runStateT (mainLoop (rootPkg initialState)) initialState
       pure result
