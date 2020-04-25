@@ -39,20 +39,26 @@ test_no = 200
 wd = os.getcwd()
 
 
-for p in package_names:
+def ipm_test(p):
     os.chdir(wd)
     os.system('./generateTestsFromDart.py -p {0} -n {1} -o bulkDart/'.format(p, test_no))
     
-    test_name = test_no + '-' + p
     test_dir = '/media/HDD/fedora/diss-testing/ipm/' + test_name
 
     os.system('./generateTestRepos.py -c bulkDart/{0}.json -o {1}'.format(test_name, test_dir))
     os.chdir(test_dir)
     
-    ipm_time = timeit.timeit(os.system('ipm install --dry-run'))
+    return timeit.timeit(os.system('ipm install --dry-run'))
 
-    
+def pub_test(p):
+    test_dir = '/media/HDD/fedora/diss-testing/pub' + test_name
+    os.system('mkdir -p {0}'.format(test_dir))
+    os.chdir(test_dir)
 
+for p in package_names:
+    test_name = test_no + '-' + p
+    ipm_time = ipm_test(p)
+    pub_time = pub_test(p)
     test_no = test_no + 1
 
 def dart_output_to_json(output):

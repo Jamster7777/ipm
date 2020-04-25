@@ -12,7 +12,7 @@ arg_parser.add_argument(
 
 arg_parser.add_argument(
     '-n', '--testNo',
-    help='Test number to identify the generated test with.',
+    help='Test number to identify the first generated test with.',
     required=True
     )
 
