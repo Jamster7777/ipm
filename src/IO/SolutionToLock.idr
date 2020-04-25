@@ -10,7 +10,7 @@ import IO.ParseManifest
 
 toJsonKeyValuePair : (PkgName, Version) -> String
 toJsonKeyValuePair (n, v) =
-  "    \"" ++ (show n) ++ "\" : \"" ++ (show v) ++ "\""
+  "    \"" ++ (show n) ++ "\": \"" ++ (show v) ++ "\""
 
 toJson : List (PkgName, Version) -> String
 toJson [] = ""
