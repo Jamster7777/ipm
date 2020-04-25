@@ -8,15 +8,21 @@ import Core.IpmError
 import Language.JSON
 import IO.ParseManifest
 
+||| Convert an individual package name / version pair to a line of JSON which
+||| will be part of a larger file.
 toJsonKeyValuePair : (PkgName, Version) -> String
 toJsonKeyValuePair (n, v) =
   "    \"" ++ (show n) ++ "\": \"" ++ (show v) ++ "\""
 
+||| Convert a list of package name / version pairs to JSON
 toJson : List (PkgName, Version) -> String
 toJson [] = ""
 toJson (x :: []) = (toJsonKeyValuePair x)
 toJson (x :: xs) = (toJsonKeyValuePair x) ++ ",\n" ++ (toJson xs)
 
+||| Convert the version solving solution to JSON and output it as a lockfile.
+|||
+||| @vMap version solving's solution, mapping package names to versions.
 export
 solutionToLock : (vMap : SortedMap PkgName Version) -> IO (Either IpmError ())
 solutionToLock vMap =
@@ -26,7 +32,9 @@ solutionToLock vMap =
               |  Left err => pure (Left (BuildError ("Error writing lock file: " ++ (show err)))) --TODO change error
       pure $ Right ()
 
-
+||| Convert list Json fields of JSON fields to a list of package names and
+||| versions ready to be stored in a map. If the name / version strings are
+||| invalid, or there is any nested JSON, return Nothing.
 jsonToMap : List (String, JSON) -> Maybe (List (PkgName, Version))
 jsonToMap [] = Just []
 jsonToMap ((n, JString v) :: xs) =
@@ -41,6 +49,8 @@ jsonToMap ((n, JString v) :: xs) =
         Just rest => Just $ (name, version) :: rest
 jsonToMap _ = Nothing
 
+||| Read and parse the lockfile in the current directory, converting it into
+||| a SortedMap.
 export
 lockToSolution : IO (Either IpmError (SortedMap PkgName Version))
 lockToSolution =
