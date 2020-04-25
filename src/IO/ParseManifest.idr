@@ -34,44 +34,18 @@ checkName str =
                 Right (MkPkgName group package)
 
 checkRange : String -> Either IpmError Range
-checkRange str = case (parse range str) of
-                    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
-                    (Right Nothing)     => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
-                    (Right (Just v))    => Right v
+checkRange str =
+  case (parse range str) of
+    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
+    (Right Nothing)     => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
+    (Right (Just v))    => Right v
 
--- TODO
 export
 checkVersion : String -> Either IpmError Version
-checkVersion str = case (parse bareVersion str) of
-                    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
-                    (Right (v, b1, b2)) => Right v
-
-checkDependencies : (keys : List (String, JSON)) -> Either IpmError (List ManiDep)
-checkDependencies [] = Right []
-checkDependencies (key :: keys) =
-  case key of
-    -- JSON parser deals with duplicate keys
-    (id, (JObject fields)) => do  let (Right parsedName) = checkName id | Left err => Left err
-                                  let (Right dep) = checkDependency parsedName fields Nothing Nothing | Left err => Left err
-                                  case (checkDependencies keys) of
-                                    (Left err)   => Left err
-                                    (Right deps) => Right (dep :: deps)
-    (id, _) => Left (ManifestFormatError ("The dependency'" ++ id ++ "' is not defined correctly."))
-  where
-    checkDependency : (name : PkgName) -> (fields : List (String, JSON)) -> (maybeRange : Maybe Range) -> (maybePath : Maybe String) -> Either IpmError ManiDep
-    checkDependency name [] (Just version) (Just path) = Right (MkManiDep name (PkgLocal path) version)
-    checkDependency name [] Nothing _ = Left (ManifestFormatError ("The dependency '" ++ (show name) ++ "' does not specify a version."))
-    checkDependency name [] _ Nothing = Left (ManifestFormatError ("The dependency '" ++ (show name) ++ "' does not specify a local path."))
-
-    checkDependency name (("version", (JString str)) :: fields) maybeVersion maybePath =
-      do  let (Right parsedVersion) = checkRange str | Left err => Left err
-          checkDependency name fields (Just parsedVersion) maybePath
-
-    checkDependency name (("path", (JString str)) :: fields) maybeVersion maybePath =
-      checkDependency name fields maybeVersion (Just (cleanFilePath str))
-
-    -- checkDependency (("url", (JString str)) :: fields) = ?urlhandler -- TODO deal with URLs
-    checkDependency _ ((fname, _) :: _) _ _ = Left (ManifestFormatError ("'" ++ fname ++ "' is not a valid dependency field."))
+checkVersion str =
+  case (parse bareVersion str) of
+    (Left errStr)       => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version number."))
+    (Right (v, b1, b2)) => Right v
 
 ||| Lookup field in JSON object, if it cannot be found or is not a string return
 ||| a lookup error, otherwise return the value (a string).
@@ -121,6 +95,39 @@ lookupRequiredObject search parent =
           | _ => Left (ManifestLookupError search)
       Right found
 
+checkDependencies :  (keys : List (String, JSON))
+                  -> Either IpmError (List ManiDep)
+checkDependencies [] = Right []
+checkDependencies (depObj :: depObjs) =
+  do  let Right dep
+          = checkDependency depObj--checkDependency parsedName fields Nothing Nothing | Left err => Left err
+          | Left err => Left err
+      case (checkDependencies depObjs) of
+        (Left err)   => Left err
+        (Right deps) => Right (dep :: deps)
+  where
+    checkDependency :  (String, JSON)
+                    -> Either IpmError ManiDep
+    checkDependency (nameStr, (JObject fields)) =
+      do  let Right name
+              = checkName nameStr
+              | Left err => Left err
+          let Right versionStr
+              = lookupRequiredString "version" fields
+              | Left e => Left e
+          let Right version
+              = checkRange versionStr
+              | Left err => Left err
+          case lookupOptionalString "path" fields of
+            Nothing => do let Just url
+                              = lookupOptionalString "url" fields
+                              | Nothing => Left (ManifestFormatError ("The dependency '" ++ (show name) ++ "' does not specify a url/path to the package."))
+                          Right $ MkManiDep name (PkgUrl url) version
+            Just path =>  Right $ MkManiDep name (PkgLocal path) version
+
+    checkDependency (nameStr, _) =
+      Left (ManifestFormatError ("The dependency'" ++ nameStr ++ "' is not defined correctly."))
+
 constructManifest :  JSON
                   -> Either IpmError Manifest
 constructManifest (JObject parent) =
@@ -145,7 +152,8 @@ constructManifest (JObject parent) =
           (lookupOptionalString "opts" parent)
         )
       )
-
+-- The JSON parser should already have caught this error (no parent object).
+constructManifest _ = Left ImpossibleError
 
 export
 parseManifest :  (dir : String)
