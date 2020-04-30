@@ -103,7 +103,7 @@ def add_package(package, is_root=False):
             print("Deps to fetch:\n{0}".format(deps_to_fetch))
 
         for dep in deps_to_fetch:
-            if (not args.bulkPub) or (not os.path.isdir(os.path.join(args.__base__output, package))):
+            if (not args.bulkPub) or (not os.path.isdir(os.path.join(args.output, package))):
                 add_package(dep)
 
 output = {}
