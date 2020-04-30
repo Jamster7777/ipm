@@ -2,13 +2,7 @@
 
 import requests, argparse, sys, json, os, timeit
 
-arg_parser = argparse.ArgumentParser(description="Convert a dart package dependency tree into a test config file for testing ipm with.")
-
-arg_parser.add_argument(
-    '-n', '--testNo',
-    help='Test number to identify the first generated test with.',
-    required=True
-    )
+arg_parser = argparse.ArgumentParser(description="Generate several Dart tests based on the most recently published Dart packages.")
 
 arg_parser.add_argument(
     '-l', '--limit',
@@ -32,10 +26,6 @@ args = arg_parser.parse_args(sys.argv[1:])
 
 response_json = requests.get('https://pub.dartlang.org/api/packages?sort=popularity').json()
 
-
-# # TODO remove
-# package_names = [ 'implicitly_animated_reorderable_list' ]
-
 pub_path = os.path.join(args.output, 'pub')
 ipm_path = os.path.join(args.output, 'ipm')
 
@@ -50,36 +40,39 @@ for p in response_json['packages']:
     if no_generated >= limit:
         break
 
-    if p['name'] and p['latest']['pubspec'] and p['latest']['pubspec']['homepage'] and ("github.com/" in p['latest']['pubspec']['homepage']):
-        
-        if args.verbose:
-            print(p['name'] + ' has a GitHub url')
-
-        check_github = requests.get(p['latest']['pubspec']['homepage'])
-
-        if check_github.status_code < 300:
+    try:
+        p['latest']['pubspec']['dependencies']['flutter']
+    except:
+        if p['name'] and p['latest']['pubspec'] and p['latest']['pubspec']['homepage'] and ("github.com/" in p['latest']['pubspec']['homepage']):
             
             if args.verbose:
-                print(p['name'] + ' has a PUBLIC GitHub url')
+                print(p['name'] + ' has a GitHub url')
 
-            # Can only test packages with a GitHub url we can clone from, to compare against Dart
+            check_github = requests.get(p['latest']['pubspec']['homepage'])
 
-            p_pub_path = os.path.join(pub_path, p['name'])
-            os.system('git clone {0} {1}'.format(p['latest']['pubspec']['homepage'], p_pub_path))
-            
-            if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
+            if check_github.status_code < 300:
                 
                 if args.verbose:
-                    print(p['name'] + ' has a pubspec.yaml file in the parent directory')
-                    print('Generating ipm test config for this package...')
+                    print(p['name'] + ' has a PUBLIC GitHub url')
 
-                # There is a pubspec file we can test, so we'll generate an ipm test.
+                # Can only test packages with a GitHub url we can clone from, to compare against Dart
+
+                p_pub_path = os.path.join(pub_path, p['name'])
+                os.system('git clone {0} {1}'.format(p['latest']['pubspec']['homepage'], p_pub_path))
                 
-                os.system('./generateTestsFromDart.py -p {0} -o {1}'.format(p['name'], ipm_path))
+                if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
+                    
+                    if args.verbose:
+                        print(p['name'] + ' has a pubspec.yaml file in the parent directory')
+                        print('Generating ipm test config for this package...')
 
-                if args.verbose:
-                    print('Generating test git repos (that do not already exist)')
+                    # There is a pubspec file we can test, so we'll generate an ipm test.
+                    
+                    os.system('./generateTestsFromDart.py -p {0} -o {1} --bulkPub'.format(p['name'], ipm_path))
 
-                os.system('./generateTestRepos.py -c {0} -o {1} --bulkPub'.format(os.path.join(ipm_path , p['name'] + '.json'), ipm_path))
+                    if args.verbose:
+                        print('Generating test git repos (that do not already exist)')
 
-    no_generated = no_generated + 1
+                    os.system('./generateTestRepos.py -c {0} -o {1} --bulkPub'.format(os.path.join(ipm_path , p['name'] + '.json'), ipm_path))
+                    no_generated = no_generated + 1
+        

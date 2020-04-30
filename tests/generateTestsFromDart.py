@@ -22,6 +22,12 @@ arg_parser.add_argument(
     action="store_true"
     )
 
+arg_parser.add_argument(
+    '--bulkPub',
+    help='Option for bulk pub tests - place all packages in pub test directory, save time by reusing packages generated for old tests.',
+    action="store_true" 
+)
+
 args = arg_parser.parse_args(sys.argv[1:])
 
 packages_added = set()
@@ -97,7 +103,8 @@ def add_package(package, is_root=False):
             print("Deps to fetch:\n{0}".format(deps_to_fetch))
 
         for dep in deps_to_fetch:
-            add_package(dep)
+            if (not args.bulkPub) or (not os.path.isdir(os.path.join(args.__base__output, package))):
+                add_package(dep)
 
 output = {}
 add_package(args.pkg, is_root=True)
