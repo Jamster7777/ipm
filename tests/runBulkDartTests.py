@@ -33,10 +33,11 @@ args = arg_parser.parse_args(sys.argv[1:])
 
 def dart_output_to_json(output):
     json = {}
-    lines = output.splitlines()
+    lines = output.decode("utf-8").splitlines()
     for l in lines:
         parts = l.split()
-        json["pub/" + parts[1]] = parts[2]
+        if parts[0] == '+':
+            json["pub/" + parts[1]] = parts[2]
 
     return json
 
