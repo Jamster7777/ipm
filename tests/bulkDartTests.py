@@ -11,6 +11,12 @@ arg_parser.add_argument(
     )
 
 arg_parser.add_argument(
+    '-l', '--limit',
+    help='Number of tests to generate',
+    required=True
+    )
+
+arg_parser.add_argument(
     '-o', '--output',
     help='The output folder to place tests in',
     required=True
@@ -24,7 +30,7 @@ arg_parser.add_argument(
 
 args = arg_parser.parse_args(sys.argv[1:])
 
-response_json = requests.get('https://pub.dartlang.org/api/packages/').json()
+response_json = requests.get('https://pub.dartlang.org/api/packages?sort=popularity').json()
 
 
 # # TODO remove
@@ -36,30 +42,45 @@ ipm_path = os.path.join(args.output, 'ipm')
 os.system('mkdir -p {0}'.format(pub_path))
 os.system('mkdir -p {0}'.format(ipm_path))
 
-def clone_repo(test_dir, url):
-    
-    return 
-
-test_no = 200
+limit = int(args.limit)
+no_generated = 0
+test_no = int(args.testNo)
 
 for p in response_json['packages']:
-    
-    if p['name'] and p['pubspec']['homepage'] and ("github.com/" in p['pubspec']['homepage']):
+
+    if no_generated >= limit:
+        break
+
+    if p['name'] and p['latest']['pubspec'] and p['latest']['pubspec']['homepage'] and ("github.com/" in p['latest']['pubspec']['homepage']):
         
-        # Can only test packages with a GitHub url we can clone from, to compare against Dart
+        if args.verbose:
+            print(p['name'] + ' has a GitHub url')
 
-        p_folder = '{0}-{1}'.format(test_no, p['name'])
-        p_pub_path = os.path.join(pub_path, p_folder)
-        os.system('git clone {0} {1}'.format(p['pubspec']['homepage'], p_pub_path))
-        
-        if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
-            
-            # There is a pubspec file we can test, so we'll generate an ipm test.
-            
-            
+        check_github = requests.get(p['latest']['pubspec']['homepage'])
 
-    test_no = test_no + 1
+        if check_github.status_code < 300:
+            
+            if args.verbose:
+                print(p['name'] + ' has a PUBLIC GitHub url')
 
+            # Can only test packages with a GitHub url we can clone from, to compare against Dart
+
+            p_label = '{0}-{1}'.format(test_no + no_generated, p['name'])
+            p_pub_path = os.path.join(pub_path, p_label)
+            os.system('git clone {0} {1}'.format(p['latest']['pubspec']['homepage'], p_pub_path))
+            
+            if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
+                
+                if args.verbose:
+                    print(p['name'] + ' has a pubspec.yaml file in the parent directory')
+                    print('Generating ipm tests for this package...')
+
+                # There is a pubspec file we can test, so we'll generate an ipm test.
+                
+                os.system('./generateTestsFromDart.py -p {0} -n {1} -o {2}'.format(p['name'], test_no + no_generated, ipm_path))
+                os.system('./generateTestRepos.py -c {0} -o {1}'.format(os.path.join(ipm_path , p_label + '.json'), ipm_path))
+
+    no_generated = no_generated + 1
 
 
 
