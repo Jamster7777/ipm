@@ -44,7 +44,6 @@ os.system('mkdir -p {0}'.format(ipm_path))
 
 limit = int(args.limit)
 no_generated = 0
-test_no = int(args.testNo)
 
 for p in response_json['packages']:
 
@@ -65,58 +64,22 @@ for p in response_json['packages']:
 
             # Can only test packages with a GitHub url we can clone from, to compare against Dart
 
-            p_label = '{0}-{1}'.format(test_no + no_generated, p['name'])
-            p_pub_path = os.path.join(pub_path, p_label)
+            p_pub_path = os.path.join(pub_path, p['name'])
             os.system('git clone {0} {1}'.format(p['latest']['pubspec']['homepage'], p_pub_path))
             
             if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
                 
                 if args.verbose:
                     print(p['name'] + ' has a pubspec.yaml file in the parent directory')
-                    print('Generating ipm tests for this package...')
+                    print('Generating ipm test config for this package...')
 
                 # There is a pubspec file we can test, so we'll generate an ipm test.
                 
-                os.system('./generateTestsFromDart.py -p {0} -n {1} -o {2}'.format(p['name'], test_no + no_generated, ipm_path))
-                os.system('./generateTestRepos.py -c {0} -o {1}'.format(os.path.join(ipm_path , p_label + '.json'), ipm_path))
+                os.system('./generateTestsFromDart.py -p {0} -o {1}'.format(p['name'], ipm_path))
+
+                if args.verbose:
+                    print('Generating test git repos (that do not already exist)')
+
+                os.system('./generateTestRepos.py -c {0} -o {1} --bulkPub'.format(os.path.join(ipm_path , p['name'] + '.json'), ipm_path))
 
     no_generated = no_generated + 1
-
-
-
-# wd = os.getcwd()
-
-
-# def ipm_test(p):
-#     os.chdir(wd)
-#     os.system('./generateTestsFromDart.py -p {0} -n {1} -o bulkDart/'.format(p, test_no))
-    
-#     test_dir = '/media/HDD/fedora/diss-testing/ipm/' + test_name
-
-#     os.system('./generateTestRepos.py -c bulkDart/{0}.json -o {1}'.format(test_name, test_dir))
-#     os.chdir(test_dir)
-    
-#     return timeit.timeit(os.system('ipm install --dry-run'))
-
-# def pub_test(p):
-#     test_dir = '/media/HDD/fedora/diss-testing/pub' + test_name
-#     os.system('mkdir -p {0}'.format(test_dir))
-#     os.chdir(test_dir)
-
-# for p in package_names:
-#     test_name = test_no + '-' + p
-#     ipm_time = ipm_test(p)
-#     pub_time = pub_test(p)
-#     test_no = test_no + 1
-
-# def dart_output_to_json(output):
-#     json = {}
-#     lines = output.splitlines()
-#     for l in lines:
-#         parts = l.split()
-#         json["u11/" + parts[1]] = parts[2]
-
-#     return json
-
-
-# print(json.dumps(dart_output_to_json(str), sort_keys=True, indent=4))

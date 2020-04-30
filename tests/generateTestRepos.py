@@ -55,7 +55,7 @@ def pkgNameToFunctionName(pkgName):
 for pkgName in config:
 
 
-    if (not args.bulkPub) or not os.path.isdir(pkgName):
+    if (not args.bulkPub) or (not os.path.isdir(os.path.join(output, pkgName))):
         os.chdir(output)
         os.system('mkdir -p {0}/src'.format(pkgName))
         os.chdir(pkgName)
