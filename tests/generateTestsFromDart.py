@@ -11,12 +11,6 @@ arg_parser.add_argument(
     )
 
 arg_parser.add_argument(
-    '-n', '--testNo',
-    help='Test number to identify the first generated test with.',
-    required=True
-    )
-
-arg_parser.add_argument(
     '-o', '--output',
     help='The output folder to place the config file in.',
     required=True
@@ -33,7 +27,7 @@ args = arg_parser.parse_args(sys.argv[1:])
 packages_added = set()
 
 def convert_to_ipm_name(name):
-    return 'u{0}/{1}'.format(args.testNo, name)
+    return 'pub/{0}'.format(name)
 
 def merge_keys(o1, o2):
     merged = o1
@@ -108,5 +102,5 @@ def add_package(package, is_root=False):
 output = {}
 add_package(args.pkg, is_root=True)
 
-with open(os.path.join(args.output, "{0}-{1}.json".format(args.testNo, args.pkg)), 'w+') as f:
+with open(os.path.join(args.output, "{0}.json".format(args.pkg)), 'w+') as f:
     json.dump(output, f, sort_keys=True, indent=4)
