@@ -19,7 +19,7 @@ import Semver.Version
 export
 install : Opts -> IO ()
 install opts =
-  do  bashCommand $ "rm -rf -f " ++ TEMP_DIR
+  do  --bashCommand $ "rm -rf -f " ++ TEMP_DIR
       Right manifest
             <- parseManifest "."
             |  Left err => putStrLn (show err)
@@ -35,5 +35,5 @@ install opts =
       Right ()
             <- solutionToLock solution
             |  Left err => putStrLn (show err)
-      bashCommand $ "rm -rf -f " ++ TEMP_DIR
+      --bashCommand $ "rm -rf -f " ++ TEMP_DIR
       pure ()

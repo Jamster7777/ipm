@@ -9,9 +9,6 @@ import IO.ParseManifest
 
 %access public export
 
--- makeTempDir : IO ()
--- makeTempDir = bash "mkdir /ipm-temp"
-
 parseTag : String -> Either IpmError Version
 parseTag tagStr =
   if (length tagStr) > 0 && (strHead tagStr) == 'v' then
@@ -19,16 +16,8 @@ parseTag tagStr =
   else
     Left (TagError (tagStr ++ " is an invalid tag."))
 
-cd : String -> IO ()
-cd dir = do  success <- bashCommand ("cd " ++ dir)
-             pure ()
-
 pDir : PkgName -> String
 pDir n = TEMP_DIR ++ (show n) ++ "/"
-
-rmTempDir : IO ()
-rmTempDir = do  success <- bashCommand ("rm -rf " ++ TEMP_DIR)
-                pure ()
 
 ||| check if a directory exists
 checkDirExists : String -> IO Bool
@@ -38,31 +27,25 @@ checkDirExists path = bashCommand $ "[ -d " ++ path ++ " ]"
 checkFileExists : String -> IO Bool
 checkFileExists path = bashCommand $ "[ -f " ++ path ++ " ]"
 
-||| Convert a false value to the given error, a true value to nothing. Used to
-||| avoid repeated code.
-boolToErr : Bool -> IpmError -> Maybe IpmError
-boolToErr True  e = Nothing
-boolToErr False e = Just e
-
 ||| Fetch the given dependancy. Make a directory for the repository within the
 ||| temporary ipm install directory. If the source is a git URL, then clone the
 ||| repo there. If it is a filepath, then copy the files into the temporary
 ||| folder for easy access later.
-fetchDep : ManiDep -> IO (Maybe IpmError)
+fetchDep : ManiDep -> IO (Either IpmError ())
 fetchDep (MkManiDep n (PkgUrl u) r) =
-  do  success <- (bashCommandSeq [
+  bashCommandSeqErr [
         ("mkdir -p " ++ (pDir n)),
         ("git clone " ++ u ++ " " ++ (pDir n)),
         ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
-        ])
-      pure $ boolToErr success (DepFetchError n u)
+        ]
+        ("Cannot fetch package " ++ (show n) ++ " from " ++ u)
 fetchDep (MkManiDep n (PkgLocal p) r) =
-  do  success <- (bashCommandSeq {inDir=p} [
+  bashCommandSeqErr {inDir=p} [
         ("mkdir -p " ++ (pDir n)),
         ("rsync -av . " ++ (pDir n)),
         ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
-        ])
-      pure $ boolToErr success (DepFetchError n p)
+      ]
+      ("Cannot fetch package " ++ (show n) ++ " from " ++ p)
 
 listVersions' : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions' {dir} =

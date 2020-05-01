@@ -239,10 +239,12 @@ fetchDepsAndVersionLists (MkManifest n ((MkManiDep pN s r) :: xs) m) =
             fetchDepsAndVersionLists (MkManifest n xs m)
       else
         do  pr "fetchDepsAndVersionLists" $ "Fetching new package from source: " ++ (show pN)
-            Nothing  <- lift $ fetchDep (MkManiDep pN s r)
-                      | Just err => pure (Just err)
-            Right vs <- lift $ listVersions pN
-                      | Left err => pure (Just err)
+            Right ()
+                  <- lift $ fetchDep (MkManiDep pN s r)
+                  |  Left err => pure (Just err)
+            Right vs
+                  <- lift $ listVersions pN
+                  |  Left err => pure (Just err)
             addVersionList pN vs
             fetchDepsAndVersionLists (MkManifest n xs m)
 
@@ -357,13 +359,6 @@ mainLoop next =
               pure $ Right $ fromList $ decList
         else
           mainLoop newNext
-        --
-        -- case (decRes) of
-        --   DecError err      => pure $ Left err
-        --   DecAction newNext => do
-        --   DecComplete       => do  pr "mainLoop" $ "Version solving has succeeded!"
-        --                            state <- get
-        --                            pure $ Right $ fromList $ extractDecs state
 
 ||| The entrypoint for the PubGrub algorithm. Returns an IpmError if version
 ||| solving fails for some reason, or the list of compatibile package versions.
@@ -378,8 +373,9 @@ mainLoop next =
 export
 pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (SortedMap PkgName Version))
 pubGrub (MkManifest n ds ms) v verbose =
-  do  Nothing <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
-               | Just err => pure (Left err)
+  do  Right ()
+            <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
+            |  Left err => pure (Left err)
       let initialState = initGrubState (MkManifest n ds ms) v verbose
       (result, resultState) <- runStateT (mainLoop (rootPkg initialState)) initialState
       pure result

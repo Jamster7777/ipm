@@ -175,7 +175,7 @@ parseManifest :  (dir : String)
 parseManifest dir =
   do  Right str
             <- readFile ((cleanFilePath dir) ++ MANIFEST_FILE_NAME)
-            | Left fileError => pure (Left (ManifestFormatError ("Error: reading " ++ MANIFEST_FILE_NAME ++ " file at the given path: " ++ (show fileError))))
+            | Left fileError => pure (Left (ManifestFormatError ("Reading " ++ ((cleanFilePath dir) ++ MANIFEST_FILE_NAME) ++ " file: " ++ (show fileError))))
       let Just json
           = parse str
           | Nothing => pure (Left (ManifestFormatError ("Error: Invalid JSON format in " ++ MANIFEST_FILE_NAME)))
