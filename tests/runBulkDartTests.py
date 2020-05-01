@@ -31,7 +31,7 @@ arg_parser.add_argument(
 args = arg_parser.parse_args(sys.argv[1:])
 
 
-def dart_output_to_json(output):
+def pub_output_to_json(output):
     json = {}
     lines = output.splitlines()
     for l in lines:
@@ -63,9 +63,11 @@ def run_test_for_pkg_man(pkg, ipm=True):
             if ipm:
                 f.write(result)
             else:
-                json.dump(dart_output_to_json(result), f, sort_keys=True, indent=4)
+                json.dump(pub_output_to_json(result), f, sort_keys=True, indent=4)
 
     return success, run_time, result
+
+original_dir = os.getcwd()
 
 pub_path = os.path.join(args.input, 'pub')
 ipm_path = os.path.join(args.input, 'ipm')
@@ -92,24 +94,28 @@ for pkg in pkgs:
         .decode("utf-8") \
         .splitlines()[-2]
 
+    os.chdir(original_dir)
+
     if pub_success and ipm_success:
         
-        pub_json = json.loads(pub_result)
+        pub_json = pub_output_to_json(pub_result)
         ipm_json = json.loads(ipm_result)
 
         # ipm outputs the root package version from version solving too, remove this.
         del ipm_json['pub/' + pkg]
         
         equal_sols = json.dumps(pub_json, sort_keys=True, indent=4) == json.dumps(ipm_json, sort_keys=True, indent=4)
+    else:
+        equal_sols = False
 
-        with open(args.csv, 'a+') as f:
-            writer = csv.writer(f, delimiter=',')
-            writer.writerow([
-                pkg, 
-                version,
-                ('N', 'Y')[pub_success],
-                pub_run_time,
-                ('N', 'Y')[ipm_success],
-                ipm_run_time,
-                ('N', 'Y')[equal_sols]
-            ])
+    with open(args.csv, 'a+') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow([
+            pkg, 
+            version,
+            ('N', 'Y')[pub_success],
+            pub_run_time,
+            ('N', 'Y')[ipm_success],
+            ipm_run_time,
+            ('N', 'Y')[equal_sols]
+        ])
