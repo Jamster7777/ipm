@@ -41,11 +41,11 @@ fetchDep (MkManiDep n (PkgUrl u) r) =
         ("Cannot fetch package " ++ (show n) ++ " from " ++ u)
 fetchDep (MkManiDep n (PkgLocal p) r) =
   bashCommandSeqErr {inDir=p} [
-        ("mkdir -p " ++ (pDir n)),
-        ("rsync -av . " ++ (pDir n)),
-        ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
-      ]
-      ("Cannot fetch package " ++ (show n) ++ " from " ++ p)
+          ("mkdir -p " ++ (pDir n)),
+          ("rsync -av . " ++ (pDir n)),
+          ("rm -f " ++ (pDir n) ++ BUILD_FILE_NAME)
+        ]
+        ("Cannot fetch package " ++ (show n) ++ " from " ++ p)
 
 listVersions' : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions' {dir} =
