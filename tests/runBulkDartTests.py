@@ -33,7 +33,7 @@ args = arg_parser.parse_args(sys.argv[1:])
 
 def dart_output_to_json(output):
     json = {}
-    lines = output.decode("utf-8").splitlines()
+    lines = output.splitlines()
     for l in lines:
         parts = l.split()
         if parts[0] == '+':
@@ -51,18 +51,26 @@ pkgs = os.listdir(pub_path)
 for p_dir in pkgs:
     os.chdir(pub_path)
     os.chdir(p_dir)
-
+    os.system('rm -f pubspec.lock')
     start_time = time.time()
-    pub_result = subprocess.check_output('pub get --dry-run', shell=True)
+    pub_result = subprocess.check_output('pub get --dry-run', shell=True).decode("utf-8")
     pub_time = time.time() - start_time
+
+    
 
     os.system('mkdir -p {0}'.format(os.path.join(args.output, p_dir)))
 
-    with open(os.path.join(args.output, p_dir, 'pub.json'), 'w+') as f:
-        json.dump(dart_output_to_json(pub_result), f, sort_keys=True, indent=4)
+    with open(os.path.join(args.output, p_dir, 'pub.log'), 'w+') as f:
+        f.write(pub_result)
+        # json.dump(dart_output_to_json(pub_result), f, sort_keys=True, indent=4)
 
     os.chdir(ipm_path)
     os.chdir('pub/')
     os.chdir(p_dir)
 
-    os.system('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run > {0}'.format(os.path.join(args.output, p_dir, 'ipm.json')))
+
+    start_time = time.time()
+    ipm_result = subprocess.check_output('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run')
+    ipm_time = time.time() - start_time
+
+          # os.path.join(args.output, p_dir, 'ipm.json'))
