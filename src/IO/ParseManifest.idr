@@ -75,6 +75,7 @@ objectsToStrings ((JString s) :: xs) =
     Just ys => Just (s :: ys)
 objectsToStrings _ = Nothing
 
+||| Lookup an array of strings in a JSON object. If
 lookupOptionalStringArray : String
                           -> (List (String, JSON))
                           -> Maybe (List String)
@@ -95,6 +96,12 @@ lookupRequiredObject search parent =
           | _ => Left (ManifestLookupError search)
       Right found
 
+
+||| Parse the list of dependencies, converting them to a list of the ManiDep
+||| type.
+|||
+||| Return an error if required fields are missing or the JSON is not formatted
+||| correctly.
 checkDependencies :  (keys : List (String, JSON))
                   -> Either IpmError (List ManiDep)
 checkDependencies [] = Right []
@@ -128,6 +135,11 @@ checkDependencies (depObj :: depObjs) =
     checkDependency (nameStr, _) =
       Left (ManifestFormatError ("The dependency'" ++ nameStr ++ "' is not defined correctly."))
 
+||| Pattern match against the JSON parent object, and read all required
+||| / optional keys.
+|||
+||| Any additional keys are treated as metadata. Return the parsed manifest or
+||| an error.
 constructManifest :  JSON
                   -> Either IpmError Manifest
 constructManifest (JObject parent) =
@@ -155,6 +167,8 @@ constructManifest (JObject parent) =
 -- The JSON parser should already have caught this error (no parent object).
 constructManifest _ = Left ImpossibleError
 
+||| Read a manifest file from a given directory. Convert it to a Manifest type
+||| or return an error if it is incorrectly formatted.
 export
 parseManifest :  (dir : String)
               -> IO (Either IpmError Manifest)

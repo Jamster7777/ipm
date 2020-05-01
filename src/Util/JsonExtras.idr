@@ -1,10 +1,7 @@
 module Util.JsonExtras
 
 import Language.JSON
---
--- export
--- JObjectMatched : Type
--- JObjectMatched = List (String, JSON)
+
 
 ||| Lookup a field name in a JSON object. Return nothing if it is not a JSON
 ||| object, the key can not be found, or the key is not unique.

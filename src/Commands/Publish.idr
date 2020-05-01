@@ -22,7 +22,7 @@ addTag new =
 
 modifyVersion : Version -> IO Version
 modifyVersion old =
-  do  i <- promptNumberedSelection "What type of release is this?" ("Major" :: "Minor" :: "Patch" :: [])
+  do  i <- promptNumberedSelection "What type of release is this?\nVersioning should adhere to the standards defined at semver.org" ("Major" :: "Minor" :: "Patch" :: [])
       case i of
         FZ            => pure (incMajor old)
         (FS FZ)       => pure (incMinor old)
