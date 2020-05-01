@@ -73,14 +73,17 @@ bashCommand command {inDir} {verbose=False} =
 
 ||| Execute a sequence of bash commands, return true if they all succeed and
 ||| false as soon as one fails.
-bashCommandSeq : (commands : List String) -> { default "." inDir : String } -> IO Bool
+bashCommandSeq :  (commands : List String)
+               -> { default "." inDir : String }
+               -> { default False verbose : Bool }
+               -> IO Bool
 bashCommandSeq [] {inDir} = pure True
-bashCommandSeq (x :: xs) {inDir} =
-  do  success <- bashCommand {inDir=inDir} x
+bashCommandSeq (x :: xs) {inDir} {verbose} =
+  do  success <- bashCommand {inDir=inDir} {verbose=verbose} x
       if
         success
       then
-        bashCommandSeq xs {inDir=inDir}
+        bashCommandSeq xs {inDir=inDir} {verbose=verbose}
       else
         pure False
 
@@ -100,10 +103,11 @@ bashCommandErr command {inDir} {verbose} errStr =
 
 bashCommandSeqErr :  (commands : List String)
                   -> { default "." inDir : String }
+                  -> { default False verbose : Bool }
                   -> (errStr : String)
                   -> IO (Either IpmError ())
-bashCommandSeqErr commands {inDir} errStr =
-  do  success <- bashCommandSeq commands {inDir=inDir}
+bashCommandSeqErr commands {inDir} {verbose} errStr =
+  do  success <- bashCommandSeq commands {inDir=inDir} {verbose=verbose}
       if
         success
       then
