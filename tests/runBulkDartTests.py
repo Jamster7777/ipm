@@ -41,36 +41,42 @@ def dart_output_to_json(output):
 
     return json
 
+def run_test_for_pkg_man(ipm=True):
+    start_time = time.time()
+    success = True
+    try:
+        if ipm:
+            result = subprocess.check_output('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run', shell=True).decode("utf-8")
+        else:
+            result = subprocess.check_output('pub get --dry-run', shell=True).decode("utf-8")
+    except subprocess.CalledProcessError:
+        success = False
+    run_time = time.time() - start_time
+
+    os.system('mkdir -p {0}'.format(os.path.join(args.output, p_dir)))
+
+    with open(os.path.join(args.output, p_dir, ('pub', 'ipm')[ipm] + '.log'), 'w+') as f:
+        f.write(result)
+    
+    if success:
+        with open(os.path.join(args.output, p_dir, ('pub', 'ipm')[ipm] + '.json'), 'w+') as f:
+            if ipm:
+                f.write(result)
+            else:
+                json.dump(dart_output_to_json(result), f, sort_keys=True, indent=4)
+
 pub_path = os.path.join(args.input, 'pub')
 ipm_path = os.path.join(args.input, 'ipm')
 
 pkgs = os.listdir(pub_path)
 
-
-
 for p_dir in pkgs:
     os.chdir(pub_path)
     os.chdir(p_dir)
     os.system('rm -f pubspec.lock')
-    start_time = time.time()
-    pub_result = subprocess.check_output('pub get --dry-run', shell=True).decode("utf-8")
-    pub_time = time.time() - start_time
-
-    
-
-    os.system('mkdir -p {0}'.format(os.path.join(args.output, p_dir)))
-
-    with open(os.path.join(args.output, p_dir, 'pub.log'), 'w+') as f:
-        f.write(pub_result)
-        # json.dump(dart_output_to_json(pub_result), f, sort_keys=True, indent=4)
+    run_test_for_pkg_man(ipm=False)    
 
     os.chdir(ipm_path)
     os.chdir('pub/')
     os.chdir(p_dir)
-
-
-    start_time = time.time()
-    ipm_result = subprocess.check_output('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run')
-    ipm_time = time.time() - start_time
-
-          # os.path.join(args.output, p_dir, 'ipm.json'))
+    run_test_for_pkg_man(ipm=True)    
