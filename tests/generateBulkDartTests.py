@@ -1,6 +1,6 @@
 #!/home/jamie/Documents/uni/diss/ipm/python-venv-ipm/bin/python3.7
 
-import requests, argparse, sys, json, os, timeit
+import requests, argparse, sys, json, os, timeit, yaml
 
 arg_parser = argparse.ArgumentParser(description="Generate several Dart tests based on the most recently published Dart packages.")
 
@@ -61,7 +61,18 @@ for p in response_json['packages']:
                 os.system('git clone {0} {1}'.format(p['latest']['pubspec']['homepage'], p_pub_path))
                 
                 if os.path.isfile(os.path.join(p_pub_path, 'pubspec.yaml')):
+
+                    with open(os.path.join(p_pub_path, 'pubspec.yaml'), 'r') as f:
+                        yamlObj = yaml.load(f)
                     
+                    try:
+                        del yamlObj['dev_dependencies']
+                        with open(os.path.join(p_pub_path, 'pubspec.yaml'), 'w+') as f:
+                            f.write(yaml.dump(yamlObj))
+                    except:
+                        # Ignore
+                        print('No dev_dependencies to delete.')
+                
                     if args.verbose:
                         print(p['name'] + ' has a pubspec.yaml file in the parent directory')
                         print('Generating ipm test config for this package...')
