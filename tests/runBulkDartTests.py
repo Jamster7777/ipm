@@ -51,7 +51,7 @@ pkgs = os.listdir(pub_path)
 for p_dir in pkgs:
     os.chdir(pub_path)
     os.chdir(p_dir)
-    
+
     start_time = time.time()
     pub_result = subprocess.check_output('pub get --dry-run', shell=True)
     pub_time = time.time() - start_time
@@ -60,10 +60,9 @@ for p_dir in pkgs:
 
     with open(os.path.join(args.output, p_dir, 'pub.json'), 'w+') as f:
         json.dump(dart_output_to_json(pub_result), f, sort_keys=True, indent=4)
-    
+
     os.chdir(ipm_path)
     os.chdir('pub/')
     os.chdir(p_dir)
-    
-    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run -v')
-    os.system('mv ipm-lock.json {0}'.format(os.path.join(args.output, p_dir)))
+
+    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run > {0}'.format(os.path.join(args.output, p_dir, 'ipm.json')))
