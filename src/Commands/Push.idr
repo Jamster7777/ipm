@@ -12,9 +12,9 @@ pushTag =
     "Error pushing new version to remote - has a remote repository been configured?"
 
 export
-push : Opts -> IO ()
+push : Opts -> IO (Either IpmError ())
 push opts =
   do  Right ()
               <- pushTag
-              | Left err => putStrLn (show err)
-      pure ()
+              | Left err => pure (Left err)
+      pure $ Right ()

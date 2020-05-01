@@ -65,18 +65,18 @@ tagInitialVersion version =
     "Error adding manifest file to git and tagging version"
 
 export
-init : Opts -> IO ()
+init : Opts -> IO (Either IpmError ())
 init opts =
   do  group <- bashPrompt "Enter a group name for the package"
       name  <- bashPrompt "Enter a package name for the package"
       version <- getVersion
       Right ()
             <- setupGitRepo
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       Right ()
             <- writeManifest $ createManifest (MkPkgName group name)
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       Right ()
             <- tagInitialVersion version
-            |  Left err => putStrLn (show err)
-      pure $ ()
+            |  Left err => pure (Left err)
+      pure $ Right ()

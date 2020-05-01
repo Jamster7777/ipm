@@ -13,31 +13,32 @@ import Data.SortedMap
 import Semver.Version
 
 export
-build : Opts -> IO ()
+build : Opts -> IO (Either IpmError ())
 build opts =
   do  exists <- checkFileExists LOCK_FILE_NAME
       if
         not exists
       then
-        putStrLn "No lock file found. Run 'ipm --install' first."
+        do  putStrLn "No lock file found. Run 'ipm --install' first."
+            pure $ Right ()
       else
         do  Right solution
                   <- lockToSolution
-                  |  Left err => putStrLn (show err)
+                  |  Left err => pure (Left err)
             Right manifest
                   <- parseManifest "."
-                  |  Left err => putStrLn (show err)
+                  |  Left err => pure (Left err)
             let Right ipkg
                   =  manifestToIpkg manifest solution True
-                  |  Left err => putStrLn (show err)
+                  |  Left err => pure (Left err)
             Right ()
                   <- writeFile BUILD_FILE_NAME ipkg
-                  |  Left err => putStrLn ("Error writing build file: " ++ (show err))
+                  |  Left err => pure (Left (GenericError ("Error writing build file: " ++ (show err))))
             Right ()
                   <- bashCommandSeqErr [
                         "idris --build " ++ BUILD_FILE_NAME,
                         "rm " ++ BUILD_FILE_NAME
                      ]
                      "Error building package"
-                  |  Left err => putStrLn (show err)
-            pure ()
+                  |  Left err => pure (Left err)
+            pure $ Right ()

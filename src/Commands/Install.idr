@@ -17,28 +17,29 @@ import Data.SortedSet
 import Semver.Version
 
 export
-install : Opts -> IO ()
+install : Opts -> IO (Either IpmError ())
 install opts =
   do  bashCommand $ "rm -rf -f " ++ TEMP_DIR
       Right manifest
             <- parseManifest "."
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       Right version
             <- getMostRecentVersion {dir="."}
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       Right solution
             <- pubGrub manifest version (hasFlag Verbose opts)
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       if
         (hasFlag DryRun opts)
       then
-        putStrLn $ solutionToLock solution
+        do  putStrLn $ solutionToLock solution
+            pure $ Right ()
       else
         do  Right ()
                   <- installRoot manifest solution
-                  |  Left err => putStrLn (show err)
+                  |  Left err => pure (Left err)
             Right ()
                   <- solutionToLockAndWrite solution
-                  |  Left err => putStrLn (show err)
+                  |  Left err => pure (Left err)
             bashCommand $ "rm -rf -f " ++ TEMP_DIR
-            pure ()
+            pure $ Right ()

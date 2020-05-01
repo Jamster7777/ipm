@@ -4,6 +4,7 @@ import IO.CommandParse
 import Core.IpmError
 import Data.SortedSet
 import Core.Opts
+import System
 
 main : IO ()
 main = do (_ :: cmdStr :: rest)
@@ -20,4 +21,8 @@ main = do (_ :: cmdStr :: rest)
                 let Right opts
                     = matchOpts rest empty
                     | Left err => putStrLn (show err)
-                cmd opts
+                res <- cmd opts
+                case res of
+                  Left err => do  putStrLn (show err)
+                                  exit 1
+                  Right () => exit 0

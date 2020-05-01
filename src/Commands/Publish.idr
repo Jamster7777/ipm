@@ -44,19 +44,19 @@ commitChanges =
         pure $ Right ()
 
 -- TODO perhaps stash changes before publishing?
-publish : Opts -> IO ()
+publish : Opts -> IO (Either IpmError ())
 publish opts =
   do  Right old
              <- getMostRecentVersion
-             |  Left err => putStrLn (show err)
+             |  Left err => pure (Left err)
       putStrLn ("Most recent version: " ++ (show old))
       Right ()
             <- commitChanges
-            |  Left err => putStrLn (show err)
+            |  Left err => pure (Left err)
       new <- modifyVersion old
       putStrLn ("New version is: " ++ (show new))
       Right ()
             <- addTag new
-            | Left err => putStrLn (show err)
+            | Left err => pure (Left err)
       putStrLn "New version published locally. Run 'ipm push' to add this to the remote repository."
-      pure ()
+      pure $ Right ()
