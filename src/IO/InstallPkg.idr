@@ -3,7 +3,6 @@ module IO.InstallPkg
 import IO.ManifestToIpkg
 import Core.ManifestTypes
 import Core.IpmError
-import Core.Opts
 import Util.Bash
 import Util.FetchDep
 import Util.Constants
@@ -36,14 +35,13 @@ mutual
   ||| Install all given packages, short circuiting if an installation fails.
   installDeps :  List PkgName
               -> (vMap : SortedMap PkgName Version)
-              -> Opts
               -> IO (Either IpmError ())
-  installDeps [] vMap opts = pure $ Right ()
-  installDeps (n :: ns) vMap opts =
+  installDeps [] vMap = pure $ Right ()
+  installDeps (n :: ns) vMap =
     do  Right ()
-            <- installPkg n False vMap opts
+            <- installPkg n False vMap
             |  Left err => pure (Left err)
-        installDeps ns vMap opts
+        installDeps ns vMap
 
   ||| Install the given package and its dependancies, using versions from the
   ||| given SortedMap. All packages required should have an entry in the map.
@@ -61,9 +59,8 @@ mutual
   installPkg :  (n : PkgName)
              -> (isRoot : Bool)
              -> (vMap : SortedMap PkgName Version)
-             -> Opts
              -> IO (Either IpmError ())
-  installPkg n isRoot vMap opts =
+  installPkg n isRoot vMap =
     do  buildExists
             <- checkFileExists $ buildFilePath n
         if
@@ -87,19 +84,13 @@ mutual
               -- Install any dependencies before invoking idris install for this
               -- package.
               Right ()
-                  <- installDeps (getDepNames manifest) vMap opts
+                  <- installDeps (getDepNames manifest) vMap
                   |  Left err => pure (Left err)
               if
                 not isRoot
               then
-                if
-                  (hasFlag DryRun opts)
-                then
-                  do  putStrLn $ "Would install " ++ (show n) ++ " v" ++ (show v)
-                      pure $ Right ()
-                else
-                  do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
-                      invokeIdrisInstall n
+                do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
+                    invokeIdrisInstall n
               else
                 pure $ Right ()
 
@@ -107,7 +98,6 @@ mutual
 export
 installRoot :  Manifest
             -> (vMap : SortedMap PkgName Version)
-            -> Opts
             -> IO (Either IpmError ())
-installRoot (MkManifest n _ _) vMap opts =
-  installPkg n True vMap opts
+installRoot (MkManifest n _ _) vMap =
+  installPkg n True vMap

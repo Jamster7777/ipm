@@ -29,11 +29,16 @@ install opts =
       Right solution
             <- pubGrub manifest version (hasFlag Verbose opts)
             |  Left err => putStrLn (show err)
-      Right ()
-            <- installRoot manifest solution opts
-            |  Left err => putStrLn (show err)
-      Right ()
-            <- solutionToLock solution
-            |  Left err => putStrLn (show err)
-      bashCommand $ "rm -rf -f " ++ TEMP_DIR
-      pure ()
+      if
+        (hasFlag DryRun opts)
+      then
+        putStrLn $ solutionToLock solution
+      else
+        do  Right ()
+                  <- installRoot manifest solution
+                  |  Left err => putStrLn (show err)
+            Right ()
+                  <- solutionToLockAndWrite solution
+                  |  Left err => putStrLn (show err)
+            bashCommand $ "rm -rf -f " ++ TEMP_DIR
+            pure ()

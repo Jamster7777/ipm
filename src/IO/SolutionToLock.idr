@@ -20,15 +20,18 @@ toJson [] = ""
 toJson (x :: []) = (toJsonKeyValuePair x)
 toJson (x :: xs) = (toJsonKeyValuePair x) ++ ",\n" ++ (toJson xs)
 
+export
+solutionToLock : (vMap : SortedMap PkgName Version) -> String
+solutionToLock vMap = "{\n" ++ (toJson (toList vMap)) ++ "\n}"
+
 ||| Convert the version solving solution to JSON and output it as a lockfile.
 |||
 ||| @vMap version solving's solution, mapping package names to versions.
 export
-solutionToLock : (vMap : SortedMap PkgName Version) -> IO (Either IpmError ())
-solutionToLock vMap =
-  do  let str = "{\n" ++ (toJson (toList vMap)) ++ "\n}"
-      Right ()
-              <- writeFile LOCK_FILE_NAME str
+solutionToLockAndWrite : (vMap : SortedMap PkgName Version) -> IO (Either IpmError ())
+solutionToLockAndWrite vMap =
+  do  Right ()
+              <- writeFile LOCK_FILE_NAME $ solutionToLock vMap
               |  Left err => pure (Left (BuildError ("Error writing lock file: " ++ (show err)))) --TODO change error
       pure $ Right ()
 
