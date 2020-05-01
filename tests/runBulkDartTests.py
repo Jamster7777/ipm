@@ -58,3 +58,9 @@ for p_dir in os.listdir('.'):
     with open(os.path.join(args.output, p_dir, 'pub.json'), 'w+') as f:
         json.dump(dart_output_to_json(pub_result), f, sort_keys=True, indent=4)
     
+    os.chdir(ipm_path)
+    os.chdir('pub/')
+    os.chdir(p_dir)
+    
+    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run')
+    os.system('mv ipm-lock.json {0}'.format(os.path.join(args.output, p_dir)))
