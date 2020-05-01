@@ -18,7 +18,12 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     '--bulkPub',
     help='Option for bulk pub tests - place all packages in pub test directory, save time by reusing packages generated for old tests.',
-    action="store_true" 
+    action="store_true"
+)
+arg_parser.add_argument(
+    '-v', '--verbose',
+    help='Display debugging output',
+    action='store_true'
 )
 
 args = arg_parser.parse_args(sys.argv[1:])
@@ -105,32 +110,32 @@ export
             pkgName,
             pkgVersion,
             os.path.basename(args.configFile)
-        )
+            )
 
-        mainStart = '''
+            mainStart = '''
 
 main : IO ()
 main =
     do  putStrLn "Installed for {0} version {1} ({2}):"
 '''.format(
-            pkgName,
-            pkgVersion,
-            os.path.basename(args.configFile)
-        )
+                pkgName,
+                pkgVersion,
+                os.path.basename(args.configFile)
+            )
 
-        allImports = ''.join(imports)
-        allPrintStmts = ''.join(printStmts)
+            allImports = ''.join(imports)
+            allPrintStmts = ''.join(printStmts)
 
-        pkgFile = moduleDef + funcDef
-        mainFile = "module Main\n" + allImports + mainStart + allPrintStmts
+            pkgFile = moduleDef + funcDef
+            mainFile = "module Main\n" + allImports + mainStart + allPrintStmts
 
-        with open('src/{0}.idr'.format(pkgNameToModuleName(pkgName)), 'w+') as f:
-            f.write(pkgFile)
+            with open('src/{0}.idr'.format(pkgNameToModuleName(pkgName)), 'w+') as f:
+                f.write(pkgFile)
 
-        with open('src/Main.idr', 'w+') as f:
-            f.write(mainFile)
+            with open('src/Main.idr', 'w+') as f:
+                f.write(mainFile)
 
 
-        # Commit and tag this version
-        os.system('git add . && git commit -m "versionUpgrade"')
-        os.system('git tag v{0}'.format(pkgVersion))
+            # Commit and tag this version
+            os.system('git add . && git commit -m "versionUpgrade"')
+            os.system('git tag v{0}'.format(pkgVersion))
