@@ -19,4 +19,3 @@ jLookup search fields =
         Just val
       else
         Nothing
-jLookup search _ = Nothing
