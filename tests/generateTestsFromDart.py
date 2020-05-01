@@ -83,20 +83,17 @@ def add_package(package, is_root=False):
             except (KeyError, AttributeError):
                 deps = {}
 
-            # if is_root:
-            #     try:
-            #         dev_deps = vObj['pubspec']['dev_dependencies']
-            #         if dev_deps is None:
-            #             dev_deps = {}
-            #     except (KeyError, AttributeError):
-            #         dev_deps = {}
+            if is_root:
+                try:
+                    dev_deps = vObj['pubspec']['dev_dependencies']
+                    if dev_deps is None:
+                        dev_deps = {}
+                except (KeyError, AttributeError):
+                    dev_deps = {}
 
-            #     all_deps = merge_keys(deps, dev_deps)
-            # else:
-            #     all_deps = deps
-            
-            # TODO
-            all_deps = deps
+                all_deps = merge_keys(deps, dev_deps)
+            else:
+                all_deps = deps
 
             depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in all_deps.items())
             output[ipm_name][version] = depsIpmNames

@@ -44,9 +44,12 @@ def dart_output_to_json(output):
 pub_path = os.path.join(args.input, 'pub')
 ipm_path = os.path.join(args.input, 'ipm')
 
-os.chdir(pub_path)
+pkgs = os.listdir(pub_path)
 
-for p_dir in os.listdir('.'):
+
+
+for p_dir in pkgs:
+    os.chdir(pub_path)
     os.chdir(p_dir)
     
     start_time = time.time()
@@ -62,5 +65,5 @@ for p_dir in os.listdir('.'):
     os.chdir('pub/')
     os.chdir(p_dir)
     
-    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run')
+    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run -v')
     os.system('mv ipm-lock.json {0}'.format(os.path.join(args.output, p_dir)))

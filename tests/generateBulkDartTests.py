@@ -75,4 +75,5 @@ for p in response_json['packages']:
 
                     os.system('./generateTestRepos.py -c {0} -o {1} --bulkPub'.format(os.path.join(ipm_path , p['name'] + '.json'), ipm_path))
                     no_generated = no_generated + 1
-        
+                else:
+                    os.system('rm -rf {0}'.format(p_pub_path))
