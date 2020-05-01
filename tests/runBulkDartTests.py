@@ -65,4 +65,4 @@ for p_dir in pkgs:
     os.chdir('pub/')
     os.chdir(p_dir)
 
-    os.system('/home/jamie/Documents/uni/diss/ipm/ipm install --dry-run > {0}'.format(os.path.join(args.output, p_dir, 'ipm.json')))
+    os.system('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run > {0}'.format(os.path.join(args.output, p_dir, 'ipm.json')))
