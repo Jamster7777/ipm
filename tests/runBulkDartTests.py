@@ -57,13 +57,6 @@ def run_test_for_pkg_man(pkg, ipm=True):
 
     with open(os.path.join(args.output, pkg, ('pub', 'ipm')[ipm] + '.log'), 'w+') as f:
         f.write(result)
-    
-    if success:
-        with open(os.path.join(args.output, pkg, ('pub', 'ipm')[ipm] + '.json'), 'w+') as f:
-            if ipm:
-                f.write(result)
-            else:
-                json.dump(pub_output_to_json(result), f, sort_keys=True, indent=4)
 
     return success, run_time, result
 
@@ -96,11 +89,22 @@ for pkg in pkgs:
 
     os.chdir(original_dir)
 
+    if pub_success:
+        pub_json = pub_output_to_json(pub_result)
+        with open(os.path.join(args.output, pkg, 'pub.json'), 'w+') as f:
+            json.dump(pub_json, f, sort_keys=True, indent=4)
+
+    if ipm_success:
+        ipm_conflict_res_required = 'Conflict resolution required' in ipm_result
+        ipm_json = json.loads(ipm_result[ipm_result.index('{'):])
+
+        with open(os.path.join(args.output, pkg, 'ipm.json'), 'w+') as f:
+            json.dump(ipm_json, f, sort_keys=True, indent=4)
+    else:
+        ipm_conflict_res_required = True
+
     if pub_success and ipm_success:
         
-        pub_json = pub_output_to_json(pub_result)
-        ipm_json = json.loads(ipm_result)
-
         # ipm outputs the root package version from version solving too, remove this.
         del ipm_json['pub/' + pkg]
         
@@ -117,5 +121,6 @@ for pkg in pkgs:
             pub_run_time,
             ('N', 'Y')[ipm_success],
             ipm_run_time,
+            ('N', 'Y')[ipm_conflict_res_required],
             ('N', 'Y')[equal_sols]
         ])
