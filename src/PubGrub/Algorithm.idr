@@ -94,7 +94,7 @@ conflictResolution :  Incomp
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i isFirst =
    -- TODO remove trace
-  do  trace "Conflict resolution required" $  pr "conflictResolution" $ "Loop started with i= " ++ (showIncomp i)
+  do  pr "conflictResolution" $ "Loop started with i= " ++ (showIncomp i)
       state <- get
       if
         (failCondition state i)

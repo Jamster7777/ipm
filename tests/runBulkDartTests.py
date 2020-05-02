@@ -42,7 +42,7 @@ def pub_output_to_json(output):
     return json
 
 def run_test_for_pkg_man(pkg, ipm=True):
-    
+
     start_time = time.time()
     success = True
     try:
@@ -67,7 +67,7 @@ def run_test_for_pkg_man(pkg, ipm=True):
     except subprocess.CalledProcessError as e:
         success = False
         result = e.output.decode("utf-8")
-    
+
     run_time = time.time() - start_time
 
     os.system('mkdir -p {0}'.format(os.path.join(args.output, pkg)))
@@ -88,15 +88,15 @@ for pkg in pkgs:
     os.chdir(pub_path)
     os.chdir(pkg)
     os.system('rm -f pubspec.lock')
-    
-    pub_success, pub_run_time, pub_result = run_test_for_pkg_man(pkg, ipm=False)    
+
+    pub_success, pub_run_time, pub_result = run_test_for_pkg_man(pkg, ipm=False)
 
 
     os.chdir(ipm_path)
     os.chdir('pub/')
     os.chdir(pkg)
-    
-    ipm_success, ipm_run_time, ipm_result = run_test_for_pkg_man(pkg, ipm=True)    
+
+    ipm_success, ipm_run_time, ipm_result = run_test_for_pkg_man(pkg, ipm=True)
 
     version = \
         subprocess \
@@ -112,19 +112,16 @@ for pkg in pkgs:
             json.dump(pub_json, f, sort_keys=True, indent=4)
 
     if ipm_success:
-        ipm_conflict_res_required = 'Conflict resolution required' in ipm_result
-        ipm_json = json.loads(ipm_result[ipm_result.index('{'):])
+        ipm_json = json.loads(ipm_result)
 
         with open(os.path.join(args.output, pkg, 'ipm.json'), 'w+') as f:
             json.dump(ipm_json, f, sort_keys=True, indent=4)
-    else:
-        ipm_conflict_res_required = True
 
     if pub_success and ipm_success:
-        
+
         # ipm outputs the root package version from version solving too, remove this.
         del ipm_json['pub/' + pkg]
-        
+
         equal_sols = json.dumps(pub_json, sort_keys=True, indent=4) == json.dumps(ipm_json, sort_keys=True, indent=4)
     else:
         equal_sols = (pub_success == ipm_success)
@@ -132,12 +129,11 @@ for pkg in pkgs:
     with open(args.csv, 'a+') as f:
         writer = csv.writer(f, delimiter=',')
         writer.writerow([
-            pkg, 
+            pkg,
             version,
             ('N', 'Y')[pub_success],
             pub_run_time,
             ('N', 'Y')[ipm_success],
             ipm_run_time,
-            ('N', 'Y')[ipm_conflict_res_required],
             ('N', 'Y')[equal_sols]
         ])
