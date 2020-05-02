@@ -42,15 +42,25 @@ def pub_output_to_json(output):
     return json
 
 def run_test_for_pkg_man(pkg, ipm=True):
+    
     start_time = time.time()
     success = True
     try:
         if ipm:
-            result = subprocess.check_output('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run', shell=True).decode("utf-8")
+            result = \
+                subprocess \
+                    .check_output(
+                        'echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run',
+                        shell=True,
+                        stderr=subprocess.STDOUT
+                        ) \
+                    .decode("utf-8")
         else:
             result = subprocess.check_output('pub get --dry-run', shell=True).decode("utf-8")
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         success = False
+        result = e.output.decode("utf-8")
+    
     run_time = time.time() - start_time
 
     os.system('mkdir -p {0}'.format(os.path.join(args.output, pkg)))
