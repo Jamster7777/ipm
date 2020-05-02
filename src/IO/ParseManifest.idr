@@ -10,11 +10,11 @@ import Semver.Version
 import Semver.Range
 import Lightyear.Strings
 
+||| Parse a package name, returning an error if invalid.
 export
 checkName : String -> Either IpmError PkgName
 checkName str =
   case
-    -- TODO put chars in list
     find (\x => not ((isAlphaNum x) || (x == '/') || (x == '-') || (x == '_'))) (unpack str)
   of
     Just c  => Left (PkgNameError ("'" ++ (show c) ++ "' is not allowed in a package name"))
@@ -33,6 +33,7 @@ checkName str =
                     | Nothing => Left ImpossibleError
                 Right (MkPkgName group package)
 
+||| Parse a range string, returning an error if invalid
 checkRange : String -> Either IpmError Range
 checkRange str =
   case (parse range str) of
@@ -40,6 +41,7 @@ checkRange str =
     (Right Nothing)     => Left (ManifestFormatError ("'" ++ str ++ "' is an invalid version range."))
     (Right (Just v))    => Right v
 
+||| Parse a version string, returning an error if invalid
 export
 checkVersion : String -> Either IpmError Version
 checkVersion str =
@@ -58,6 +60,8 @@ lookupRequiredString search parent =
           | _ => Left (ManifestLookupError search)
       Right found
 
+||| Lookup field in JSON object, if it cannot be found or is not a string return
+||| Nothing, otherwise return the value (a string).
 lookupOptionalString :  String
                      -> (List (String, JSON))
                      -> Maybe String
@@ -75,7 +79,8 @@ objectsToStrings ((JString s) :: xs) =
     Just ys => Just (s :: ys)
 objectsToStrings _ = Nothing
 
-||| Lookup an array of strings in a JSON object. If
+||| Lookup an array of strings in a JSON object (returning Nothing if the object
+||| is in an incorrect format)
 lookupOptionalStringArray : String
                           -> (List (String, JSON))
                           -> Maybe (List String)

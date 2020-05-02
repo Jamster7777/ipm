@@ -118,29 +118,6 @@ checkTerm term ps = checkTerm' term ps True TInc
           )
           checkTerm' xs (ys ++ extraPSRanges) False newSoFar
 
-||| Some parts of the algorithm can lead to the same package being referenced
-||| by more than one term in an incompatibility. When it comes to the evaluation
-||| stage, it is important to evaluate all terms for the package together.
-|||
-||| For example, if the partial solution has a decision of foo = 1.0.0, this
-||| would satisfy the term foo <2.0.0 but not the term foo >3.0.0. But overall,
-||| it is within one of the ranges so should be merged into one count of
-||| satisfaction within the incompatibility.
--- checkForTermsToMerge :  List (PkgName, Term)
---                      -> PkgName
---                      -> (List Term, List (PkgName, Term))
--- checkForTermsToMerge [] n = ([], [])
--- checkForTermsToMerge ((n, t) :: ts) search =
---   do  let (hits, termsToKeep) = checkForTermsToMerge ts search
---       if
---         (n == search)
---       then
---         -- Add the term to the 'hits', and remove it from the incomp
---         (t :: hits, termsToKeep)
---       else
---         -- Leave the incomp untouched and don't add anything to the 'hits'
---         (hits, (n, t) :: termsToKeep)
-
 ||| Evaluate an incompatibility against the partial solution. Based on the
 ||| definition of an incompatibility at:
 ||| https://github.com/dart-lang/pub/blob/master/doc/solver.md#incompatibility
@@ -150,6 +127,15 @@ checkTerm term ps = checkTerm' term ps True TInc
 ||| almost satisfied if all terms are satisfied except one inconclusive term.
 ||| Otherwise, the incompatibility is inconclusive for the given partial
 ||| solution.
+|||
+||| Some parts of the algorithm can lead to the same package being referenced
+||| by more than one term in an incompatibility. When it comes to the evaluation
+||| stage, it is important to evaluate all terms for the package together.
+|||
+||| For example, if the partial solution has a decision of foo = 1.0.0, this
+||| would satisfy the term foo <2.0.0 but not the term foo >3.0.0. But overall,
+||| it is within one of the ranges so should be merged into one count of
+||| satisfaction within the incompatibility.
 checkIncomp :  Incomp
             -> PartialSolution
             -> IncompResult

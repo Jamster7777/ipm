@@ -1,3 +1,4 @@
+
 module IO.ManifestToIpkg
 
 import Core.ManifestTypes
@@ -77,6 +78,8 @@ config (MkPkgConfig sourcedir mods main executable opts) isRoot =
     (opt "opts" opts)
   )
 
+||| Covert the manifest of the root package, combined with the selected versions
+||| for the solution, to a String in the format of an ipkg build file.
 export
 manifestToIpkg : Manifest -> SortedMap PkgName Version -> (isRoot : Bool) -> Either IpmError String
 manifestToIpkg (MkManifest n ds c) vMap isRoot =

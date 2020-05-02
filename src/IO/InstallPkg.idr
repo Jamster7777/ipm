@@ -53,8 +53,8 @@ mutual
   ||| - Fetch the manifest for the version specified.
   ||| - For each dependency specified in the manifest, install (dependencies
   |||   must be installed first for Idris to typecheck properly).
-  ||| - Convert the manifest to an ipkg lockfile, and write it to file.
-  ||| - Invoke the Idris installer on the lockfile (if it is a dry run, then
+  ||| - Convert the manifest to an ipkg build file, and write it to file.
+  ||| - Invoke the Idris installer on the build file (if it is a dry run, then
   |||   just print what would be installed).
   installPkg :  (n : PkgName)
              -> (isRoot : Bool)

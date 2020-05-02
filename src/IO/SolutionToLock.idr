@@ -20,6 +20,8 @@ toJson [] = ""
 toJson (x :: []) = (toJsonKeyValuePair x)
 toJson (x :: xs) = (toJsonKeyValuePair x) ++ ",\n" ++ (toJson xs)
 
+||| Return a string representing the lock file contents given a particular
+||| solution.
 export
 solutionToLock : (vMap : SortedMap PkgName Version) -> String
 solutionToLock vMap = "{\n" ++ (toJson (toList vMap)) ++ "\n}"

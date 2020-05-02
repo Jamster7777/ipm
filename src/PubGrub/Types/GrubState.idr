@@ -109,9 +109,12 @@ setNeedDec nd =
 -- Special getters for GrubState
 --------------------------------------------------------------------------------
 
+||| Abstract away some of the boilerplate of getting an incompatibility from state
 getI : PkgName -> GrubState -> List Incomp
 getI n state = getI' n (incompMap state)
 
+||| Abstract away some of the boilerplate of getting the partial solution for a
+||| package from state
 getPSForPkg : PkgName -> GrubState -> List Assignment
 getPSForPkg n state = getPSForPkg' n (partialSolution state)
 
@@ -136,6 +139,7 @@ vsInPS state n =
           | Nothing  => []
       vsInPS' n vs (partialSolution state)
 
+||| Return the packages in the partial solution which don't have decisions yet
 psNoDec : GrubState -> List PkgName
 psNoDec state =
   do  let haveDecs
@@ -148,15 +152,18 @@ psNoDec state =
 -- Special setters for GrubState
 --------------------------------------------------------------------------------
 
+||| Add an incompatibility to the state
 addI : Incomp -> StateT GrubState IO ()
 addI i = do  state <- get
              setIncompMap (addI' i (incompMap state))
 
+||| Add an assignment to the partial solution contained in the state
 addToPS : PkgName -> Assignment -> StateT GrubState IO ()
 addToPS n a =
   do  state <- get
       setPartialSolution (addToPS' n a (partialSolution state))
 
+||| Add multiple assignments to the partial solution contained in the state
 addToPSMulti : PkgName -> List Assignment -> StateT GrubState IO ()
 addToPSMulti n [] = pure ()
 addToPSMulti n (x :: xs) =

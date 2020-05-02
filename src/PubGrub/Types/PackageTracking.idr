@@ -10,12 +10,17 @@ import Data.SortedMap
 -- Types for keeping track of package versions and manifests
 --------------------------------------------------------------------------------
 
+||| Store the available versions for each package
 PkgVersions : Type
 PkgVersions = SortedMap PkgName (List Version)
 
+||| Store the parsed manifests for each package version
 Manifests : Type
 Manifests = SortedMap (PkgName, Version) Manifest
 
+||| Stores the packages that currently need a decision, alongside the decision
+||| level this requirement comes from (so the requirement can be removed upon
+||| backtracking)
 NeedDec : Type
 NeedDec = SortedMap PkgName Integer
 

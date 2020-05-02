@@ -10,6 +10,11 @@ import Core.Opts
 import Core.IpmError
 import Data.SortedSet
 
+{-
+Inspired by Edwin Brady's implementation of command line options in Idris 2:
+https://github.com/edwinb/Idris2/blob/59503712f39422d9cea52f051aa2eb8c01281eca/src/Idris/CommandLine.idr
+-}
+
 record CmdDesc where
   constructor MkCmd
   cmd : String
