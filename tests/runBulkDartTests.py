@@ -56,7 +56,14 @@ def run_test_for_pkg_man(pkg, ipm=True):
                         ) \
                     .decode("utf-8")
         else:
-            result = subprocess.check_output('pub get --dry-run', shell=True).decode("utf-8")
+            result = \
+                subprocess \
+                    .check_output(
+                        'pub get --dry-run',
+                        shell=True,
+                        stderr=subprocess.STDOUT
+                        ) \
+                    .decode("utf-8")
     except subprocess.CalledProcessError as e:
         success = False
         result = e.output.decode("utf-8")
@@ -120,7 +127,7 @@ for pkg in pkgs:
         
         equal_sols = json.dumps(pub_json, sort_keys=True, indent=4) == json.dumps(ipm_json, sort_keys=True, indent=4)
     else:
-        equal_sols = False
+        equal_sols = (pub_success == ipm_success)
 
     with open(args.csv, 'a+') as f:
         writer = csv.writer(f, delimiter=',')
