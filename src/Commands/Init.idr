@@ -37,7 +37,7 @@ createManifest : PkgName -> String
 createManifest n =
   """{
     "name" : """" ++ (show n) ++ """",
-    "dependencies" : []
+    "dependencies" : {}
 }
 """
 
