@@ -36,10 +36,10 @@ getVersion =
 createManifest : PkgName -> String
 createManifest n =
   """{
-    \"name\" : \"""" ++ (show n) ++ """\",
-    \"dependencies\" : []
+    "name" : """" ++ (show n) ++ """",
+    "dependencies" : []
 }
-  """
+"""
 
 writeManifest : String -> IO (Either IpmError ())
 writeManifest man =
