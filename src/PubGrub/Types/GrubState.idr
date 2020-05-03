@@ -64,7 +64,15 @@ record GrubState where
 
 initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
 initGrubState (MkManifest n xs m) v verbose =
-  MkGrubState emptyPS (initIncompMap n v) 0 (initPkgVersions n v) empty n verbose (insert n 0 empty)
+  MkGrubState
+    emptyPS
+    (initIncompMap n v)
+    0
+    (initPkgVersions n v)
+    empty
+    n
+    verbose
+    (insert n 0 empty)
 
 
 --------------------------------------------------------------------------------

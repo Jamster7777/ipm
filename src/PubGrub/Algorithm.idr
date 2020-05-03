@@ -373,10 +373,17 @@ mainLoop next =
 |||               purposes.
 export
 pubGrub : (rootManifest : Manifest) -> (rootVersion : Version) -> (verbose : Bool) -> IO (Either IpmError (SortedMap PkgName Version))
-pubGrub (MkManifest n ds ms) v verbose =
+pubGrub manifest v verbose =
   do  Right ()
-            <- fetchDep (MkManiDep n (PkgLocal ".") (versionAsRange v))
+            <- fetchDep (MkManiDep (name manifest) (PkgLocal ".") (versionAsRange v))
             |  Left err => pure (Left err)
-      let initialState = initGrubState (MkManifest n ds ms) v verbose
-      (result, resultState) <- runStateT (mainLoop (rootPkg initialState)) initialState
-      pure result
+      -- For the root package, the dependencies still need to be fetched, but
+      -- handleNewManifest must be called here so that the most recent manifest
+      -- is used, NOT the manifest used in the most recent published version.
+      -- Otherwise a version would need to be published just to try out a new
+      -- dependency.
+      (possErr, initialState) <- runStateT (handleNewManifest manifest v) (initGrubState manifest v verbose)
+      case possErr of
+        Left err => pure $ Left err
+        Right _  => do  (result, resultState) <- runStateT (mainLoop (rootPkg initialState)) initialState
+                        pure result

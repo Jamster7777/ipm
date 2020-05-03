@@ -38,8 +38,14 @@ mutual
               -> IO (Either IpmError ())
   installDeps [] vMap = pure $ Right ()
   installDeps (n :: ns) vMap =
-    do  Right ()
-            <- installPkg n False vMap
+    do  let Just v
+            =  lookup n vMap
+            |  Nothing => pure (Left VersionLookupError)
+        Right manifest
+            <- checkoutManifest n v
+            |  Left err => pure (Left err)
+        Right ()
+            <- installPkg False manifest vMap
             |  Left err => pure (Left err)
         installDeps ns vMap
 
@@ -56,30 +62,24 @@ mutual
   ||| - Convert the manifest to an ipkg build file, and write it to file.
   ||| - Invoke the Idris installer on the build file (if it is a dry run, then
   |||   just print what would be installed).
-  installPkg :  (n : PkgName)
-             -> (isRoot : Bool)
+  installPkg :  (isRoot : Bool)
+             -> (manifest : Manifest)
              -> (vMap : SortedMap PkgName Version)
              -> IO (Either IpmError ())
-  installPkg n isRoot vMap =
+  installPkg isRoot manifest vMap =
     do  buildExists
-            <- checkFileExists $ buildFilePath n
+            <- checkFileExists $ buildFilePath $ name manifest
         if
           buildExists
         then
           pure $ Right ()
         else
-          do  let Just v
-                  =  lookup n vMap
-                  |  Nothing => pure (Left VersionLookupError)
-              Right manifest
-                  <- checkoutManifest n v
-                  |  Left err => pure (Left err)
-              let Right ipkg
+          do  let Right ipkg
                   =  manifestToIpkg manifest vMap isRoot
                   |  Left err => pure (Left err)
               -- For all packages, write the lockfile to the temp directory.
               Right ()
-                  <- writeToDir ipkg (pDir n)
+                  <- writeToDir ipkg (pDir (name manifest))
                   |  Left err => pure (Left err)
               -- Install any dependencies before invoking idris install for this
               -- package.
@@ -89,8 +89,11 @@ mutual
               if
                 not isRoot
               then
-                do  putStrLn $ "Installing " ++ (show n) ++ " v" ++ (show v)
-                    invokeIdrisInstall n
+                do  let Just v
+                        =  lookup (name manifest) vMap
+                        |  Nothing => pure (Left VersionLookupError)
+                    putStrLn $ "Installing " ++ (show (name manifest)) ++ " v" ++ (show v)
+                    invokeIdrisInstall $ name manifest
               else
                 pure $ Right ()
 
@@ -99,5 +102,5 @@ export
 installRoot :  Manifest
             -> (vMap : SortedMap PkgName Version)
             -> IO (Either IpmError ())
-installRoot (MkManifest n _ _) vMap =
-  installPkg n True vMap
+installRoot manifest vMap =
+  installPkg True manifest vMap
