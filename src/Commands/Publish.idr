@@ -16,8 +16,8 @@ import Util.FetchDep
 
 addTag : Version -> IO (Either IpmError ())
 addTag new =
-  bashCommandErr
-    ("git tag -F " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " -e v"  ++ (show new))
+  bashCommandErr {verbose=True}
+    ("git tag -eF " ++ PUBLISH_TEMPLATE_MESSAGE_LOCATION ++ " v"  ++ (show new))
     "Error adding version tag"
 
 modifyVersion : Version -> IO Version

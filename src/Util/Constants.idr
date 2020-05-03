@@ -15,7 +15,7 @@ TEMP_DIR : String
 TEMP_DIR = "/home/jamie/ipm-temp/"
 
 PUBLISH_TEMPLATE_MESSAGE_LOCATION : String
-PUBLISH_TEMPLATE_MESSAGE_LOCATION = "/home/jamie/Documents/uni/diss/ipm/assets/default-publish-message.txt"
+PUBLISH_TEMPLATE_MESSAGE_LOCATION = "/home/jamie/Documents/uni/diss/ipm/assets/default-publish-message"
 
 PR_SEP : String
 PR_SEP = "\n--------------------------\n"

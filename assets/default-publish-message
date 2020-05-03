@@ -1,0 +1,15 @@
+# Enter details of the new version below
+
+# Breaking changes
+# - Uncomment this block if there are breaking changes in your code.
+# - List them like this
+# - There should be no breaking changes unless this is a major version upgrade.
+
+# New features
+# - Uncomment this block if there are any new features in your code.
+# - List them like this
+# - There should be no new features if this is a patch version upgrade
+
+# Bugfixes
+# - Uncomment this block if there are any bugfixes in this release
+# - List them like this

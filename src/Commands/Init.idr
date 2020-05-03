@@ -47,7 +47,7 @@ writeManifest man =
       if
         exists
       then
-        pure $ Left $ InitError $ MANIFEST_FILE_NAME ++ "already exists. Please remove it before running ipm init."
+        pure $ Left $ InitError $ MANIFEST_FILE_NAME ++ " already exists. Please remove it before running ipm init."
       else
         do  Right ()
                 <- writeFile MANIFEST_FILE_NAME man
