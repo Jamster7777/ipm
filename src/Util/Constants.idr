@@ -14,6 +14,9 @@ LOCK_FILE_NAME = "ipm-lock.json"
 TEMP_DIR : String
 TEMP_DIR = "/home/jamie/ipm-temp/"
 
+EXECUTABLES_FOLDER : String
+EXECUTABLES_FOLDER = "/home/jamie/ipm-bin/"
+
 PUBLISH_TEMPLATE_MESSAGE_LOCATION : String
 PUBLISH_TEMPLATE_MESSAGE_LOCATION = "/home/jamie/Documents/uni/diss/ipm/assets/default-publish-message"
 

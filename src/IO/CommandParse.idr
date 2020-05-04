@@ -5,10 +5,12 @@ import Commands.Install
 import Commands.Init
 import Commands.Versions
 import Commands.Publish
+import Commands.InstallExec
 import Commands.Push
 import Core.Opts
 import Core.IpmError
 import Data.SortedSet
+
 
 {-
 Inspired by Edwin Brady's implementation of command line options in Idris 2:
@@ -33,6 +35,8 @@ commands = [
     (Just "Build an executable for this package."),
   MkCmd "install" install
     (Just "Install the packages dependencies and generate a lockfile."),
+  MkCmd "install-exec" installExec
+    (Just "Install this package as an executable."),
   MkCmd "init" init
     (Just "Initalise an ipm project in this directory."),
   MkCmd "publish" publish
