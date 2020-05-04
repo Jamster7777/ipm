@@ -32,9 +32,9 @@ record OptDesc where
 commands : List CmdDesc
 commands = [
   MkCmd "build" build
-    (Just "Build an executable for this package."),
+    (Just "Build an executable for this package. Requires an executable and main field to be declared in ipm.json."),
   MkCmd "install" install
-    (Just "Install the packages dependencies and generate a lockfile."),
+    (Just "Install the package's dependencies and generate a lockfile."),
   MkCmd "install-exec" installExec
     (Just "Install this package as an executable."),
   MkCmd "init" init
@@ -44,7 +44,7 @@ commands = [
   MkCmd "push" push
     (Just "Push any new package version(s) to the remote repository."),
   MkCmd "versions" versions
-    (Just "List the versions of this package, from newest to oldest.")
+    (Just "List the versions of this package, from oldest to newest.")
 ]
 
 opts : List OptDesc
@@ -77,7 +77,7 @@ help : IO ()
 help =
   do  putStr "Available commands:"
       putStrLn $ concat $ intersperse "" $ map cmdToHelp commands
-      putStr "Available opts:"
+      putStr "Available options:"
       putStrLn $ concat $ intersperse "" $ map optToHelp opts
 
 export
