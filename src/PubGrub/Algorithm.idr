@@ -17,7 +17,7 @@ import Core.IpmError
 import Data.SortedMap
 import Control.Monad.State
 import Util.ListExtras
-import Util.FetchDep
+import IO.FetchPkgDetails
 
 -- TODO remove
 import Debug.Trace

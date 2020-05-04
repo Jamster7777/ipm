@@ -1,4 +1,5 @@
-module FetchDep
+module IO.FetchPkgDetails
+
 import Core.ManifestTypes
 import Semver.Version
 import Core.IpmError
@@ -7,7 +8,7 @@ import Util.Constants
 import Semver.Range
 import IO.ParseManifest
 
-%access public export
+%access export
 
 parseTag : String -> Either IpmError Version
 parseTag tagStr =

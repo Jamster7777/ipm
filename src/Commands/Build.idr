@@ -7,7 +7,7 @@ import IO.SolutionToLock
 import IO.ManifestToIpkg
 import IO.ParseManifest
 import Util.Bash
-import Util.FetchDep
+import IO.FetchPkgDetails
 import Util.Constants
 import Data.SortedMap
 import Semver.Version

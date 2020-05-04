@@ -1,7 +1,7 @@
 module Commands.Versions
 
 import Core.Opts
-import Util.FetchDep
+import IO.FetchPkgDetails
 import Util.ListExtras
 import Core.IpmError
 import Semver.Version

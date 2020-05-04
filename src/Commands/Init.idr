@@ -3,7 +3,7 @@ module Commands.Init
 import Core.Opts
 import Util.Bash
 import Util.Constants
-import Util.FetchDep
+import IO.FetchPkgDetails
 import Core.IpmError
 import IO.ParseManifest
 import Semver.Version

@@ -4,7 +4,7 @@ import IO.ManifestToIpkg
 import Core.ManifestTypes
 import Core.IpmError
 import Util.Bash
-import Util.FetchDep
+import IO.FetchPkgDetails
 import Util.Constants
 import Semver.Version
 import Semver.Range

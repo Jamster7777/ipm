@@ -5,7 +5,7 @@ import PubGrub.Algorithm
 import IO.ParseManifest
 import Util.Bash
 import Util.Constants
-import Util.FetchDep
+import IO.FetchPkgDetails
 import Core.Opts
 import Core.IpmError
 import Core.ManifestTypes

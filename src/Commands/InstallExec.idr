@@ -7,7 +7,7 @@ import Core.IpmError
 import Core.ManifestTypes
 import Util.Bash
 import Util.Constants
-import Util.FetchDep
+import IO.FetchPkgDetails
 import IO.ParseManifest
 
 export

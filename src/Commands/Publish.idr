@@ -9,7 +9,7 @@ import Util.Constants
 import Data.String
 import Data.Vect
 import Semver.Version
-import Util.FetchDep
+import IO.FetchPkgDetails
 
 --TODO remove
 %access public export
