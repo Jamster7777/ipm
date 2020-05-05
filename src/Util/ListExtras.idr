@@ -1,7 +1,8 @@
 module Util.ListExtras
 
 
-public export
+||| Find the maximum element of a list, returning Nothing if the list is empty
+export
 total
 max : (Ord a) => List a -> Maybe a
 max [] = Nothing
@@ -18,7 +19,7 @@ max (x :: xs) = Just (max' xs x)
 
 ||| Custom implementation for showing a list, splitting the elements onto new
 ||| lines insteasd of the standard format.
-public export
+export
 total
 showList : List a -> (a -> String) -> String
 showList [] f = ""
