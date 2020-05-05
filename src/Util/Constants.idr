@@ -13,7 +13,8 @@ LOCATION_FOR_IPM_FOLDERS : String
 LOCATION_FOR_IPM_FOLDERS = "/home/jamie/"
 
 
-||| Input the path to the parent directory of this source code.
+||| Input the path to the parent directory of this source code (run 'pwd' from
+||| the parent directory and paste the output here).
 LOCATION_OF_THIS_SOURCE_CODE : String
 LOCATION_OF_THIS_SOURCE_CODE = "/home/jamie/Documents/uni/diss/ipm/"
 
