@@ -6,6 +6,13 @@ import Data.SortedSet
 import Core.Opts
 import System
 
+||| The main entry point to ipm.
+|||
+||| If the command given is not --help / -h, then parse the command and its
+||| options (otherwise show the help message).
+|||
+||| Execute the returned command. If it fails, then print the error and exit
+||| with an exit code of 1. Otherwise exit with an exit code of 0.
 main : IO ()
 main = do (_ :: cmdStr :: rest)
                 <- getArgs
