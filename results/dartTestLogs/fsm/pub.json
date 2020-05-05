@@ -1,0 +1,8 @@
+{
+    "pub/dfunc": "0.3.4",
+    "pub/matcher": "0.12.6",
+    "pub/meta": "1.1.8",
+    "pub/path": "1.7.0",
+    "pub/quiver": "2.1.3",
+    "pub/stack_trace": "1.9.3"
+}

@@ -1,0 +1,4 @@
+Resolving dependencies...
+The current Dart SDK version is 2.7.2.
+
+Because github_hook requires SDK version >=1.17.0 <2.0.0, version solving failed.

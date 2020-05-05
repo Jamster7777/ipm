@@ -1,0 +1,4 @@
+Resolving dependencies...
+The current Dart SDK version is 2.7.2.
+
+Because bot_test requires SDK version >=1.0.0 <2.0.0, version solving failed.

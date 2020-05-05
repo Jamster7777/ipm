@@ -2,7 +2,7 @@ module Core.IpmError
 import Semver.Version
 import Core.ManifestTypes
 
-%access export
+%access public export
 
 ||| Used to store errors in ipm as they are propagated back up the call stack.
 data IpmError = BashError String

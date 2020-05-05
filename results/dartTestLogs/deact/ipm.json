@@ -1,0 +1,5 @@
+{
+    "pub/deact": "0.4.0",
+    "pub/incremental_dom_bindings": "1.0.0+1",
+    "pub/logging": "0.11.4"
+}

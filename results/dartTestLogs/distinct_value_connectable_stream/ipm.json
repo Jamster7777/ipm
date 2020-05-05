@@ -1,0 +1,5 @@
+{
+    "pub/distinct_value_connectable_stream": "1.1.1",
+    "pub/meta": "1.1.8",
+    "pub/rxdart": "0.24.0-dev.1"
+}

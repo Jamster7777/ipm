@@ -1,0 +1,7 @@
+{
+    "pub/base_x": "1.0.1",
+    "pub/bitcoins": "1.0.3",
+    "pub/bs58": "1.0.1",
+    "pub/hash": "1.0.3",
+    "pub/pointycastle": "1.0.2"
+}

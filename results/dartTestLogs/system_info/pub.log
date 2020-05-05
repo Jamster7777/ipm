@@ -1,0 +1,5 @@
+Resolving dependencies...
++ file_utils 0.1.4
++ globbing 0.3.1
++ path 1.7.0
+Would change 3 dependencies.

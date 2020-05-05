@@ -1,0 +1,7 @@
+{
+    "pub/bot": "0.28.0",
+    "pub/bot_test": "0.2.0+1",
+    "pub/path": "1.7.0",
+    "pub/stack_trace": "1.9.3",
+    "pub/unittest": "0.11.7"
+}

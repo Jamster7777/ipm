@@ -1,7 +1,0 @@
-{
-    "name": "a",
-    "version": "1.0.0",
-    "dependancies": {
-        "c": "2.0.0"
-    }
-}

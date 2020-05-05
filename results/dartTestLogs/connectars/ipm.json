@@ -1,0 +1,14 @@
+{
+    "pub/charcode": "1.1.3",
+    "pub/collection": "1.14.12",
+    "pub/connectars": "1.2.6",
+    "pub/http": "0.12.1",
+    "pub/http_parser": "3.1.4",
+    "pub/meta": "1.1.8",
+    "pub/path": "1.7.0",
+    "pub/pedantic": "1.9.0",
+    "pub/source_span": "1.7.0",
+    "pub/string_scanner": "1.0.5",
+    "pub/term_glyph": "1.1.0",
+    "pub/typed_data": "1.1.6"
+}

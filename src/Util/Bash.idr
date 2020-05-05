@@ -4,6 +4,8 @@ import Core.IpmError
 import Data.Vect
 import Data.String
 
+%access public export
+
 -- The following 3 functions were taken directly from:
 -- https://github.com/idris-lang/Idris-dev/blob/bbd0f286c2e76ae157b5130303d29622d31de309/libs/prelude/Prelude/File.idr
 -- When imported, a strange bug was occuring, so they have been directly
@@ -41,7 +43,6 @@ readFileH h = loop ""
         loop (acc ++ l)
 
 ||| Execute a bash command and return the STDOUT.
-export
 execAndReadOutput : (cmd : String) -> { default "." inDir : String } -> IO (Either IpmError String)
 execAndReadOutput cmd {inDir} = do
   Right fh <- my_popen ("cd " ++ inDir ++ " && " ++ cmd) Read | Left err => pure (Left (BashError (show err)))

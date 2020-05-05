@@ -1,0 +1,15 @@
+{
+    "pub/charcode": "1.1.3",
+    "pub/collection": "1.14.12",
+    "pub/functional_data": "0.3.0",
+    "pub/json2yaml": "1.0.1",
+    "pub/meta": "1.1.8",
+    "pub/path": "1.7.0",
+    "pub/plain_optional": "0.1.3",
+    "pub/pubspec_lock": "2.0.1",
+    "pub/source_span": "1.7.0",
+    "pub/string_scanner": "1.0.5",
+    "pub/sum_types": "0.2.1+2",
+    "pub/term_glyph": "1.1.0",
+    "pub/yaml": "2.2.1"
+}

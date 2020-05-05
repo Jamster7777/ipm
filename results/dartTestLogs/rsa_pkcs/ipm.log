@@ -1,0 +1,4 @@
+{
+    "pub/asn1lib": "0.6.4",
+    "pub/rsa_pkcs": "1.1.1"
+}

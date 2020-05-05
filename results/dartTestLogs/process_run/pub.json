@@ -1,0 +1,13 @@
+{
+    "pub/args": "1.6.0",
+    "pub/charcode": "1.1.3",
+    "pub/collection": "1.14.12",
+    "pub/io": "0.3.4",
+    "pub/meta": "1.1.8",
+    "pub/path": "1.7.0",
+    "pub/pub_semver": "1.4.4",
+    "pub/source_span": "1.7.0",
+    "pub/string_scanner": "1.0.5",
+    "pub/term_glyph": "1.1.0",
+    "pub/yaml": "2.2.1"
+}

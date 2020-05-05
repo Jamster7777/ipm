@@ -1,0 +1,6 @@
+Resolving dependencies...
++ base_x 1.0.1
++ bs58 1.0.1
++ hash 1.0.3
++ pointycastle 1.0.2
+Would change 4 dependencies.

@@ -18,7 +18,13 @@ arg_parser.add_argument(
 
 arg_parser.add_argument(
     '--output', '-o',
-    help='The output folder for lock files',
+    help='The output folder for log files',
+    required=True
+    )
+
+arg_parser.add_argument(
+    '--ipm',
+    help='The path to the ipm executable for your system (ideally just ipm)',
     required=True
     )
 
@@ -50,7 +56,7 @@ def run_test_for_pkg_man(pkg, ipm=True):
             result = \
                 subprocess \
                     .check_output(
-                        'echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm install --dry-run',
+                        '{0} install --dry-run'.format(args.ipm),
                         shell=True,
                         stderr=subprocess.STDOUT
                         ) \
@@ -100,7 +106,7 @@ for pkg in pkgs:
 
     version = \
         subprocess \
-        .check_output('echo \'c,.l\' | sudo -S /home/jamie/Documents/uni/diss/ipm/ipm versions', shell=True) \
+        .check_output('{0} versions'.format(args.ipm), shell=True) \
         .decode("utf-8") \
         .splitlines()[-2]
 

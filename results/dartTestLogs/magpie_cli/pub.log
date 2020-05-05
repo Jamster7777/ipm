@@ -1,0 +1,93 @@
+Resolving dependencies...
++ analyzer 0.38.5 (0.39.8 available)
++ analyzer_plugin 0.2.1
++ archive 2.0.13
++ args 1.6.0
++ async 2.4.1
++ boolean_selector 2.0.0
++ browser_launcher 0.1.5
++ build 1.2.2
++ build_config 0.4.2
++ build_daemon 2.1.0 (2.1.4 available)
++ build_resolvers 1.2.1 (1.3.7 available)
++ build_runner 1.9.0
++ build_runner_core 5.1.0
++ built_collection 4.3.2
++ built_value 6.8.2 (7.1.0 available)
++ built_value_generator 6.8.2 (7.1.0 available)
++ charcode 1.1.3
++ checked_yaml 1.0.2
++ code_builder 3.2.0 (3.2.1 available)
++ collection 1.14.12
++ completion 0.2.2
++ convert 2.1.1
++ coverage 0.13.9
++ crypto 2.1.4
++ csslib 0.16.1
++ dart_style 1.3.3 (1.3.6 available)
++ devtools 0.1.13 (0.2.3 available)
++ devtools_server 0.1.12 (0.2.3 available)
++ dwds 0.7.9 (3.1.0 available)
++ file 5.1.0
++ fixnum 0.10.11
++ front_end 0.1.27 (0.1.29 available)
++ glob 1.2.0
++ graphs 0.2.0
++ html 0.14.0+3
++ http 0.12.1
++ http_multi_server 2.2.0
++ http_parser 3.1.4
++ intl 0.16.1
++ io 0.3.4
++ js 0.6.1+1
++ json_annotation 3.0.1
++ json_rpc_2 2.1.1
++ kernel 0.3.27 (0.3.29 available)
++ linter 0.1.101 (0.1.115 available)
++ logging 0.11.4
++ matcher 0.12.6
++ meta 1.1.8
++ mime 0.9.6+3
++ multicast_dns 0.2.2
++ mustache 1.1.1
++ node_interop 1.0.3
++ node_io 1.0.1+2
++ package_config 1.9.3
++ package_resolver 1.0.10
++ path 1.7.0
++ pedantic 1.9.0
++ petitparser 3.0.2
++ platform 2.2.1
++ plugin 0.2.0+3
++ pool 1.4.0
++ process 3.0.12
++ pub_semver 1.4.4
++ pubspec_parse 0.1.5
++ quiver 2.1.3
++ scratch_space 0.0.4+2
++ shelf 0.7.5
++ shelf_proxy 0.1.0+7
++ shelf_static 0.2.8
++ shelf_web_socket 0.2.3
++ source_gen 0.9.4+6 (0.9.5 available)
++ source_maps 0.10.9
++ source_span 1.7.0
++ sse 2.1.2 (3.5.0 available)
++ stack_trace 1.9.3
++ stream_channel 2.0.0
++ stream_transform 0.0.20 (1.2.0 available)
++ string_scanner 1.0.5
++ term_glyph 1.1.0
++ test_api 0.2.15
++ timing 0.1.1+2
++ typed_data 1.1.6
++ usage 3.4.1
++ uuid 2.0.4
++ vm_service 1.2.0 (4.0.2 available)
++ vm_service_client 0.2.6+3
++ watcher 0.9.7+15
++ web_socket_channel 1.1.0
++ webkit_inspection_protocol 0.5.1
++ xml 3.7.0 (4.1.0 available)
++ yaml 2.2.1
+Would change 91 dependencies.

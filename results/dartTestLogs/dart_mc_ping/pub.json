@@ -1,0 +1,11 @@
+{
+    "pub/collection": "1.14.12",
+    "pub/colorize": "2.0.0",
+    "pub/fixnum": "0.10.11",
+    "pub/logging": "0.11.4",
+    "pub/matcher": "0.12.6",
+    "pub/meta": "1.1.8",
+    "pub/path": "1.7.0",
+    "pub/raw": "0.2.0",
+    "pub/stack_trace": "1.9.3"
+}

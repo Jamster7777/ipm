@@ -1,0 +1,4 @@
+Resolving dependencies...
+Because restified depends on flutter any from sdk which doesn't exist (the Flutter SDK is not available), version solving failed.
+
+Flutter users should run `flutter pub get` instead of `pub get`.
