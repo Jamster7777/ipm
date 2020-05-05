@@ -72,7 +72,7 @@ getRelevantPS (dict, list) i =
         -- an error will be thrown exposing the bug).
         (Just as) => filterDict old ts (insert n as soFar)
 
-||| TODO
+||| Retrieve the most recent assignment from the partial solution given
 getMostRecentAssignment : PartialSolution -> (PkgName, Assignment)
 getMostRecentAssignment (dict, (a :: as)) = a
 

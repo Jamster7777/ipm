@@ -38,7 +38,6 @@ showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
     showIncompMiddle ((n, (Pos r)) :: xs) = (show n) ++ " " ++ (showRange r) ++ ", " ++ (showIncompMiddle xs)
     showIncompMiddle ((n, (Neg r)) :: xs) = "not " ++ (show n) ++ " " ++ (showRange r) ++ ", " ++ (showIncompMiddle xs)
 
--- TODO be able to retrieve incompatibilties in a list properly
 showIncomps : IncompMap -> String
 showIncomps iMap =
   "Incompatibilties\n"

@@ -34,7 +34,7 @@ solutionToLockAndWrite : (vMap : SortedMap PkgName Version) -> IO (Either IpmErr
 solutionToLockAndWrite vMap =
   do  Right ()
               <- writeFile LOCK_FILE_NAME $ solutionToLock vMap
-              |  Left err => pure (Left (BuildError ("Error writing lock file: " ++ (show err)))) --TODO change error
+              |  Left err => pure (Left (BuildError ("Error writing lock file: " ++ (show err))))
       pure $ Right ()
 
 ||| Convert list Json fields of JSON fields to a list of package names and

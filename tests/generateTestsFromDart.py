@@ -25,7 +25,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     '--bulkPub',
     help='Option for bulk pub tests - place all packages in pub test directory, save time by reusing packages generated for old tests.',
-    action="store_true" 
+    action="store_true"
 )
 
 args = arg_parser.parse_args(sys.argv[1:])
@@ -83,24 +83,9 @@ def add_package(package, is_root=False):
             except (KeyError, AttributeError):
                 deps = {}
 
-            # if is_root:
-            #     try:
-            #         dev_deps = vObj['pubspec']['dev_dependencies']
-            #         if dev_deps is None:
-            #             dev_deps = {}
-            #     except (KeyError, AttributeError):
-            #         dev_deps = {}
-
-            #     all_deps = merge_keys(deps, dev_deps)
-            # else:
-            #     all_deps = deps
-
-            # TODO
-            all_deps = deps
-
-            depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in all_deps.items())
+            depsIpmNames = dict((convert_to_ipm_name(k), v) for k, v in deps.items())
             output[ipm_name][version] = depsIpmNames
-            deps_to_fetch |= set(all_deps.keys())
+            deps_to_fetch |= set(deps.keys())
 
         if args.verbose:
             print("Deps to fetch:\n{0}".format(deps_to_fetch))

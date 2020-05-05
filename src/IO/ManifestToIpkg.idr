@@ -15,7 +15,6 @@ formatVersion v =
 ||| The normal slash can't be used as ipkg files don't allow this.
 formatName : PkgName -> String
 formatName (MkPkgName x y) =
-  -- TODO verify names can't contain bad symbols
   x ++ "-" ++ y
 
 ||| Convert a package name and version into the reference used to install that

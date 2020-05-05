@@ -1,7 +1,6 @@
 
 module PubGrub.Algorithm
 
--- TODO remove redundant ones
 import PubGrub.Types.Assignment
 import PubGrub.Types.GrubState
 import PubGrub.Types.Incomp
@@ -19,8 +18,6 @@ import Control.Monad.State
 import Util.ListExtras
 import IO.FetchPkgDetails
 
--- TODO remove
-import Debug.Trace
 
 --------------------------------------------------------------------------------
 -- The following algorithm is based off of the algorithm described at:
@@ -55,8 +52,6 @@ findSatisfier ps i =
 ||| Backtrack the partial solution to 'previous satisfier', the earliest
 ||| assignment before satisfier such that incompatibility is satisfied by the
 ||| partial solution up to and including that assignment plus satisfier.
-|||
-||| TODO avoid repeated code?
 findPreviousSatisfier :  PartialSolution
                      -> Incomp
                      -> (satisfier : (PkgName, Assignment))
@@ -93,14 +88,12 @@ conflictResolution :  Incomp
                    -> (isFirst : Bool)
                    -> StateT GrubState IO (Either IpmError Incomp)
 conflictResolution i isFirst =
-   -- TODO remove trace
   do  pr "conflictResolution" $ "Loop started with i= " ++ (showIncomp i)
       state <- get
       if
         (failCondition state i)
       then
         do  pr "conflictResolution" $ "Incompatibilty is empty / only refers to the root package, version solving has failed."
-            -- TODO add error reporting code here.
             pure $ Left VersionSolvingFail
       else
         do  let relPS
@@ -125,20 +118,17 @@ conflictResolution i isFirst =
             then
               if
                 not isFirst
-              -- TODO find a way to not repeat this?
               then
                 do  pr "conflictResolution" $ "Incompatibilty is different from original input, so adding it to the partial solution."
                     addI i
                     pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (partialSolution state)
-                    --TODO comment
                     backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
                     pure $ Right i
               else
                 do  pr "conflictResolution" $ "Backtracking partial solution to previousSatisfierLevel."
                     setPartialSolution $ backtrackToDecisionLevel previousSatisfierLevel (partialSolution state)
-                    --TODO comment
                     backtrackNeedDec previousSatisfierLevel
                     setDecisionLevel previousSatisfierLevel
                     pure $ Right i
@@ -298,7 +288,7 @@ decMake : StateT GrubState IO (Either IpmError PkgName)
 decMake =
   do  state <- get
       -- Note that the minimum could be 0 versions.
-      let Just package = minVsInPS state | Nothing => pure (Left ImpossibleError) --TODO
+      let Just package = minVsInPS state | Nothing => pure (Left ImpossibleError)
       pr "decMake" $ "Decision making started, choosing package= " ++ (show package)
       case (max (vsInPS state package)) of
                         -- If there are 0 versions available within the allowed

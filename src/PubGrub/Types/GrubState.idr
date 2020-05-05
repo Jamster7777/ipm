@@ -14,8 +14,6 @@ import Control.Monad.State
 import Data.SortedMap
 import Data.SortedSet
 
--- TODO
-import Debug.Trace
 
 %access public export
 
@@ -25,25 +23,24 @@ import Debug.Trace
 
 ||| The type used to keep track of the state of PubGrub version solving.
 |||
-||| - PartialSolution keeps tract of the current assignments.
-||| - IncompMap stores the current incompatibilties/
-||| - Integer stores the current decision level (starts at 0, and increases by
+||| - partialSolution keeps tract of the current assignments.
+||| - IncompMap stores the current incompatibilties
+||| - decisionLevel stores the current decision level (starts at 0, and increases by
 |||   1 with each decision that is added to the partial solution).
-||| - PkgVersions stores the available versions of packages which have been
+||| - pkgVersions stores the available versions of packages which have been
 |||   retrieved from their source so far (packages are loaded as they are
 |||   referenced as dependancies).
-||| - Manifests stores the parsed manifest file for each package version once it
+||| - manifests stores the parsed manifest file for each package version once it
 |||   has been parsed, so it doesn't need to be reparsed each time it is
 |||   referenced.
-||| - PkgName stores the name of the root package
-||| - Bool stores whether the verbose stdout should be used for version solving.
-||| - NeedDec stores the package names that must have a decision
+||| - root stores the name of the root package
+||| - verbose stores whether the verbose debug output should be used.
+||| - needDec stores the package names that must have a decision
 |||   for version solving to be complete. The number keeps track of the decision
 |||   level, so that when the algorithm backtracks it can clear irrelevant ones
 |||   and no longer check for decisions which aren't required anymore (e.g. it
 |||   may be that a different version of the dependant doesn't require that
-|||   package AT ALL).
-|||   TODO change docs here
+|||   package at all).
 record GrubState where
   constructor MkGrubState
   partialSolution : PartialSolution
@@ -215,7 +212,6 @@ recordPkgDep n =
                         pure ()
           Just _  => pure ()
 
--- TODO check if there's a way to generalise this
 recordPkgDeps : List PkgName -> StateT GrubState IO ()
 recordPkgDeps [] = pure ()
 recordPkgDeps (x :: xs) =

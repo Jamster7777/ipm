@@ -11,8 +11,6 @@ import Semver.Range
 import Semver.Version
 import Semver.Interval
 
--- TODO remove
-import Debug.Trace
 
 %access public export
 
