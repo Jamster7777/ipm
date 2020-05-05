@@ -31,10 +31,13 @@ PartialSolution = (SortedMap PkgName (List Assignment), List (PkgName, Assignmen
 -- 'Show' implementation
 --------------------------------------------------------------------------------
 
+||| Decisions are shown using a question mark, derivations are shown using a
+||| tilde
 showAssignPair : (PkgName, Assignment) -> String
 showAssignPair (n, (Decision v l)) = (show l) ++ "? " ++ (show n) ++ " " ++ (show v)
 showAssignPair (n, (Derivation r i l)) = (show l) ++ "~ " ++ (show n) ++ " " ++ (show r) ++ " (caused by: " ++ (show i) ++ ")"
 
+||| Show the list of all assignments in the partial solution
 showPS : PartialSolution -> String
 showPS (_, list) =
   "Partial Solution\n"
@@ -46,6 +49,7 @@ showPS (_, list) =
 -- Getters
 --------------------------------------------------------------------------------
 
+||| Get all assignments regarding a certain package
 getPSForPkg' : PkgName -> PartialSolution -> List Assignment
 getPSForPkg' n ps = case (lookup n (fst ps)) of
                 Nothing  => []
@@ -81,6 +85,8 @@ getMostRecentAssignment (dict, (a :: as)) = a
 -- Setters
 --------------------------------------------------------------------------------
 
+||| Add an assignment for a given package to the partial solution object given,
+||| and return the new partial solution.
 addToPS' : PkgName -> Assignment -> PartialSolution -> PartialSolution
 addToPS' n a (dict, list) =
   do  let newList = (n, a) :: list
@@ -93,9 +99,11 @@ addToPS' n a (dict, list) =
 -- Constructor
 --------------------------------------------------------------------------------
 
+||| Return an empty partial solution
 emptyPS : PartialSolution
 emptyPS = (empty, [])
 
+||| Return a partial solution where the only term is the assignment given
 psWithOneTerm : PkgName -> Assignment -> PartialSolution
 psWithOneTerm n a = addToPS' n a emptyPS
 
@@ -104,6 +112,7 @@ psWithOneTerm n a = addToPS' n a emptyPS
 -- Utils
 --------------------------------------------------------------------------------
 
+||| Check if an assignment is within the decision level limit provided.
 assignWithinLimit : Integer -> Assignment -> Bool
 assignWithinLimit limit (Derivation _ _ level) = level <= limit
 assignWithinLimit limit (Decision v level) = level <= limit

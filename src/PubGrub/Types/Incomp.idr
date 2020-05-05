@@ -15,11 +15,14 @@ import Data.SortedMap
 -- Type definition
 --------------------------------------------------------------------------------
 
+||| An incompatibility is just a list of terms
 Incomp : Type
 Incomp = List (PkgName, Term)
 
 %name Incomp i
 
+||| Incompatibilties are stored in 2 formats, a map and a list. This type is
+||| discussed in detail in the report accompanying this code.
 IncompMap : Type
 IncompMap = (SortedMap PkgName (List Incomp), List Incomp)
 
@@ -30,6 +33,8 @@ IncompMap = (SortedMap PkgName (List Incomp), List Incomp)
 -- 'Show' implementations
 --------------------------------------------------------------------------------
 
+||| the 'Show' implementation for an Incomp (couldn't directly use a show
+||| implementation because of the nature of the type).
 showIncomp : Incomp -> String
 showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
   where
@@ -38,6 +43,7 @@ showIncomp i = "{ " ++ (showIncompMiddle (toList i)) ++ " }"
     showIncompMiddle ((n, (Pos r)) :: xs) = (show n) ++ " " ++ (showRange r) ++ ", " ++ (showIncompMiddle xs)
     showIncompMiddle ((n, (Neg r)) :: xs) = "not " ++ (show n) ++ " " ++ (showRange r) ++ ", " ++ (showIncompMiddle xs)
 
+||| List all incomps in the given incompmap.
 showIncomps : IncompMap -> String
 showIncomps iMap =
   "Incompatibilties\n"
@@ -48,6 +54,10 @@ showIncomps iMap =
 -- Getters and setters
 --------------------------------------------------------------------------------
 
+||| Add an incomp to the IncompMap. This function will add the incomp in several
+||| places:
+||| - one entry for each pacakge name in the incomp
+||| - Once in the chronological list of incomps
 addI' : Incomp -> IncompMap -> IncompMap
 addI' i (dict, list) = (addI'' i i dict, i :: list)
   where
@@ -58,6 +68,7 @@ addI' i (dict, list) = (addI'' i i dict, i :: list)
         Nothing   => addI'' xs i (insert n [i] m)
         (Just is) => addI'' xs i (insert n (i :: is) m)
 
+||| Retrieve all incomps referring to a given package
 getI' : PkgName -> IncompMap -> List Incomp
 getI' n (dict, list) =
   case (lookup n dict) of
@@ -69,6 +80,7 @@ getI' n (dict, list) =
 -- Constructors
 --------------------------------------------------------------------------------
 
+||| Make an empty IncompMap type
 emptyIncompMap : IncompMap
 emptyIncompMap = (empty, [])
 

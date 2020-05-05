@@ -32,6 +32,7 @@ isDec : Assignment -> Bool
 isDec (Derivation _ _ _) = False
 isDec (Decision _ _) = True
 
+||| Extract the decision level from the assignment given
 getDecLevel : Assignment -> Integer
 getDecLevel (Derivation _ _ l) = l
 getDecLevel (Decision _ l) = l

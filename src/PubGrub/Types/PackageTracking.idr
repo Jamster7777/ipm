@@ -28,13 +28,12 @@ NeedDec = SortedMap PkgName Integer
 -- Constructors
 --------------------------------------------------------------------------------
 
+||| Initially, only the root package and its latest version are contained in
+||| PkgVersions
 initPkgVersions : PkgName -> Version -> PkgVersions
 initPkgVersions n v =
   insert n [v] empty
 
-initManifests : PkgName -> Version -> Manifest -> Manifests
-initManifests n v m =
-  insert (n, v) m empty
-
+||| Initially, the only package that needs a decision is the root package.
 initNeedDec : PkgName -> NeedDec
 initNeedDec n = insert n 0 empty

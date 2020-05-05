@@ -59,6 +59,7 @@ record GrubState where
 -- Constructors
 --------------------------------------------------------------------------------
 
+||| Construct an initial GrubState from the root manifest.
 initGrubState : (rootManifest : Manifest) -> Version -> (verbose : Bool) -> GrubState
 initGrubState (MkManifest n xs m) v verbose =
   MkGrubState
@@ -212,6 +213,8 @@ recordPkgDep n =
                         pure ()
           Just _  => pure ()
 
+||| Update the GrubState with a list of packages that need to have decisions
+||| before version solving can complete.
 recordPkgDeps : List PkgName -> StateT GrubState IO ()
 recordPkgDeps [] = pure ()
 recordPkgDeps (x :: xs) =

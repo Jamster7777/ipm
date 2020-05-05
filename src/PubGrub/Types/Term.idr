@@ -9,8 +9,12 @@ import Semver.Range
 -- Type definitions
 --------------------------------------------------------------------------------
 
+||| A term can be positive or negative
 data Term = Pos Range | Neg Range
 
+||| For the purposes of this implementation, negative and positive terms can
+||| never be equal (because negating a term will always flip it from 1 to 2
+||| ranges, or visa versa).
 Eq Term where
   (==) (Pos x) (Pos y) = x == y
   (==) (Pos x) (Neg y) = False
