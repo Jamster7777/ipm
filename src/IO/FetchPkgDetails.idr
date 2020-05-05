@@ -8,15 +8,18 @@ import Util.Constants
 import Semver.Range
 import IO.ParseManifest
 
+-- All functions in this module are used outwith it.
 %access export
 
+||| Attempt to parse a version number from a git tag.
 parseTag : String -> Either IpmError Version
 parseTag tagStr =
   if (length tagStr) > 0 && (strHead tagStr) == 'v' then
-    checkVersion (trim (strTail tagStr)) -- TODO return proper error from here
+    checkVersion (trim (strTail tagStr))
   else
     Left (TagError (tagStr ++ " is an invalid tag."))
 
+||| Return the directory for a package in the temporary ipm directory.
 pDir : PkgName -> String
 pDir n = TEMP_DIR ++ (show n) ++ "/"
 
@@ -48,6 +51,8 @@ fetchDep (MkManiDep n (PkgLocal p) r) =
         ]
         ("Cannot fetch package " ++ (show n) ++ " from " ++ p)
 
+||| List published ipm versions for the package in the given directory. Checks
+||| git tags and returns all that match the correct version format.
 listVersions' : { default "." dir : String } -> IO (Either IpmError (List Version))
 listVersions' {dir} =
   do  (Right raw) <- execAndReadOutput {inDir=dir} "git tag" | Left err => pure (Left (TagError "Error reading versions"))
@@ -61,9 +66,15 @@ listVersions' {dir} =
         Left err => tagsToVersions xs
         Right v  => v :: (tagsToVersions xs)
 
+||| Retrieve the list of versions for a package. Assumes
+||| that the git repository for that package is already in the temporary ipm
+||| directory.
 listVersions : PkgName -> IO (Either IpmError (List Version))
 listVersions n = listVersions' {dir=(pDir n)}
 
+||| For a given package directory, fetch the list of published versions and
+||| return the most recent version. If there is not a most recent version
+||| return v0.0.0
 getMostRecentVersion : { default "." dir : String } -> IO (Either IpmError Version)
 getMostRecentVersion {dir} =
   do  Right vs <- listVersions' {dir=dir} | Left err => pure (Left err)
@@ -71,6 +82,9 @@ getMostRecentVersion {dir} =
         Nothing  => pure $ Right (MkVersion 0 0 0 [] [])
         Just v   => pure (Right v)
 
+||| Fetch the manifest file for a particular package name and version. Assumes
+||| that the git repository for that package is already in the temporary ipm
+||| directory.
 checkoutManifest : PkgName -> Version -> IO (Either IpmError Manifest)
 checkoutManifest n v =
     do  Right vs  <- listVersions' {dir=(pDir n)} | Left err => pure (Left err)
