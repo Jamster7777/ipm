@@ -5,16 +5,12 @@ import Core.IpmError
 import Util.Bash
 
 
-pushTag : IO (Either IpmError ())
-pushTag =
-  bashCommandErr
-    ("git push --follow-tags")
-    "Error pushing new version to remote - has a remote repository been configured?"
-
+||| The reason the ipm push command exists is because in order to push new tags
+||| to a remote repository, the --follow-tags option is required. A lot of git
+||| users may not know this so it is abstracted over for them.
 export
 push : Opts -> IO (Either IpmError ())
 push opts =
-  do  Right ()
-              <- pushTag
-              | Left err => pure (Left err)
-      pure $ Right ()
+  bashCommandErr
+    ("git push --follow-tags")
+    "Error pushing new version to remote - has a remote repository been configured?"

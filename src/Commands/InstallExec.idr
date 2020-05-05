@@ -10,6 +10,8 @@ import Util.Constants
 import IO.FetchPkgDetails
 import IO.ParseManifest
 
+||| Run the install and build commands, and then move the generated executable
+||| to the executables directory.
 export
 installExec : Opts -> IO (Either IpmError ())
 installExec opts =

@@ -12,6 +12,9 @@ import Util.Constants
 import Data.SortedMap
 import Semver.Version
 
+||| Command to read a lockfile, make a build file (.ipkg) from it, and build
+||| an executable. The build file is removed after the executable is
+||| is successfully built.
 export
 build : Opts -> IO (Either IpmError ())
 build opts =

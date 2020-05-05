@@ -16,6 +16,11 @@ import Data.SortedMap
 import Data.SortedSet
 import Semver.Version
 
+||| Command to run version solving on the manifest file, and install the
+||| packages chosen, and output a lock file. Can be passed a dry run flag via
+||| the Opts type which means it will skip the install / lockfile step and
+||| just output the lockfile string to STDOUT. Can also be passed a verbose
+||| option in order to give detailed debugging output of version solving. 
 export
 install : Opts -> IO (Either IpmError ())
 install opts =
