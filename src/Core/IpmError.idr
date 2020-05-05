@@ -2,15 +2,15 @@ module Core.IpmError
 import Semver.Version
 import Core.ManifestTypes
 
-%access public export
+%access export
 
+||| Used to store errors in ipm as they are propagated back up the call stack.
 data IpmError = BashError String
               | PublishError String
               | ManifestFormatError String
               | TagError String
               | InvalidVersionError PkgName Version
               | DepFetchError PkgName String
-              -- TODO make this more useful.
               | VersionSolvingFail
               | VersionLookupError
               | WriteLockError String
@@ -23,6 +23,8 @@ data IpmError = BashError String
               | UsageError String
               | GenericError String
 
+||| Some errors have standard error messages defined here to avoid repeatably
+||| defining them in the code.
 Show IpmError where
   show (BashError x)      = "Error executing bash command: " ++ (show x)
   show (PublishError x)   = x

@@ -3,6 +3,7 @@ import Data.SortedSet
 
 %access public export
 
+||| Each possible Opt
 data Opt  = DryRun
           | Verbose
 
@@ -15,8 +16,10 @@ Eq Opt where
 Ord Opt where
   compare _ _ = EQ
 
+||| Store the opts which have been passed to the ipm command.
 Opts : Type
 Opts = SortedSet Opt
 
+||| Check if an opt is contained in the set of opts passed to the ipm command.
 hasFlag : Opt -> Opts -> Bool
 hasFlag opt opts = contains opt opts
