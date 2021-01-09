@@ -1,3 +1,5 @@
+An attempt at a package manager for Idris, for my Senior Honours Project at the University of St Andrews.
+
 # How to set up this package manager for use
 
 Below are instructions on getting ipm v0.1.0 ready to use. Apologies for the
